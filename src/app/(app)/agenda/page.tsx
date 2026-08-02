@@ -1,3 +1,4 @@
+import { getOfficineActive } from '@/lib/data/officine-active'
 import { getRendezVous } from '@/lib/data/rendez-vous'
 import { getPlannings } from '@/lib/data/plannings'
 import { getEquipe } from '@/lib/data/equipe'
@@ -5,14 +6,17 @@ import { Agenda } from '@/components/agenda/agenda'
 import { getWeekDates, toISODate } from '@/lib/dates'
 
 export default async function AgendaPage() {
+  const officine = await getOfficineActive()
+  if (!officine) return null
+
   const weekDates = getWeekDates(new Date())
   const dateDebut = toISODate(weekDates[0])
   const dateFin = toISODate(weekDates[6])
 
   const [rendezVous, creneaux, equipe] = await Promise.all([
-    getRendezVous(dateDebut, dateFin),
-    getPlannings(dateDebut, dateFin),
-    getEquipe(),
+    getRendezVous(officine.officine_id, dateDebut, dateFin),
+    getPlannings(officine.officine_id, dateDebut, dateFin),
+    getEquipe(officine.officine_id),
   ])
 
   return (

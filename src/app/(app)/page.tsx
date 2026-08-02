@@ -1,15 +1,19 @@
 import { getCurrentProfil } from '@/lib/data/profils'
+import { getOfficineActive } from '@/lib/data/officine-active'
 import { getMessages } from '@/lib/data/messages'
 import { getTaches } from '@/lib/data/taches'
 import { getEquipe } from '@/lib/data/equipe'
 import { CahierDeLiaison } from '@/components/cahier-de-liaison'
 
 export default async function Home() {
+  const officine = await getOfficineActive()
+  if (!officine) return null
+
   const [profil, messages, taches, equipe] = await Promise.all([
     getCurrentProfil(),
-    getMessages(),
-    getTaches(),
-    getEquipe(),
+    getMessages(officine.officine_id),
+    getTaches(officine.officine_id),
+    getEquipe(officine.officine_id),
   ])
 
   return (

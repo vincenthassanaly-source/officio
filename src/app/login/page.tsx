@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { LoginForm } from './login-form'
 
 export default function LoginPage() {
@@ -5,12 +6,18 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-bg px-6">
       <div className="w-full max-w-sm rounded-3xl border border-border bg-surface p-8 shadow-sm">
         <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light">
-          Pharmacie Rome Village
+          Officio
         </p>
         <h1 className="mt-1 mb-6 font-serif text-2xl text-ink">
-          Connexion à Officio
+          Connexion
         </h1>
         <LoginForm />
+        <p className="mt-5 text-center text-[13px] text-muted">
+          Pas encore de compte ?{' '}
+          <Link href="/inscription" className="font-semibold text-primary">
+            En créer un
+          </Link>
+        </p>
       </div>
     </main>
   )

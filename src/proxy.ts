@@ -1,7 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_ROUTES = ['/login']
+const PUBLIC_EXACT = ['/login', '/inscription']
+const PUBLIC_PREFIX = ['/rejoindre']
+
+function estRoutePublique(pathname: string) {
+  return (
+    PUBLIC_EXACT.includes(pathname) ||
+    PUBLIC_PREFIX.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+  )
+}
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -31,7 +39,8 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const isPublicRoute = PUBLIC_ROUTES.includes(request.nextUrl.pathname)
+  const pathname = request.nextUrl.pathname
+  const isPublicRoute = estRoutePublique(pathname)
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
@@ -39,7 +48,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && isPublicRoute) {
+  if (user && PUBLIC_EXACT.includes(pathname)) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)

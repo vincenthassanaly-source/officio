@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
+import { getOfficineActive } from '@/lib/data/officine-active'
 
 export async function envoyerMessage(formData: FormData) {
   const contenu = String(formData.get('contenu') ?? '').trim()
@@ -11,11 +12,12 @@ export async function envoyerMessage(formData: FormData) {
   if (!contenu) return
 
   const profil = await getCurrentProfil()
-  if (!profil) throw new Error('Non connecté')
+  const officine = await getOfficineActive()
+  if (!profil || !officine) throw new Error('Non connecté')
 
   const supabase = await createClient()
   const { error } = await supabase.from('messages').insert({
-    officine_id: profil.officine_id,
+    officine_id: officine.officine_id,
     auteur_id: profil.id,
     contenu,
     categorie,

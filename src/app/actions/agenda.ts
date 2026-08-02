@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
+import { getOfficineActive } from '@/lib/data/officine-active'
 import type { TypeCreneau } from '@/lib/data/plannings'
 
 export async function creerRendezVous(formData: FormData) {
@@ -16,11 +17,12 @@ export async function creerRendezVous(formData: FormData) {
   if (!titre || !date || !heureDebut) return
 
   const profil = await getCurrentProfil()
-  if (!profil) throw new Error('Non connecté')
+  const officine = await getOfficineActive()
+  if (!profil || !officine) throw new Error('Non connecté')
 
   const supabase = await createClient()
   const { error } = await supabase.from('rendez_vous').insert({
-    officine_id: profil.officine_id,
+    officine_id: officine.officine_id,
     titre,
     categorie,
     date,
@@ -53,11 +55,12 @@ export async function creerCreneau(formData: FormData) {
   if (!profilId || !date) return
 
   const profilActuel = await getCurrentProfil()
-  if (!profilActuel) throw new Error('Non connecté')
+  const officine = await getOfficineActive()
+  if (!profilActuel || !officine) throw new Error('Non connecté')
 
   const supabase = await createClient()
   const { error } = await supabase.from('plannings').insert({
-    officine_id: profilActuel.officine_id,
+    officine_id: officine.officine_id,
     profil_id: profilId,
     date,
     type,

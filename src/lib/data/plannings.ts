@@ -12,12 +12,17 @@ export type Creneau = {
   note: string | null
 }
 
-export async function getPlannings(dateDebut: string, dateFin: string): Promise<Creneau[]> {
+export async function getPlannings(
+  officineId: string,
+  dateDebut: string,
+  dateFin: string
+): Promise<Creneau[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('plannings')
     .select('id, profil_id, date, type, heure_debut, heure_fin, note')
+    .eq('officine_id', officineId)
     .gte('date', dateDebut)
     .lte('date', dateFin)
     .order('heure_debut', { ascending: true })

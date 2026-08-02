@@ -7,18 +7,19 @@ export type Tache = {
   titre: string
   statut: StatutTache
   echeance: string | null
-  assigne: { id: string; nom_complet: string; initiales: string; role: string } | null
+  assigne: { id: string; nom_complet: string; initiales: string } | null
 }
 
-export async function getTaches(): Promise<Tache[]> {
+export async function getTaches(officineId: string): Promise<Tache[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('taches')
     .select(
       `id, titre, statut, echeance,
-       assigne:profils!taches_assigne_id_fkey ( id, nom_complet, initiales, role )`
+       assigne:profils!taches_assigne_id_fkey ( id, nom_complet, initiales )`
     )
+    .eq('officine_id', officineId)
     .order('created_at', { ascending: false })
 
   if (error) {

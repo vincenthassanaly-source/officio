@@ -12,12 +12,17 @@ export type RendezVous = {
   note: string | null
 }
 
-export async function getRendezVous(dateDebut: string, dateFin: string): Promise<RendezVous[]> {
+export async function getRendezVous(
+  officineId: string,
+  dateDebut: string,
+  dateFin: string
+): Promise<RendezVous[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('rendez_vous')
     .select('id, titre, categorie, date, heure_debut, duree_minutes, note')
+    .eq('officine_id', officineId)
     .gte('date', dateDebut)
     .lte('date', dateFin)
     .order('date', { ascending: true })

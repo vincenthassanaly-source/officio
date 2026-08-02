@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
+import { getOfficineActive } from '@/lib/data/officine-active'
 import type { StatutTache } from '@/lib/data/taches'
 
 export async function creerTache(formData: FormData) {
@@ -13,11 +14,12 @@ export async function creerTache(formData: FormData) {
   if (!titre) return
 
   const profil = await getCurrentProfil()
-  if (!profil) throw new Error('Non connecté')
+  const officine = await getOfficineActive()
+  if (!profil || !officine) throw new Error('Non connecté')
 
   const supabase = await createClient()
   const { error } = await supabase.from('taches').insert({
-    officine_id: profil.officine_id,
+    officine_id: officine.officine_id,
     titre,
     assigne_id: assigneId,
     echeance,

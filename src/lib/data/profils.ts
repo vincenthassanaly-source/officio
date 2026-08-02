@@ -4,9 +4,7 @@ export type Role = 'titulaire' | 'adjoint' | 'preparateur'
 
 export type Profil = {
   id: string
-  officine_id: string
   nom_complet: string
-  role: Role
   initiales: string
 }
 
@@ -19,7 +17,7 @@ export async function getCurrentProfil(): Promise<Profil | null> {
 
   const { data } = await supabase
     .from('profils')
-    .select('id, officine_id, nom_complet, role, initiales')
+    .select('id, nom_complet, initiales')
     .eq('id', user.id)
     .single()
 
