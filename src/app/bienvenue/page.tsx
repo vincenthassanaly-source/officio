@@ -20,7 +20,7 @@ export default async function BienvenuePage({
         <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light">
           {adhesions.length > 0 ? 'Ajouter une officine' : 'Bienvenue sur Officio'}
         </p>
-        <h1 className="mt-1 mb-5 font-serif text-2xl text-ink">
+        <h1 className="mt-1 mb-5 font-heading text-2xl text-ink">
           Crée une officine ou rejoins-en une
         </h1>
         <BienvenueForm inviteInitial={invite} />

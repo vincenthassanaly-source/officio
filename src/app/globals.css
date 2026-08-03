@@ -1,18 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --color-bg: #edf1ea;
+  --color-bg: oklch(98% 0.004 260);
   --color-surface: #ffffff;
-  --color-primary: #1f4d3d;
-  --color-primary-light: #35705a;
-  --color-primary-dark: #142f26;
-  --color-ink: #16211c;
-  --color-muted: #5f6f65;
-  --color-accent: #c98a3b;
-  --color-accent-soft: #f3ddb8;
-  --color-border: #dce3da;
-  --color-rec: #b84a3e;
-  --color-rec-soft: #f1d8d3;
+  --color-primary: oklch(52% 0.19 275);
+  --color-primary-light: oklch(66% 0.14 275);
+  --color-primary-dark: oklch(38% 0.16 275);
+  --color-primary-soft: oklch(94% 0.03 275);
+  --color-ink: oklch(21% 0.02 265);
+  --color-muted: oklch(52% 0.02 265);
+  --color-border: oklch(91% 0.006 260);
+  --color-track: oklch(93% 0.01 265);
+  --color-accent: oklch(58% 0.14 70);
+  --color-accent-soft: oklch(94% 0.06 80);
+  --color-rec: oklch(58% 0.2 25);
+  --color-rec-soft: oklch(94% 0.06 25);
+  --color-purple: oklch(52% 0.15 300);
+  --color-purple-soft: oklch(92% 0.06 300);
+  --color-green: oklch(58% 0.14 150);
+  --color-neutral-soft: oklch(93% 0.01 265);
+  --color-neutral-text: oklch(65% 0.01 265);
 }
 
 @theme inline {
@@ -21,17 +28,23 @@
   --color-primary: var(--color-primary);
   --color-primary-light: var(--color-primary-light);
   --color-primary-dark: var(--color-primary-dark);
+  --color-primary-soft: var(--color-primary-soft);
   --color-ink: var(--color-ink);
   --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-track: var(--color-track);
   --color-accent: var(--color-accent);
   --color-accent-soft: var(--color-accent-soft);
-  --color-border: var(--color-border);
   --color-rec: var(--color-rec);
   --color-rec-soft: var(--color-rec-soft);
+  --color-purple: var(--color-purple);
+  --color-purple-soft: var(--color-purple-soft);
+  --color-green: var(--color-green);
+  --color-neutral-soft: var(--color-neutral-soft);
+  --color-neutral-text: var(--color-neutral-text);
 
-  --font-serif: var(--font-fraunces);
+  --font-heading: var(--font-space-grotesk);
   --font-sans: var(--font-inter);
-  --font-mono: var(--font-plex-mono);
 }
 
 body {

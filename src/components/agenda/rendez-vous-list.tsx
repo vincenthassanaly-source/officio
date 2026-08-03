@@ -6,10 +6,10 @@ import type { CategorieRdv, RendezVous } from '@/lib/data/rendez-vous'
 import { formatJourCourt, toISODate } from '@/lib/dates'
 
 const CATEGORIES: { value: CategorieRdv; label: string; className: string }[] = [
-  { value: 'rdv', label: 'Rendez-vous', className: 'bg-accent-soft text-[#7A4E12]' },
-  { value: 'livraison', label: 'Logistique', className: 'bg-[#E1EEE6] text-primary' },
-  { value: 'formation', label: 'Formation', className: 'bg-[#E4E1F2] text-[#5B4E96]' },
-  { value: 'autre', label: 'Autre', className: 'bg-bg text-muted' },
+  { value: 'rdv', label: 'Rendez-vous', className: 'bg-accent-soft text-accent' },
+  { value: 'livraison', label: 'Logistique', className: 'bg-primary-soft text-primary' },
+  { value: 'formation', label: 'Formation', className: 'bg-purple-soft text-purple' },
+  { value: 'autre', label: 'Autre', className: 'bg-neutral-soft text-muted' },
 ]
 
 export function RendezVousList({
@@ -47,7 +47,7 @@ export function RendezVousList({
               <span className={`text-[10px] font-semibold uppercase ${actif ? 'text-accent-soft' : 'text-muted'}`}>
                 {formatJourCourt(d)}
               </span>
-              <span className="mt-0.5 font-serif text-base">{d.getDate()}</span>
+              <span className="mt-0.5 font-heading text-base">{d.getDate()}</span>
             </button>
           )
         })}

@@ -7,10 +7,10 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 
 function dueInfo(tache: Tache): { label: string; className: string } {
   if (tache.statut === 'fait') {
-    return { label: 'Fait', className: 'bg-[#EDEFEA] text-muted' }
+    return { label: 'Fait', className: 'bg-neutral-soft text-muted' }
   }
   if (!tache.echeance) {
-    return { label: 'À définir', className: 'bg-[#E1EEE6] text-primary' }
+    return { label: 'À définir', className: 'bg-primary-soft text-primary' }
   }
 
   const aujourdhui = new Date()
@@ -19,11 +19,11 @@ function dueInfo(tache: Tache): { label: string; className: string } {
   const diffJours = Math.round((echeance.getTime() - aujourdhui.getTime()) / 86_400_000)
 
   if (diffJours < 0) return { label: 'En retard', className: 'bg-rec-soft text-rec' }
-  if (diffJours === 0) return { label: "Aujourd'hui", className: 'bg-accent-soft text-[#7A4E12]' }
-  if (diffJours === 1) return { label: 'Demain', className: 'bg-accent-soft text-[#7A4E12]' }
+  if (diffJours === 0) return { label: "Aujourd'hui", className: 'bg-accent-soft text-accent' }
+  if (diffJours === 1) return { label: 'Demain', className: 'bg-accent-soft text-accent' }
   return {
     label: echeance.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
-    className: 'bg-[#E1EEE6] text-primary',
+    className: 'bg-primary-soft text-primary',
   }
 }
 

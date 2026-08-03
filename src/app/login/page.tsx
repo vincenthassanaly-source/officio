@@ -8,7 +8,7 @@ export default function LoginPage() {
         <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light">
           Officio
         </p>
-        <h1 className="mt-1 mb-6 font-serif text-2xl text-ink">
+        <h1 className="mt-1 mb-6 font-heading text-2xl text-ink">
           Connexion
         </h1>
         <LoginForm />

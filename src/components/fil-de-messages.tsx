@@ -5,15 +5,15 @@ import { envoyerMessage, marquerLu } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 
 const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
-  { value: 'info', label: 'Info', className: 'bg-[#E1EEE6] text-primary' },
-  { value: 'stock', label: 'Stock', className: 'bg-accent-soft text-[#7A4E12]' },
+  { value: 'info', label: 'Info', className: 'bg-primary-soft text-primary' },
+  { value: 'stock', label: 'Stock', className: 'bg-accent-soft text-accent' },
   { value: 'urgent', label: 'Urgent', className: 'bg-rec-soft text-rec' },
 ]
 
 const ROLE_COLOR: Record<string, string> = {
-  titulaire: '#7C9A85',
-  adjoint: 'var(--color-accent)',
-  preparateur: '#B0B8AC',
+  titulaire: 'var(--color-primary)',
+  adjoint: 'var(--color-purple)',
+  preparateur: 'var(--color-muted)',
 }
 
 function formatDate(iso: string) {
@@ -58,7 +58,7 @@ export function FilDeMessages({
               <div className="mb-2.5 flex items-center gap-2.5">
                 <div
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                  style={{ background: ROLE_COLOR[m.auteur?.role ?? ''] ?? '#A2AEA5' }}
+                  style={{ background: ROLE_COLOR[m.auteur?.role ?? ''] ?? 'var(--color-muted)' }}
                 >
                   {m.auteur?.initiales ?? '?'}
                 </div>

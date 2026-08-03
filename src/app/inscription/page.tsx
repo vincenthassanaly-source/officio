@@ -14,7 +14,7 @@ export default async function InscriptionPage({
         <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light">
           Officio
         </p>
-        <h1 className="mt-1 mb-1 font-serif text-2xl text-ink">Créer un compte</h1>
+        <h1 className="mt-1 mb-1 font-heading text-2xl text-ink">Créer un compte</h1>
         {invite && (
           <p className="mb-5 text-[13px] text-muted">
             Tu rejoindras une officine avec le code <strong>{invite}</strong> une fois ton compte créé.

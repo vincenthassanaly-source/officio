@@ -10,7 +10,7 @@ export default async function InviterPage() {
 
   return (
     <>
-      <h1 className="mb-4 font-serif text-2xl text-ink">Inviter un collègue</h1>
+      <h1 className="mb-4 font-heading text-2xl text-ink">Inviter un collègue</h1>
       <InviterCard officineId={officine.id} code={officine.code_invitation} />
     </>
   )

@@ -23,11 +23,11 @@ export function PlanningEquipe({
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex items-center gap-4 text-[11px] text-muted">
         <span>
-          <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-primary-light" />
+          <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-primary" />
           Travail
         </span>
         <span>
-          <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-[#C7CCC1]" />
+          <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-neutral-text" />
           Repos
         </span>
         <span>
@@ -78,7 +78,7 @@ export function PlanningEquipe({
                     return (
                       <div
                         key={iso}
-                        className="rounded-lg bg-[#EDEFEA] py-2 text-center text-[10px] text-[#A2AEA5]"
+                        className="rounded-lg bg-neutral-soft py-2 text-center text-[10px] text-neutral-text"
                       >
                         —
                       </div>
@@ -95,10 +95,10 @@ export function PlanningEquipe({
                           disabled={isPending}
                           className={`rounded-lg py-1.5 text-center text-[9.5px] font-semibold leading-tight ${
                             c.type === 'travail'
-                              ? 'bg-[#E1EEE6] text-primary'
+                              ? 'bg-primary-soft text-primary'
                               : c.type === 'repos'
-                                ? 'bg-[#EDEFEA] text-[#A2AEA5]'
-                                : 'bg-accent-soft text-[#7A4E12]'
+                                ? 'bg-neutral-soft text-neutral-text'
+                                : 'bg-accent-soft text-accent'
                           }`}
                           title="Cliquer pour supprimer"
                         >

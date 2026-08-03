@@ -22,7 +22,7 @@ export function Agenda({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="mb-4 flex shrink-0 rounded-xl bg-[#E2E7DD] p-1">
+      <div className="mb-4 flex shrink-0 rounded-xl bg-track p-1">
         <button
           type="button"
           onClick={() => setOnglet('rdv')}

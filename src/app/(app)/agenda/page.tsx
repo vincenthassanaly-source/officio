@@ -21,7 +21,7 @@ export default async function AgendaPage() {
 
   return (
     <>
-      <h1 className="mb-4 font-serif text-2xl text-ink">Agenda</h1>
+      <h1 className="mb-4 font-heading text-2xl text-ink">Agenda</h1>
       <Agenda rendezVous={rendezVous} creneaux={creneaux} equipe={equipe} weekDates={weekDates} />
     </>
   )

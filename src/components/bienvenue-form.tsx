@@ -13,7 +13,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex shrink-0 rounded-xl bg-[#E2E7DD] p-1">
+      <div className="flex shrink-0 rounded-xl bg-track p-1">
         <button
           type="button"
           onClick={() => setOnglet('creer')}
