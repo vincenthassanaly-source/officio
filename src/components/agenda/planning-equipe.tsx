@@ -16,6 +16,10 @@ function heureEnDecimal(heure: string): number {
   return h + m / 60
 }
 
+function confirmerSuppression(message: string): boolean {
+  return confirm(message)
+}
+
 export function PlanningEquipe({
   creneaux,
   equipe,
@@ -170,7 +174,12 @@ export function PlanningEquipe({
                   <button
                     type="button"
                     key={c.id}
-                    onClick={() => startTransition(() => supprimerCreneau(c.id))}
+                    onClick={() => {
+                      const libelle = c.type === 'repos' ? 'Repos' : 'Congé'
+                      if (confirmerSuppression(`Supprimer « ${libelle} » pour ${membre?.nom_complet ?? 'cette personne'} ?`)) {
+                        startTransition(() => supprimerCreneau(c.id))
+                      }
+                    }}
                     disabled={isPending}
                     title={`${membre?.nom_complet ?? ''} — ${c.type === 'repos' ? 'Repos' : 'Congé'} (cliquer pour supprimer)`}
                     className={`rounded px-1 py-0.5 text-[8px] font-bold ${
@@ -220,7 +229,16 @@ export function PlanningEquipe({
                   <button
                     type="button"
                     key={c.id}
-                    onClick={() => startTransition(() => supprimerCreneau(c.id))}
+                    onClick={() => {
+                      const horaire = `${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)}`
+                      if (
+                        confirmerSuppression(
+                          `Supprimer le créneau de ${membre?.nom_complet ?? 'cette personne'} (${horaire}) ?`
+                        )
+                      ) {
+                        startTransition(() => supprimerCreneau(c.id))
+                      }
+                    }}
                     disabled={isPending}
                     title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour supprimer)`}
                     className="absolute inset-x-0.5 overflow-hidden rounded-md px-1 py-0.5 text-left text-[8px] font-semibold leading-tight text-white disabled:opacity-70"
