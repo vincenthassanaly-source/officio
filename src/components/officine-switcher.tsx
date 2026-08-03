@@ -16,13 +16,13 @@ export function OfficineSwitcher({
   const active = adhesions.find((a) => a.officine_id === officineActiveId)
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
+    <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex min-w-0 items-center gap-2">
         <select
           value={officineActiveId}
           disabled={isPending}
           onChange={(e) => startTransition(() => changerOfficineActiveAction(e.target.value))}
-          className="max-w-[180px] truncate bg-transparent font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light outline-none disabled:opacity-60"
+          className="min-w-0 max-w-[110px] truncate bg-transparent font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light outline-none disabled:opacity-60 sm:max-w-[180px]"
         >
           {adhesions.map((a) => (
             <option key={a.officine_id} value={a.officine_id}>
@@ -30,7 +30,7 @@ export function OfficineSwitcher({
             </option>
           ))}
         </select>
-        <Link href="/bienvenue" className="text-[11px] font-semibold text-primary">
+        <Link href="/bienvenue" className="shrink-0 text-[11px] font-semibold text-primary">
           + Ajouter
         </Link>
       </div>
