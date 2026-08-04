@@ -23,6 +23,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           >
             Inviter
           </Link>
+          <Link
+            href="/profil"
+            className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
+          >
+            Profil
+          </Link>
           <form action={signOut}>
             <button
               type="submit"

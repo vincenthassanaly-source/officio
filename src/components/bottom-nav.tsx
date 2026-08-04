@@ -8,6 +8,7 @@ const ITEMS = [
   { href: '/liaison', label: 'Liaison' },
   { href: '/agenda', label: 'Agenda' },
   { href: '/documents', label: 'Documents' },
+  { href: '/carnet', label: 'Carnet' },
 ]
 
 export function BottomNav() {
