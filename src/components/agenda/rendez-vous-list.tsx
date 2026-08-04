@@ -132,9 +132,9 @@ export function RendezVousList({
         </form>
       )}
 
-      <div className="flex flex-1 flex-col gap-3">
+      <div className="flex flex-1 flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4">
         {rdvDuJour.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted">Aucun rendez-vous ce jour-là.</p>
+          <p className="py-10 text-center text-sm text-muted lg:col-span-2">Aucun rendez-vous ce jour-là.</p>
         )}
         {rdvDuJour.map((r) => {
           const cat = CATEGORIES.find((c) => c.value === r.categorie) ?? CATEGORIES[0]

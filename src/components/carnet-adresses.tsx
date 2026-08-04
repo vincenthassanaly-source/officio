@@ -140,9 +140,9 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
         </form>
       )}
 
-      <div className="flex flex-1 flex-col gap-2.5">
+      <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3">
         {visibles.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted">
+          <p className="py-10 text-center text-sm text-muted lg:col-span-2">
             {contacts.length === 0
               ? 'Aucun contact pour l’instant — ajoute le premier avec le bouton +.'
               : 'Aucun contact dans cette catégorie.'}
@@ -159,7 +159,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
                     setEnEdition(null)
                   })
                 }}
-                className="flex flex-col gap-2 rounded-2xl border border-primary bg-surface p-3"
+                className="flex flex-col gap-2 rounded-2xl border border-primary bg-surface p-3 lg:col-span-2"
               >
                 <ChampsFormulaire contact={c} />
                 <div className="flex gap-2">

@@ -130,9 +130,9 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
         </form>
       )}
 
-      <div className="flex flex-1 flex-col gap-2.5">
+      <div className="flex flex-1 flex-col gap-2.5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-3">
         {visibles.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted">Aucun document pour l&rsquo;instant.</p>
+          <p className="py-10 text-center text-sm text-muted lg:col-span-2">Aucun document pour l&rsquo;instant.</p>
         )}
         {visibles.map((d) => (
           <button

@@ -2,22 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-
-const ITEMS = [
-  { href: '/', label: 'Accueil' },
-  { href: '/liaison', label: 'Liaison' },
-  { href: '/agenda', label: 'Agenda' },
-  { href: '/documents', label: 'Documents' },
-  { href: '/carnet', label: 'Carnet' },
-]
+import { NAV_ITEMS, estLienActif } from '@/lib/nav-items'
 
 export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="sticky bottom-0 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 py-2">
-      {ITEMS.map((item) => {
-        const actif = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
+    <nav className="sticky bottom-0 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 py-2 lg:hidden">
+      {NAV_ITEMS.map((item) => {
+        const actif = estLienActif(item.href, pathname)
         return (
           <Link
             key={item.href}
