@@ -19,8 +19,11 @@ export function RendezVousList({
   rendezVous: RendezVous[]
   weekDates: Date[]
 }) {
-  const aujourdhui = toISODate(new Date())
-  const [dateSelectionnee, setDateSelectionnee] = useState(aujourdhui)
+  const [dateSelectionnee, setDateSelectionnee] = useState(() => {
+    const aujourdhui = toISODate(new Date())
+    const semaineContientAujourdhui = weekDates.some((d) => toISODate(d) === aujourdhui)
+    return semaineContientAujourdhui ? aujourdhui : toISODate(weekDates[0])
+  })
   const [formOuvert, setFormOuvert] = useState(false)
   const [isPending, startTransition] = useTransition()
 

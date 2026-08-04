@@ -5,11 +5,17 @@ import { getEquipe } from '@/lib/data/equipe'
 import { Agenda } from '@/components/agenda/agenda'
 import { getWeekDates, toISODate } from '@/lib/dates'
 
-export default async function AgendaPage() {
+export default async function AgendaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ semaine?: string }>
+}) {
   const officine = await getOfficineActive()
   if (!officine) return null
 
-  const weekDates = getWeekDates(new Date())
+  const { semaine } = await searchParams
+  const dateReference = semaine ? new Date(`${semaine}T00:00:00`) : new Date()
+  const weekDates = getWeekDates(Number.isNaN(dateReference.getTime()) ? new Date() : dateReference)
   const dateDebut = toISODate(weekDates[0])
   const dateFin = toISODate(weekDates[6])
 

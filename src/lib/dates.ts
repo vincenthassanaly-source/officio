@@ -28,3 +28,26 @@ export function formatJourCourt(d: Date): string {
 export function formatHeure(heure: string): string {
   return heure.slice(0, 5)
 }
+
+const MOIS_COURT = [
+  'janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin',
+  'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.',
+]
+
+const MOIS_LONG = [
+  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+]
+
+export function formatPeriodeSemaine(weekDates: Date[]): string {
+  const debut = weekDates[0]
+  const fin = weekDates[6]
+
+  const memeMois = debut.getMonth() === fin.getMonth() && debut.getFullYear() === fin.getFullYear()
+
+  if (memeMois) {
+    return `${debut.getDate()} – ${fin.getDate()} ${MOIS_LONG[fin.getMonth()]} ${fin.getFullYear()}`
+  }
+
+  return `${debut.getDate()} ${MOIS_COURT[debut.getMonth()]} – ${fin.getDate()} ${MOIS_COURT[fin.getMonth()]} ${fin.getFullYear()}`
+}

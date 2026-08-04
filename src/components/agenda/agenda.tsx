@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { RendezVousList } from './rendez-vous-list'
 import { PlanningEquipe } from './planning-equipe'
 import type { RendezVous } from '@/lib/data/rendez-vous'
 import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
+import { formatPeriodeSemaine, getWeekDates, toISODate } from '@/lib/dates'
 
 export function Agenda({
   rendezVous,
@@ -18,10 +20,51 @@ export function Agenda({
   equipe: MembreEquipe[]
   weekDates: Date[]
 }) {
+  const router = useRouter()
   const [onglet, setOnglet] = useState<'rdv' | 'planning'>('rdv')
+
+  const lundiAffiche = toISODate(weekDates[0])
+  const estSemaineActuelle = lundiAffiche === toISODate(getWeekDates(new Date())[0])
+
+  function allerVersSemaine(offsetJours: number) {
+    const cible = new Date(weekDates[0])
+    cible.setDate(cible.getDate() + offsetJours)
+    router.push(`/agenda?semaine=${toISODate(cible)}`)
+  }
 
   return (
     <div className="flex flex-1 flex-col">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => allerVersSemaine(-7)}
+          aria-label="Semaine précédente"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-semibold text-muted hover:text-ink"
+        >
+          ‹
+        </button>
+        <div className="flex flex-col items-center gap-0.5">
+          <span className="text-[12.5px] font-semibold text-ink">{formatPeriodeSemaine(weekDates)}</span>
+          {!estSemaineActuelle && (
+            <button
+              type="button"
+              onClick={() => router.push('/agenda')}
+              className="text-[11px] font-semibold text-primary"
+            >
+              Aujourd&rsquo;hui
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => allerVersSemaine(7)}
+          aria-label="Semaine suivante"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-semibold text-muted hover:text-ink"
+        >
+          ›
+        </button>
+      </div>
+
       <div className="mb-4 flex shrink-0 rounded-xl bg-track p-1">
         <button
           type="button"
@@ -44,9 +87,9 @@ export function Agenda({
       </div>
 
       {onglet === 'rdv' ? (
-        <RendezVousList rendezVous={rendezVous} weekDates={weekDates} />
+        <RendezVousList key={lundiAffiche} rendezVous={rendezVous} weekDates={weekDates} />
       ) : (
-        <PlanningEquipe creneaux={creneaux} equipe={equipe} weekDates={weekDates} />
+        <PlanningEquipe key={lundiAffiche} creneaux={creneaux} equipe={equipe} weekDates={weekDates} />
       )}
     </div>
   )
