@@ -60,7 +60,20 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
   const [recherche, setRecherche] = useState('')
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
+  const [idsEnTransition, setIdsEnTransition] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
+
+  function marquerTransition(id: string, action: () => Promise<void>) {
+    setIdsEnTransition((prev) => new Set(prev).add(id))
+    startTransition(async () => {
+      await action()
+      setIdsEnTransition((prev) => {
+        const suivant = new Set(prev)
+        suivant.delete(id)
+        return suivant
+      })
+    })
+  }
 
   const comptes = useMemo(() => {
     const c: Record<StatutHuile, number> = { en_stock: 0, en_commande: 0, a_commander: 0 }
@@ -182,10 +195,14 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
             )
           }
 
+          const enTransition = idsEnTransition.has(h.id)
+
           return (
             <div
               key={h.id}
-              className="flex items-center gap-2.5 rounded-2xl border border-border bg-surface p-3"
+              className={`flex items-center gap-2.5 rounded-2xl border border-border bg-surface p-3 transition-all duration-200 ${
+                enTransition ? 'scale-[0.98] opacity-40' : 'opacity-100'
+              }`}
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[13px] font-semibold text-ink">{h.nom}</div>
@@ -193,20 +210,38 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
                   {formatPrix(h.prix_reference, h.volume_reference_ml)}
                 </div>
               </div>
-              <select
-                value={h.statut}
-                disabled={isPending}
-                onChange={(e) =>
-                  startTransition(() => changerStatutHuile(h.id, e.target.value as StatutHuile))
-                }
-                className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[11px] font-semibold text-ink outline-none focus:border-primary disabled:opacity-60"
-              >
-                {STATUTS.map((s) => (
-                  <option key={s.value} value={s.value}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
+              {ongletStatut === 'en_stock' ? (
+                <select
+                  value={h.statut}
+                  disabled={isPending}
+                  onChange={(e) => {
+                    const nouveauStatut = e.target.value as StatutHuile
+                    marquerTransition(h.id, () => changerStatutHuile(h.id, nouveauStatut))
+                  }}
+                  className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[11px] font-semibold text-ink outline-none focus:border-primary disabled:opacity-60"
+                >
+                  {STATUTS.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <label className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-ink">
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    disabled={isPending || enTransition}
+                    onChange={() => {
+                      const nouveauStatut: StatutHuile =
+                        ongletStatut === 'a_commander' ? 'en_commande' : 'en_stock'
+                      marquerTransition(h.id, () => changerStatutHuile(h.id, nouveauStatut))
+                    }}
+                    className="h-4 w-4 accent-[var(--color-primary)] disabled:opacity-60"
+                  />
+                  {ongletStatut === 'a_commander' ? 'Commandée' : 'Reçue'}
+                </label>
+              )}
               <button
                 type="button"
                 onClick={() => {
