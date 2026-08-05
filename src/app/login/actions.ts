@@ -1,9 +1,15 @@
 'use server'
 
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-export type LoginState = { error?: string } | undefined
+export type LoginState =
+  | { error: string }
+  | {
+      success: true
+      profil: { id: string; nom_complet: string; initiales: string } | null
+      session: { accessToken: string; refreshToken: string }
+    }
+  | undefined
 
 export async function signIn(
   _prevState: LoginState,
@@ -17,11 +23,24 @@ export async function signIn(
   }
 
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-  if (error) {
+  if (error || !data.session) {
     return { error: 'Email ou mot de passe incorrect.' }
   }
 
-  redirect('/')
+  const { data: profil } = await supabase
+    .from('profils')
+    .select('id, nom_complet, initiales')
+    .eq('id', data.session.user.id)
+    .single()
+
+  return {
+    success: true,
+    profil,
+    session: {
+      accessToken: data.session.access_token,
+      refreshToken: data.session.refresh_token,
+    },
+  }
 }

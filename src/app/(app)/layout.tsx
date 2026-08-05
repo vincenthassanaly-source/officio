@@ -3,19 +3,26 @@ import { redirect } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
 import { SidebarNav } from '@/components/sidebar-nav'
 import { OfficineSwitcher } from '@/components/officine-switcher'
+import { EcouteurSession } from '@/components/ecouteur-session'
 import { getMesAdhesions } from '@/lib/data/adhesions'
 import { getOfficineActive } from '@/lib/data/officine-active'
+import { getCurrentProfil } from '@/lib/data/profils'
 import { signOut } from '../actions/auth'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const adhesions = await getMesAdhesions()
   if (adhesions.length === 0) redirect('/bienvenue')
 
-  const officineActive = await getOfficineActive()
+  const [officineActive, profilActuel] = await Promise.all([getOfficineActive(), getCurrentProfil()])
 
   return (
     <div className="flex w-full flex-1 flex-col overflow-x-hidden lg:flex-row lg:overflow-x-visible">
-      <SidebarNav adhesions={adhesions} officineActiveId={officineActive!.officine_id} />
+      <EcouteurSession />
+      <SidebarNav
+        adhesions={adhesions}
+        officineActiveId={officineActive!.officine_id}
+        profilActuel={profilActuel}
+      />
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col lg:mx-0 lg:max-w-none">
         <header className="flex items-start justify-between gap-2 px-4 pt-6 sm:gap-3 sm:px-8 lg:hidden">

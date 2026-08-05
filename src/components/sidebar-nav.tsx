@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { NAV_ITEMS, estLienActif } from '@/lib/nav-items'
 import { OfficineSwitcher } from '@/components/officine-switcher'
+import { SwitchIdentite } from '@/components/switch-identite'
 import { IconAccueil, IconAgenda, IconCarnet, IconDocuments, IconLiaison } from '@/components/nav-icons'
 import { signOut } from '@/app/actions/auth'
 import type { Adhesion } from '@/lib/data/adhesions'
@@ -19,9 +20,11 @@ const ICONES: Record<string, React.ComponentType<{ className?: string }>> = {
 export function SidebarNav({
   adhesions,
   officineActiveId,
+  profilActuel,
 }: {
   adhesions: Adhesion[]
   officineActiveId: string
+  profilActuel: { id: string; nom_complet: string; initiales: string } | null
 }) {
   const pathname = usePathname()
 
@@ -49,6 +52,13 @@ export function SidebarNav({
       </nav>
 
       <div className="mt-auto flex flex-col gap-1 border-t border-border pt-4">
+        {profilActuel && (
+          <SwitchIdentite
+            profilActuelId={profilActuel.id}
+            nomComplet={profilActuel.nom_complet}
+            initiales={profilActuel.initiales}
+          />
+        )}
         <Link
           href="/inviter"
           className="rounded-lg px-3 py-2 text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink"
