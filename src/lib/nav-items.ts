@@ -4,6 +4,7 @@ export const NAV_ITEMS = [
   { href: '/agenda', label: 'Agenda' },
   { href: '/documents', label: 'Documents' },
   { href: '/carnet', label: 'Carnet' },
+  { href: '/fournisseurs', label: 'Fournisseurs' },
 ]
 
 export function estLienActif(href: string, pathname: string): boolean {

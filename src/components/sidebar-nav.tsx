@@ -5,7 +5,14 @@ import { usePathname } from 'next/navigation'
 import { NAV_ITEMS, estLienActif } from '@/lib/nav-items'
 import { OfficineSwitcher } from '@/components/officine-switcher'
 import { SwitchIdentite } from '@/components/switch-identite'
-import { IconAccueil, IconAgenda, IconCarnet, IconDocuments, IconLiaison } from '@/components/nav-icons'
+import {
+  IconAccueil,
+  IconAgenda,
+  IconCarnet,
+  IconDocuments,
+  IconFournisseurs,
+  IconLiaison,
+} from '@/components/nav-icons'
 import { signOut } from '@/app/actions/auth'
 import type { Adhesion } from '@/lib/data/adhesions'
 
@@ -15,6 +22,7 @@ const ICONES: Record<string, React.ComponentType<{ className?: string }>> = {
   '/agenda': IconAgenda,
   '/documents': IconDocuments,
   '/carnet': IconCarnet,
+  '/fournisseurs': IconFournisseurs,
 }
 
 export function SidebarNav({

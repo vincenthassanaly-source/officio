@@ -83,3 +83,22 @@ export function IconCarnet({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconFournisseurs({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="1" y="7" width="14" height="10" rx="1" />
+      <path d="M15 10h4l3 3v4h-7z" />
+      <circle cx="6" cy="19" r="2" />
+      <circle cx="17" cy="19" r="2" />
+    </svg>
+  )
+}
