@@ -1,6 +1,6 @@
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
-import { HuilesEssentiellesListe } from '@/components/huiles-essentielles-liste'
+import { HuilesEssentiellesOnglets } from '@/components/huiles-essentielles-onglets'
 
 export default async function HuilesEssentiellesPage() {
   const officine = await getOfficineActive()
@@ -11,7 +11,7 @@ export default async function HuilesEssentiellesPage() {
   return (
     <>
       <h1 className="mb-4 font-heading text-2xl text-ink">Huiles essentielles</h1>
-      <HuilesEssentiellesListe huiles={huiles} />
+      <HuilesEssentiellesOnglets huiles={huiles} />
     </>
   )
 }
