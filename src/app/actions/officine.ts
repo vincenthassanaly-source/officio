@@ -42,7 +42,6 @@ export async function rejoindreOfficineAction(
 ): Promise<OnboardingState> {
   const code = String(formData.get('code') ?? '').trim()
   const nomComplet = String(formData.get('nom_complet') ?? '').trim()
-  const role = String(formData.get('role') ?? 'adjoint')
 
   if (!code || !nomComplet) {
     return { error: 'Merci de remplir tous les champs.' }
@@ -53,7 +52,7 @@ export async function rejoindreOfficineAction(
     code_saisi: code,
     nom_complet: nomComplet,
     initiales: initialesDepuisNom(nomComplet),
-    role_choisi: role,
+    role_choisi: 'adjoint',
   })
 
   if (error) {

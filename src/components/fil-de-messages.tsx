@@ -10,12 +10,6 @@ const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
   { value: 'urgent', label: 'Urgent', className: 'bg-rec-soft text-rec' },
 ]
 
-const ROLE_COLOR: Record<string, string> = {
-  titulaire: 'var(--color-primary)',
-  adjoint: 'var(--color-purple)',
-  preparateur: 'var(--color-muted)',
-}
-
 function formatDate(iso: string) {
   const date = new Date(iso)
   const now = new Date()
@@ -58,16 +52,13 @@ export function FilDeMessages({
               <div className="mb-2.5 flex items-center gap-2.5">
                 <div
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                  style={{ background: ROLE_COLOR[m.auteur?.role ?? ''] ?? 'var(--color-muted)' }}
+                  style={{ background: 'var(--color-primary)' }}
                 >
                   {m.auteur?.initiales ?? '?'}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13.5px] font-semibold text-ink">
-                    {m.auteur?.nom_complet ?? 'Ancien collègue'}{' '}
-                    <span className="font-medium capitalize text-muted text-[11px]">
-                      {m.auteur?.role}
-                    </span>
+                    {m.auteur?.nom_complet ?? 'Ancien collègue'}
                   </div>
                   <div className="text-[11px] text-muted">{formatDate(m.created_at)}</div>
                 </div>

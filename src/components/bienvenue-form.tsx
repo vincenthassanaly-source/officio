@@ -58,7 +58,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
               className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
             />
           </div>
-          <p className="text-[12px] text-muted">Tu deviendras Titulaire de cette officine.</p>
+          <p className="text-[12px] text-muted">Tu seras responsable de cette officine.</p>
           {etatCreer?.error && (
             <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatCreer.error}</p>
           )}
@@ -94,19 +94,6 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
               placeholder="Prénom Nom"
               className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
             />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted">
-              Ton rôle
-            </label>
-            <select
-              name="role"
-              defaultValue="adjoint"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
-            >
-              <option value="adjoint">Adjoint</option>
-              <option value="preparateur">Préparateur</option>
-            </select>
           </div>
           {etatRejoindre?.error && (
             <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatRejoindre.error}</p>

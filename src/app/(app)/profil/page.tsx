@@ -1,5 +1,4 @@
 import { getCurrentProfil } from '@/lib/data/profils'
-import { getOfficineActive } from '@/lib/data/officine-active'
 import { createClient } from '@/lib/supabase/server'
 import { ProfilForm } from '@/components/profil-form'
 
@@ -10,10 +9,9 @@ export default async function ProfilPage() {
       data: { user },
     },
     profil,
-    officine,
-  ] = await Promise.all([supabase.auth.getUser(), getCurrentProfil(), getOfficineActive()])
+  ] = await Promise.all([supabase.auth.getUser(), getCurrentProfil()])
 
-  if (!profil || !officine || !user) return null
+  if (!profil || !user) return null
 
   return (
     <>
@@ -22,7 +20,6 @@ export default async function ProfilPage() {
         nomComplet={profil.nom_complet}
         initiales={profil.initiales}
         email={user.email ?? ''}
-        role={officine.role}
       />
     </>
   )

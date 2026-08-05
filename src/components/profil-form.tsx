@@ -2,24 +2,15 @@
 
 import { useActionState } from 'react'
 import { modifierProfil } from '@/app/actions/profil'
-import type { Role } from '@/lib/data/profils'
-
-const LABEL_ROLE: Record<Role, string> = {
-  titulaire: 'Titulaire',
-  adjoint: 'Adjoint',
-  preparateur: 'Préparateur',
-}
 
 export function ProfilForm({
   nomComplet,
   initiales,
   email,
-  role,
 }: {
   nomComplet: string
   initiales: string
   email: string
-  role: Role
 }) {
   const [state, action, pending] = useActionState(modifierProfil, undefined)
 
@@ -56,15 +47,6 @@ export function ProfilForm({
         <span className="text-xs font-semibold uppercase tracking-wide text-muted">Email</span>
         <div className="rounded-xl border border-border bg-neutral-soft px-4 py-3 text-[15px] text-muted">
           {email}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted">
-          Rôle dans cette officine
-        </span>
-        <div className="rounded-xl border border-border bg-neutral-soft px-4 py-3 text-[15px] text-muted">
-          {LABEL_ROLE[role]}
         </div>
       </div>
 
