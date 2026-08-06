@@ -5,6 +5,7 @@ import { getMessages } from '@/lib/data/messages'
 import { getTaches } from '@/lib/data/taches'
 import { getRendezVous } from '@/lib/data/rendez-vous'
 import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
+import { getChaussures } from '@/lib/data/chaussures'
 import { getWeekDates, toISODate } from '@/lib/dates'
 
 export default async function AccueilPage() {
@@ -15,14 +16,16 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
-  const [messages, taches, rendezVous, huiles] = await Promise.all([
+  const [messages, taches, rendezVous, huiles, chaussures] = await Promise.all([
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
     getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
     getHuilesEssentielles(officine.officine_id),
+    getChaussures(officine.officine_id),
   ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
+  const chaussuresSansPrix = chaussures.filter((c) => c.prix === null).length
 
   const nonLus = messages.filter(
     (m) => !m.lecteurs.some((l) => l.profil_id === profil?.id)
@@ -98,6 +101,16 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Fournisseurs</div>
             <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+          </div>
+        </Link>
+        <Link
+          href="/chaussures"
+          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+        >
+          <div className="h-7 w-7 rounded-lg bg-brun" />
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Chaussures orthopédiques</div>
+            <div className="mt-0.5 text-[11px] text-muted">{chaussuresSansPrix} sans prix</div>
           </div>
         </Link>
       </div>
