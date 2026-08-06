@@ -9,7 +9,7 @@ const GENRES: { value: GenreChaussure; label: string }[] = [
   { value: 'femme', label: 'Femme' },
   { value: 'homme', label: 'Homme' },
   { value: 'enfant', label: 'Enfant' },
-  { value: 'unisexe', label: 'Unisexe' },
+  { value: 'permanent', label: 'Permanent' },
 ]
 
 function formatPrix(prix: number | null) {
@@ -110,7 +110,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
   const [recherche, setRecherche] = useState('')
 
   const comptes = useMemo(() => {
-    const c: Record<GenreChaussure, number> = { femme: 0, homme: 0, enfant: 0, unisexe: 0 }
+    const c: Record<GenreChaussure, number> = { femme: 0, homme: 0, enfant: 0, permanent: 0 }
     chaussures.forEach((ch) => {
       c[ch.genre] += 1
     })

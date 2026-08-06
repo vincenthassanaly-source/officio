@@ -49,7 +49,7 @@ function mapperGenre(nomBreadcrumb) {
   if (n.includes('femme')) return 'femme'
   if (n.includes('homme')) return 'homme'
   if (n.includes('enfant')) return 'enfant'
-  if (n.includes('unisexe')) return 'unisexe'
+  if (n.includes('permanent')) return 'permanent'
   return null
 }
 
@@ -151,7 +151,8 @@ async function recupererFicheProduit(page, url) {
     // dans l'ordre : fil d'Ariane (souvent "PERMANENT" et non un genre pour le
     // médical/confort/mocassins), description, puis slug de l'URL
     // (ex: /basket-homme/..., /mocassin-femme/...). Si aucune ne donne de genre,
-    // le modèle est classé Unisexe plutôt qu'exclu.
+    // le modèle est classé Permanent plutôt qu'exclu (catalogue permanent du
+    // fournisseur : médical, confort, mocassins... cross-listés dans l'Été).
     function detecterGenre(texte) {
       if (!texte) return null
       const t = texte.toUpperCase()
@@ -165,7 +166,7 @@ async function recupererFicheProduit(page, url) {
       detecterGenre(genreItem ? genreItem.name : null) ??
       detecterGenre(produit.description) ??
       detecterGenre(window.location.pathname) ??
-      'UNISEXE'
+      'PERMANENT'
 
     return {
       nom: produit.name,

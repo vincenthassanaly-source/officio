@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
-export type GenreChaussure = 'femme' | 'homme' | 'enfant' | 'unisexe'
+export type GenreChaussure = 'femme' | 'homme' | 'enfant' | 'permanent'
 
 export type ChaussureModele = {
   id: string
