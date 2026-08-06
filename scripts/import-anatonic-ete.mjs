@@ -49,6 +49,7 @@ function mapperGenre(nomBreadcrumb) {
   if (n.includes('femme')) return 'femme'
   if (n.includes('homme')) return 'homme'
   if (n.includes('enfant')) return 'enfant'
+  if (n.includes('unisexe')) return 'unisexe'
   return null
 }
 
@@ -126,28 +127,52 @@ async function recupererFicheProduit(page, url) {
 
     const items = breadcrumb.itemListElement
     // Certains modèles n'ont pas de sous-catégorie dans le fil d'Ariane
-    // (position 4 = le produit lui-même plutôt qu'une vraie catégorie) :
-    // dans ce cas on déduit la catégorie du premier mot de la description.
+    // (le dernier élément avant le produit est parfois le produit lui-même,
+    // ou un label générique "ETE FEMME"/"PERMANENT") : dans ce cas on déduit
+    // la catégorie du premier mot de la description, puis du slug de l'URL.
     const genreItem = items[2]
-    const categorieItem = items[3] && items[3].name !== produit.name ? items[3].name : null
-    const categorieDeduite = produit.description ? produit.description.trim().split(/\s+/)[0] : null
+    const avantDernier = items.length >= 2 ? items[items.length - 2] : null
+    const estLabelGenerique = (nom) => /^(ETE|ACCUEIL|PERMANENT)( FEMME| HOMME| ENFANT)?$/i.test(nom.trim())
+    const categorieItem =
+      avantDernier && avantDernier.name !== produit.name && !estLabelGenerique(avantDernier.name)
+        ? avantDernier.name
+        : null
+    const premierMotDescription = produit.description ? produit.description.trim().split(/\s+/)[0] : null
+    const categorieDeduite = premierMotDescription && /[A-Za-zÀ-ÿ]/.test(premierMotDescription)
+      ? premierMotDescription
+      : null
+    const segmentUrl = window.location.pathname.split('/').filter(Boolean)[0] ?? ''
+    const categorieDepuisUrl =
+      /^[a-z]/i.test(segmentUrl) && !estLabelGenerique(segmentUrl.replace(/-/g, ' '))
+        ? segmentUrl.replace(/-/g, ' ').toUpperCase()
+        : null
 
-    // Quelques fiches orphelines n'ont aucun fil d'Ariane au-delà du nom :
-    // on tente de retrouver le genre dans la description du produit.
-    let genreLabel = genreItem ? genreItem.name : null
-    if (!genreLabel && produit.description) {
-      const d = produit.description.toUpperCase()
-      if (d.includes('FEMME') || d.includes('FILLETTE')) genreLabel = 'FEMME'
-      else if (d.includes('HOMME') || d.includes('GARCON') || d.includes('GARÇON')) genreLabel = 'HOMME'
-      else if (d.includes('ENFANT')) genreLabel = 'ENFANT'
+    // On cherche un genre reconnu (femme/homme/enfant) dans plusieurs sources,
+    // dans l'ordre : fil d'Ariane (souvent "PERMANENT" et non un genre pour le
+    // médical/confort/mocassins), description, puis slug de l'URL
+    // (ex: /basket-homme/..., /mocassin-femme/...). Si aucune ne donne de genre,
+    // le modèle est classé Unisexe plutôt qu'exclu.
+    function detecterGenre(texte) {
+      if (!texte) return null
+      const t = texte.toUpperCase()
+      if (t.includes('FEMME') || t.includes('FILLETTE')) return 'FEMME'
+      if (t.includes('HOMME') || t.includes('GARCON') || t.includes('GARÇON')) return 'HOMME'
+      if (t.includes('ENFANT')) return 'ENFANT'
+      return null
     }
+
+    const genreLabel =
+      detecterGenre(genreItem ? genreItem.name : null) ??
+      detecterGenre(produit.description) ??
+      detecterGenre(window.location.pathname) ??
+      'UNISEXE'
 
     return {
       nom: produit.name,
       reference: produit.sku ?? null,
       photoUrl: produit.image ? produit.image.replace('home_default', 'large_default') : null,
       genreLabel,
-      categorie: categorieItem ?? categorieDeduite ?? 'Autre',
+      categorie: categorieItem ?? categorieDeduite ?? categorieDepuisUrl ?? 'Autre',
     }
   })
 }
