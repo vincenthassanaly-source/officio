@@ -90,6 +90,16 @@ export default async function AccueilPage() {
             <div className="mt-0.5 text-[11px] text-muted">{huilesACommander} à commander</div>
           </div>
         </Link>
+        <Link
+          href="/fournisseurs"
+          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+        >
+          <div className="h-7 w-7 rounded-lg bg-accent" />
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Fournisseurs</div>
+            <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+          </div>
+        </Link>
       </div>
     </>
   )
