@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 
 export type GenreChaussure = 'femme' | 'homme' | 'enfant' | 'permanent'
 
+export type RayonChaussure = 'ÉTÉ' | 'HIVER' | 'PERMANENT' | 'FINS DE SÉRIE'
+
 export type ChaussureVariante = {
   id: string
   couleur: string
@@ -13,6 +15,7 @@ export type ChaussureModele = {
   nom_modele: string
   description: string | null
   genre: GenreChaussure
+  rayon: RayonChaussure
   categorie: string
   reference: string | null
   pointures: string[] | null
@@ -27,7 +30,7 @@ export async function getChaussures(officineId: string): Promise<ChaussureModele
   const { data, error } = await supabase
     .from('chaussures_orthopediques')
     .select(
-      'id, nom_modele, description, genre, categorie, reference, pointures, prix, photo_url, variantes:chaussures_variantes(id, couleur, photo_url)'
+      'id, nom_modele, description, genre, rayon, categorie, reference, pointures, prix, photo_url, variantes:chaussures_variantes(id, couleur, photo_url)'
     )
     .eq('officine_id', officineId)
     .order('categorie', { ascending: true })

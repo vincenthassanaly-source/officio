@@ -3,13 +3,15 @@
 import { useMemo, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { modifierPrixChaussure } from '@/app/actions/chaussures'
-import type { ChaussureModele, GenreChaussure } from '@/lib/data/chaussures'
+import type { ChaussureModele, GenreChaussure, RayonChaussure } from '@/lib/data/chaussures'
+
+const RAYONS: RayonChaussure[] = ['ÉTÉ', 'HIVER', 'PERMANENT', 'FINS DE SÉRIE']
 
 const GENRES: { value: GenreChaussure; label: string }[] = [
   { value: 'femme', label: 'Femme' },
   { value: 'homme', label: 'Homme' },
   { value: 'enfant', label: 'Enfant' },
-  { value: 'permanent', label: 'Permanent' },
+  { value: 'permanent', label: 'Autre' },
 ]
 
 function formatPrix(prix: number | null) {
@@ -205,23 +207,36 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 }
 
 export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModele[] }) {
-  const [genre, setGenre] = useState<GenreChaussure>('femme')
+  const [rayon, setRayon] = useState<RayonChaussure>('ÉTÉ')
+  const [genre, setGenre] = useState<GenreChaussure | null>(null)
   const [recherche, setRecherche] = useState('')
   const [chaussureOuverteId, setChaussureOuverteId] = useState<string | null>(null)
   const chaussureOuverte = chaussures.find((ch) => ch.id === chaussureOuverteId) ?? null
 
-  const comptes = useMemo(() => {
-    const c: Record<GenreChaussure, number> = { femme: 0, homme: 0, enfant: 0, permanent: 0 }
+  const comptesRayon = useMemo(() => {
+    const c: Record<RayonChaussure, number> = { 'ÉTÉ': 0, HIVER: 0, PERMANENT: 0, 'FINS DE SÉRIE': 0 }
     chaussures.forEach((ch) => {
-      c[ch.genre] += 1
+      c[ch.rayon] += 1
     })
     return c
   }, [chaussures])
 
+  const chaussuresDuRayon = useMemo(() => chaussures.filter((ch) => ch.rayon === rayon), [chaussures, rayon])
+
+  const genresDisponibles = useMemo(() => {
+    const c: Partial<Record<GenreChaussure, number>> = {}
+    chaussuresDuRayon.forEach((ch) => {
+      c[ch.genre] = (c[ch.genre] ?? 0) + 1
+    })
+    return GENRES.filter((g) => c[g.value]).map((g) => ({ ...g, compte: c[g.value] ?? 0 }))
+  }, [chaussuresDuRayon])
+
+  const genreActif = genre && genresDisponibles.some((g) => g.value === genre) ? genre : (genresDisponibles[0]?.value ?? null)
+
   const groupes = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
-    const visibles = chaussures
-      .filter((ch) => ch.genre === genre)
+    const visibles = chaussuresDuRayon
+      .filter((ch) => ch.genre === genreActif)
       .filter(
         (ch) =>
           !rechercheNormalisee ||
@@ -236,33 +251,60 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
       parCategorie.set(ch.categorie, liste)
     }
     return [...parCategorie.entries()].sort(([a], [b]) => a.localeCompare(b))
-  }, [chaussures, genre, recherche])
+  }, [chaussuresDuRayon, genreActif, recherche])
 
   const totalVisible = groupes.reduce((somme, [, liste]) => somme + liste.length, 0)
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex gap-1.5">
-        {GENRES.map((g) => (
+      <div className="flex gap-1.5 overflow-x-auto">
+        {RAYONS.map((r) => (
           <button
             type="button"
-            key={g.value}
-            onClick={() => setGenre(g.value)}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-              genre === g.value ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
+            key={r}
+            onClick={() => {
+              setRayon(r)
+              setGenre(null)
+            }}
+            className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+              rayon === r ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
             }`}
           >
-            {g.label}
+            {r}
             <span
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9.5px] font-bold ${
-                genre === g.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
+              className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold ${
+                rayon === r ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
               }`}
             >
-              {comptes[g.value]}
+              {comptesRayon[r]}
             </span>
           </button>
         ))}
       </div>
+
+      {genresDisponibles.length > 1 && (
+        <div className="flex gap-1.5">
+          {genresDisponibles.map((g) => (
+            <button
+              type="button"
+              key={g.value}
+              onClick={() => setGenre(g.value)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                genreActif === g.value ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
+              }`}
+            >
+              {g.label}
+              <span
+                className={`flex h-4 w-4 items-center justify-center rounded-full text-[9.5px] font-bold ${
+                  genreActif === g.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
+                }`}
+              >
+                {g.compte}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <input
         value={recherche}
