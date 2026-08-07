@@ -170,12 +170,91 @@ async function recupererFicheProduit(page, url) {
 
     return {
       nom: produit.name,
+      description: produit.description ? produit.description.trim() : null,
       reference: produit.sku ?? null,
       photoUrl: produit.image ? produit.image.replace('home_default', 'large_default') : null,
       genreLabel,
       categorie: categorieItem ?? categorieDeduite ?? categorieDepuisUrl ?? 'Autre',
     }
   })
+}
+
+// Lit les blocs "Taille" / "Couleur" du sélecteur de variantes (select ou
+// radios selon le produit) pour récupérer la liste des pointures et la liste
+// des couleurs disponibles (avec de quoi re-sélectionner chacune ensuite).
+async function recupererGroupesVariantes(page) {
+  return page.evaluate(() => {
+    const groupes = Array.from(document.querySelectorAll('.product-variants-item'))
+    let pointures = []
+    const couleurs = []
+
+    for (const groupe of groupes) {
+      const label = (groupe.querySelector('.control-label')?.textContent ?? '').trim().toLowerCase()
+      const select = groupe.querySelector('select[data-product-attribute]')
+      const radios = Array.from(groupe.querySelectorAll('input[type="radio"][data-product-attribute]'))
+      const estTaille = label.includes('taille') || label.includes('pointure')
+      const estCouleur = label.includes('couleur')
+
+      if (estTaille) {
+        if (select) {
+          pointures = Array.from(select.options)
+            .map((o) => o.textContent.trim())
+            .filter(Boolean)
+        } else if (radios.length) {
+          pointures = radios.map((r) => (r.title || r.value).trim())
+        }
+      } else if (estCouleur) {
+        if (select) {
+          const groupId = select.getAttribute('data-product-attribute')
+          Array.from(select.options).forEach((o) => {
+            if (o.value) couleurs.push({ type: 'select', groupId, value: o.value, nom: o.textContent.trim() })
+          })
+        } else if (radios.length) {
+          const groupId = radios[0].getAttribute('data-product-attribute')
+          radios.forEach((r) => {
+            couleurs.push({ type: 'radio', groupId, value: r.value, nom: (r.title || r.value).trim() })
+          })
+        }
+      }
+    }
+
+    return { pointures, couleurs }
+  })
+}
+
+async function selectionnerVariante(page, variante) {
+  if (variante.type === 'select') {
+    await page.selectOption(`select[data-product-attribute="${variante.groupId}"]`, variante.value)
+  } else {
+    await page.click(`input[type="radio"][data-product-attribute="${variante.groupId}"][value="${variante.value}"]`)
+  }
+  await page.waitForTimeout(400)
+}
+
+async function lireImagePrincipale(page) {
+  return page.evaluate(() => {
+    const img = document.querySelector('.wrapper-imgs img.img-responsive')
+    return img ? (img.currentSrc || img.src) : null
+  })
+}
+
+// Sélectionne successivement chaque couleur disponible pour récupérer sa
+// photo. Si le produit n'a qu'une seule couleur (pas de sélecteur), on
+// n'ajoute pas de variante : la photo de couverture suffit.
+async function recupererPhotosParCouleur(page, couleurs) {
+  const variantes = []
+  for (const couleur of couleurs) {
+    try {
+      await selectionnerVariante(page, couleur)
+      const photoUrl = await lireImagePrincipale(page)
+      if (photoUrl) {
+        variantes.push({ couleur: couleur.nom, photoUrl: photoUrl.replace('home_default', 'large_default') })
+      }
+    } catch (err) {
+      console.warn(`  Couleur "${couleur.nom}" ignorée :`, err.message)
+    }
+  }
+  return variantes
 }
 
 async function telechargerImage(url) {
@@ -195,6 +274,18 @@ function slugifier(texte) {
     .replace(/(^-|-$)/g, '')
 }
 
+async function telechargerEtStocker(officineId, nomFichier, photoUrl) {
+  const { buffer, contentType } = await telechargerImage(photoUrl)
+  const extension = contentType.includes('png') ? 'png' : 'jpg'
+  const chemin = `${officineId}/${nomFichier}-${crypto.randomUUID().slice(0, 8)}.${extension}`
+
+  const { error: erreurUpload } = await supabase.storage.from('chaussures').upload(chemin, buffer, { contentType })
+  if (erreurUpload) throw new Error(`Upload photo : ${erreurUpload.message}`)
+
+  const { data: urlPublique } = supabase.storage.from('chaussures').getPublicUrl(chemin)
+  return urlPublique.publicUrl
+}
+
 async function main() {
   const { data: officine, error: erreurOfficine } = await supabase
     .from('officines')
@@ -211,7 +302,7 @@ async function main() {
 
   const { data: existants, error: erreurExistants } = await supabase
     .from('chaussures_orthopediques')
-    .select('url_source')
+    .select('id, url_source')
     .eq('officine_id', officineId)
 
   if (erreurExistants) {
@@ -219,7 +310,7 @@ async function main() {
     process.exit(1)
   }
 
-  const urlsDejaImportees = new Set((existants ?? []).map((r) => r.url_source))
+  const fichesExistantes = new Map((existants ?? []).map((r) => [r.url_source, r.id]))
 
   const navigateur = await chromium.launch()
   const contexte = await navigateur.newContext({ userAgent: USER_AGENT })
@@ -232,16 +323,12 @@ async function main() {
   const limite = process.env.IMPORT_LIMIT ? Number(process.env.IMPORT_LIMIT) : null
   if (limite) urlsProduits = urlsProduits.slice(0, limite)
 
-  let importes = 0
-  let ignores = 0
+  let crees = 0
+  let misAJour = 0
+  let variantesAjoutees = 0
   let erreurs = 0
 
   for (const [index, url] of urlsProduits.entries()) {
-    if (urlsDejaImportees.has(url)) {
-      ignores += 1
-      continue
-    }
-
     try {
       const fiche = await recupererFicheProduit(page, url)
       if (!fiche || !fiche.nom || !fiche.photoUrl || !fiche.genreLabel) {
@@ -257,33 +344,73 @@ async function main() {
         continue
       }
 
-      const { buffer, contentType } = await telechargerImage(fiche.photoUrl)
-      const extension = contentType.includes('png') ? 'png' : 'jpg'
-      const chemin = `${officineId}/${slugifier(fiche.nom)}-${crypto.randomUUID().slice(0, 8)}.${extension}`
+      const { pointures, couleurs } = await recupererGroupesVariantes(page)
 
-      const { error: erreurUpload } = await supabase.storage
-        .from('chaussures')
-        .upload(chemin, buffer, { contentType })
+      let chaussureId = fichesExistantes.get(url)
+      const dejaExistante = Boolean(chaussureId)
 
-      if (erreurUpload) throw new Error(`Upload photo : ${erreurUpload.message}`)
+      if (chaussureId) {
+        const { error: erreurUpdate } = await supabase
+          .from('chaussures_orthopediques')
+          .update({ description: fiche.description, pointures })
+          .eq('id', chaussureId)
 
-      const { data: urlPublique } = supabase.storage.from('chaussures').getPublicUrl(chemin)
+        if (erreurUpdate) throw new Error(`Mise à jour fiche : ${erreurUpdate.message}`)
+        misAJour += 1
+      } else {
+        const photoUrl = await telechargerEtStocker(officineId, slugifier(fiche.nom), fiche.photoUrl)
 
-      const { error: erreurInsert } = await supabase.from('chaussures_orthopediques').insert({
-        officine_id: officineId,
-        nom_modele: fiche.nom,
-        genre,
-        categorie: fiche.categorie,
-        reference: fiche.reference,
-        prix: null,
-        photo_url: urlPublique.publicUrl,
-        url_source: url,
-      })
+        const { data: nouvelleFiche, error: erreurInsert } = await supabase
+          .from('chaussures_orthopediques')
+          .insert({
+            officine_id: officineId,
+            nom_modele: fiche.nom,
+            description: fiche.description,
+            pointures,
+            genre,
+            categorie: fiche.categorie,
+            reference: fiche.reference,
+            prix: null,
+            photo_url: photoUrl,
+            url_source: url,
+          })
+          .select('id')
+          .single()
 
-      if (erreurInsert) throw new Error(`Insertion fiche : ${erreurInsert.message}`)
+        if (erreurInsert) throw new Error(`Insertion fiche : ${erreurInsert.message}`)
+        chaussureId = nouvelleFiche.id
+        crees += 1
+      }
 
-      importes += 1
-      console.log(`[${index + 1}/${urlsProduits.length}] Importé : ${fiche.nom} (${genre} / ${fiche.categorie})`)
+      const variantes = await recupererPhotosParCouleur(page, couleurs)
+      for (const variante of variantes) {
+        try {
+          const photoUrl = await telechargerEtStocker(
+            officineId,
+            `${slugifier(fiche.nom)}-${slugifier(variante.couleur)}`,
+            variante.photoUrl
+          )
+
+          const { error: erreurVariante } = await supabase.from('chaussures_variantes').upsert(
+            {
+              officine_id: officineId,
+              chaussure_id: chaussureId,
+              couleur: variante.couleur,
+              photo_url: photoUrl,
+            },
+            { onConflict: 'chaussure_id,couleur', ignoreDuplicates: true }
+          )
+
+          if (erreurVariante) throw new Error(erreurVariante.message)
+          variantesAjoutees += 1
+        } catch (err) {
+          console.warn(`  Variante "${variante.couleur}" ignorée :`, err.message)
+        }
+      }
+
+      console.log(
+        `[${index + 1}/${urlsProduits.length}] ${dejaExistante ? 'Mis à jour' : 'Créé'} : ${fiche.nom} (${genre} / ${fiche.categorie}) — ${variantes.length} couleur(s), ${pointures.length} pointure(s)`
+      )
     } catch (err) {
       erreurs += 1
       console.error(`[${index + 1}/${urlsProduits.length}] Erreur sur ${url} :`, err.message)
@@ -295,8 +422,9 @@ async function main() {
   await navigateur.close()
 
   console.log('\n--- Import terminé ---')
-  console.log(`Importés : ${importes}`)
-  console.log(`Déjà présents (ignorés) : ${ignores}`)
+  console.log(`Fiches créées : ${crees}`)
+  console.log(`Fiches mises à jour : ${misAJour}`)
+  console.log(`Variantes couleur ajoutées : ${variantesAjoutees}`)
   console.log(`Erreurs : ${erreurs}`)
 }
 

@@ -73,10 +73,10 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
   )
 }
 
-function ChaussureCarte({ chaussure }: { chaussure: ChaussureModele }) {
+function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; onOuvrir: () => void }) {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface">
-      <div className="relative aspect-square w-full bg-neutral-soft">
+      <button type="button" onClick={onOuvrir} className="relative aspect-square w-full bg-neutral-soft">
         {chaussure.photo_url ? (
           <Image
             src={chaussure.photo_url}
@@ -88,9 +88,11 @@ function ChaussureCarte({ chaussure }: { chaussure: ChaussureModele }) {
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-muted">Pas de photo</div>
         )}
-      </div>
+      </button>
       <div className="flex flex-col gap-1 p-2.5">
-        <div className="truncate text-[13px] font-semibold text-ink">{chaussure.nom_modele}</div>
+        <button type="button" onClick={onOuvrir} className="truncate text-left text-[13px] font-semibold text-ink">
+          {chaussure.nom_modele}
+        </button>
         <div className="truncate text-[10.5px] font-medium uppercase tracking-wide text-muted">
           {chaussure.categorie}
         </div>
@@ -105,9 +107,108 @@ function ChaussureCarte({ chaussure }: { chaussure: ChaussureModele }) {
   )
 }
 
+function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; onFermer: () => void }) {
+  const photos = chaussure.variantes.length > 0 ? chaussure.variantes : null
+  const [couleurIndex, setCouleurIndex] = useState(0)
+
+  const photoAffichee = photos ? photos[couleurIndex]?.photo_url : chaussure.photo_url
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center">
+      <button
+        type="button"
+        aria-label="Fermer"
+        onClick={onFermer}
+        className="absolute inset-0"
+      />
+      <div className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl">
+        <button
+          type="button"
+          onClick={onFermer}
+          aria-label="Fermer"
+          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white"
+        >
+          ×
+        </button>
+
+        <div className="relative aspect-square w-full shrink-0 bg-neutral-soft">
+          {photoAffichee ? (
+            <Image src={photoAffichee} alt={chaussure.nom_modele} fill sizes="512px" className="object-cover" />
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs text-muted">Pas de photo</div>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-3 p-4">
+          <div>
+            <div className="font-heading text-lg text-ink">{chaussure.nom_modele}</div>
+            <div className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+              {chaussure.categorie}
+            </div>
+            {chaussure.reference && (
+              <div className="mt-0.5 font-mono text-[11px] text-muted">Réf. {chaussure.reference}</div>
+            )}
+          </div>
+
+          {photos && photos.length > 1 && (
+            <div className="flex flex-col gap-1.5">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Couleurs</div>
+              <div className="flex gap-2 overflow-x-auto">
+                {photos.map((variante, index) => (
+                  <button
+                    key={variante.id}
+                    type="button"
+                    onClick={() => setCouleurIndex(index)}
+                    title={variante.couleur}
+                    className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 ${
+                      index === couleurIndex ? 'border-primary' : 'border-border'
+                    }`}
+                  >
+                    <Image src={variante.photo_url} alt={variante.couleur} fill sizes="56px" className="object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {chaussure.pointures && chaussure.pointures.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Pointures</div>
+              <div className="flex flex-wrap gap-1.5">
+                {chaussure.pointures.map((pointure) => (
+                  <span
+                    key={pointure}
+                    className="rounded-full bg-neutral-soft px-2.5 py-1 text-[11.5px] font-semibold text-ink"
+                  >
+                    {pointure}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {chaussure.description && (
+            <div className="flex flex-col gap-1.5">
+              <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Description</div>
+              <p className="text-[13px] leading-relaxed text-ink">{chaussure.description}</p>
+            </div>
+          )}
+
+          <div>
+            <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-muted">Prix</div>
+            <PrixEditable chaussure={chaussure} />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModele[] }) {
   const [genre, setGenre] = useState<GenreChaussure>('femme')
   const [recherche, setRecherche] = useState('')
+  const [chaussureOuverteId, setChaussureOuverteId] = useState<string | null>(null)
+  const chaussureOuverte = chaussures.find((ch) => ch.id === chaussureOuverteId) ?? null
 
   const comptes = useMemo(() => {
     const c: Record<GenreChaussure, number> = { femme: 0, homme: 0, enfant: 0, permanent: 0 }
@@ -182,12 +283,20 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
             </div>
             <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
               {liste.map((ch) => (
-                <ChaussureCarte key={ch.id} chaussure={ch} />
+                <ChaussureCarte key={ch.id} chaussure={ch} onOuvrir={() => setChaussureOuverteId(ch.id)} />
               ))}
             </div>
           </div>
         ))}
       </div>
+
+      {chaussureOuverte && (
+        <ChaussureDetail
+          key={chaussureOuverte.id}
+          chaussure={chaussureOuverte}
+          onFermer={() => setChaussureOuverteId(null)}
+        />
+      )}
     </div>
   )
 }
