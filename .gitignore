@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# scraping intermediate output (voir scripts/verify-import-anatonic.mjs)
+/scripts/output/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
