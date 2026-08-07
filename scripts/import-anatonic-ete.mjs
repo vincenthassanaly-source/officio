@@ -207,12 +207,14 @@ async function recupererGroupesVariantes(page) {
         if (select) {
           const groupId = select.getAttribute('data-product-attribute')
           Array.from(select.options).forEach((o) => {
-            if (o.value) couleurs.push({ type: 'select', groupId, value: o.value, nom: o.textContent.trim() })
+            if (o.value) {
+              couleurs.push({ type: 'select', groupId, value: o.value, nom: o.textContent.trim(), parDefaut: o.selected })
+            }
           })
         } else if (radios.length) {
           const groupId = radios[0].getAttribute('data-product-attribute')
           radios.forEach((r) => {
-            couleurs.push({ type: 'radio', groupId, value: r.value, nom: (r.title || r.value).trim() })
+            couleurs.push({ type: 'radio', groupId, value: r.value, nom: (r.title || r.value).trim(), parDefaut: r.checked })
           })
         }
       }
@@ -222,39 +224,97 @@ async function recupererGroupesVariantes(page) {
   })
 }
 
-async function selectionnerVariante(page, variante) {
-  if (variante.type === 'select') {
-    await page.selectOption(`select[data-product-attribute="${variante.groupId}"]`, variante.value)
-  } else {
-    await page.click(`input[type="radio"][data-product-attribute="${variante.groupId}"][value="${variante.value}"]`)
-  }
-  await page.waitForTimeout(400)
-}
+// Cliquer une couleur puis relire l'image affichée est peu fiable : le site
+// met parfois plus de temps que prévu à faire apparaître la bonne photo, et
+// on risque de capturer une image intermédiaire (même photo pour deux
+// couleurs différentes). Le site charge en réalité chaque couleur via un
+// appel réseau (`controller=product&...&group[X]=valeur`) qui renvoie la
+// bonne photo dans sa réponse : on lit directement cette réponse plutôt que
+// l'affichage, ce qui est fiable quel que soit le temps de rendu.
+async function selectionnerCouleurEtLireImage(page, couleur) {
+  const motif = `group%5B${couleur.groupId}%5D=${couleur.value}`
 
-async function lireImagePrincipale(page) {
-  return page.evaluate(() => {
-    const img = document.querySelector('.wrapper-imgs img.img-responsive')
-    return img ? (img.currentSrc || img.src) : null
-  })
+  const [reponse] = await Promise.all([
+    page.waitForResponse(
+      (res) => res.url().includes('controller=product') && res.url().includes(motif),
+      { timeout: 8000 }
+    ),
+    couleur.type === 'select'
+      ? page.selectOption(`select[data-product-attribute="${couleur.groupId}"]`, couleur.value)
+      : page.click(`input[type="radio"][data-product-attribute="${couleur.groupId}"][value="${couleur.value}"]`),
+  ])
+
+  const corps = await reponse.json()
+  const html = corps.product_cover_thumbnails ?? ''
+  const correspondance = html.match(/<img[^>]+src="([^"]+)"/)
+  return correspondance ? correspondance[1].replace('home_default', 'large_default') : null
 }
 
 // Sélectionne successivement chaque couleur disponible pour récupérer sa
-// photo. Si le produit n'a qu'une seule couleur (pas de sélecteur), on
-// n'ajoute pas de variante : la photo de couverture suffit.
-async function recupererPhotosParCouleur(page, couleurs) {
+// photo, en s'appuyant sur la réponse réseau de chaque changement (fiable,
+// contrairement à l'affichage). Cliquer un radio déjà coché ne déclenche
+// généralement aucun évènement : la couleur par défaut (sélectionnée à
+// l'ouverture de la page) est donc traitée en dernier, après qu'on s'en
+// soit déjà écarté au moins une fois, pour garantir un vrai changement
+// d'état à chaque clic — y compris pour elle.
+// Exception : s'il n'y a qu'une seule couleur au total, il n'y a rien à
+// cliquer et on utilise directement la photo de couverture déjà connue.
+async function recupererPhotosParCouleur(page, couleurs, photoParDefaut) {
+  if (couleurs.length === 0) return []
+
+  if (couleurs.length === 1) {
+    return photoParDefaut ? [{ couleur: couleurs[0].nom, photoUrl: photoParDefaut }] : []
+  }
+
+  const indexParDefaut = couleurs.findIndex((c) => c.parDefaut)
+  const ordre =
+    indexParDefaut > -1
+      ? [...couleurs.slice(0, indexParDefaut), ...couleurs.slice(indexParDefaut + 1), couleurs[indexParDefaut]]
+      : couleurs
+
   const variantes = []
-  for (const couleur of couleurs) {
+  for (const couleur of ordre) {
     try {
-      await selectionnerVariante(page, couleur)
-      const photoUrl = await lireImagePrincipale(page)
+      const photoUrl = await selectionnerCouleurEtLireImage(page, couleur)
       if (photoUrl) {
-        variantes.push({ couleur: couleur.nom, photoUrl: photoUrl.replace('home_default', 'large_default') })
+        variantes.push({ couleur, nom: couleur.nom, photoUrl })
+      } else {
+        console.warn(`  Couleur "${couleur.nom}" ignorée : photo introuvable dans la réponse`)
       }
     } catch (err) {
       console.warn(`  Couleur "${couleur.nom}" ignorée :`, err.message)
     }
   }
-  return variantes
+
+  // Le site renvoie parfois, y compris dans la réponse réseau elle-même, la
+  // photo d'une couleur précédente plutôt que la bonne (bug côté fournisseur,
+  // pas seulement un temps de rendu) : on revérifie les doublons plusieurs
+  // fois en repassant par une couleur neutre avant de recliquer la couleur
+  // suspecte, ce qui limite (sans l'éliminer totalement) le risque de photo
+  // erronée.
+  for (let passe = 0; passe < 3; passe += 1) {
+    const photosVues = new Map()
+    let unDoublonSubsiste = false
+
+    for (const variante of variantes) {
+      if (photosVues.has(variante.photoUrl)) {
+        unDoublonSubsiste = true
+        try {
+          const couleurNeutre = ordre.find((c) => c !== variante.couleur) ?? ordre[0]
+          await selectionnerCouleurEtLireImage(page, couleurNeutre)
+          const relecture = await selectionnerCouleurEtLireImage(page, variante.couleur)
+          if (relecture) variante.photoUrl = relecture
+        } catch {
+          // on garde la photo déjà capturée si la revérification échoue
+        }
+      }
+      photosVues.set(variante.photoUrl, true)
+    }
+
+    if (!unDoublonSubsiste) break
+  }
+
+  return variantes.map(({ nom, photoUrl }) => ({ couleur: nom, photoUrl }))
 }
 
 async function telechargerImage(url) {
@@ -382,7 +442,7 @@ async function main() {
         crees += 1
       }
 
-      const variantes = await recupererPhotosParCouleur(page, couleurs)
+      const variantes = await recupererPhotosParCouleur(page, couleurs, fiche.photoUrl)
       for (const variante of variantes) {
         try {
           const photoUrl = await telechargerEtStocker(
