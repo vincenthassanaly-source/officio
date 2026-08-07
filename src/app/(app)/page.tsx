@@ -6,6 +6,7 @@ import { getTaches } from '@/lib/data/taches'
 import { getRendezVous } from '@/lib/data/rendez-vous'
 import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
 import { getChaussures } from '@/lib/data/chaussures'
+import { getCnoPatients } from '@/lib/data/cno'
 import { getWeekDates, toISODate } from '@/lib/dates'
 
 export default async function AccueilPage() {
@@ -16,12 +17,13 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
-  const [messages, taches, rendezVous, huiles, chaussures] = await Promise.all([
+  const [messages, taches, rendezVous, huiles, chaussures, patientsCno] = await Promise.all([
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
     getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
     getHuilesEssentielles(officine.officine_id),
     getChaussures(officine.officine_id),
+    getCnoPatients(officine.officine_id),
   ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
@@ -111,6 +113,16 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Chaussures orthopédiques</div>
             <div className="mt-0.5 text-[11px] text-muted">{chaussuresSansPrix} sans prix</div>
+          </div>
+        </Link>
+        <Link
+          href="/suivi-cno"
+          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+        >
+          <div className="h-7 w-7 rounded-lg bg-green" />
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Suivi CNO</div>
+            <div className="mt-0.5 text-[11px] text-muted">{patientsCno.length} patients suivis</div>
           </div>
         </Link>
       </div>
