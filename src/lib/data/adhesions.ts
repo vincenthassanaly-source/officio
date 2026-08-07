@@ -10,9 +10,15 @@ export type Adhesion = {
 
 export const getMesAdhesions = cache(async (): Promise<Adhesion[]> => {
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return []
+
   const { data, error } = await supabase
     .from('adhesions')
     .select('officine_id, role, officines ( nom )')
+    .eq('profil_id', user.id)
     .order('created_at', { ascending: true })
 
   if (error) {

@@ -10,8 +10,8 @@ import type { HuileEssentielle, StatutHuile } from '@/lib/data/huiles-essentiell
 
 const STATUTS: { value: StatutHuile; label: string }[] = [
   { value: 'en_stock', label: 'En stock' },
-  { value: 'en_commande', label: 'En commande' },
   { value: 'a_commander', label: 'À commander' },
+  { value: 'en_commande', label: 'En commande' },
 ]
 
 const CHAMP_CLASS =
