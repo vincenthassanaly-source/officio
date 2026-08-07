@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { creerTache, toggleTache } from '@/app/actions/taches'
+import { creerTache, toggleTache, supprimerTache } from '@/app/actions/taches'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
 
@@ -128,41 +128,58 @@ export function TachesList({
         {visibles.map((t) => {
           const due = dueInfo(t)
           return (
-            <button
-              type="button"
+            <div
               key={t.id}
-              onClick={() => startTransition(() => toggleTache(t.id, t.statut))}
-              disabled={isPending}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 text-left disabled:opacity-70"
+              className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-3.5"
             >
-              <div
-                className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
-                  t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
-                }`}
+              <button
+                type="button"
+                onClick={() => startTransition(() => toggleTache(t.id, t.statut))}
+                disabled={isPending}
+                className="flex flex-1 items-center gap-3 text-left disabled:opacity-70"
               >
-                {t.statut === 'fait' && <span className="text-xs font-bold text-white">✓</span>}
-              </div>
-              <div className="min-w-0 flex-1">
                 <div
-                  className={`text-sm font-semibold ${
-                    t.statut === 'fait' ? 'text-muted line-through' : 'text-ink'
+                  className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
+                    t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
                   }`}
                 >
-                  {t.titre}
+                  {t.statut === 'fait' && <span className="text-xs font-bold text-white">✓</span>}
                 </div>
-                {t.assigne && (
-                  <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted">
-                    <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-primary text-[8.5px] font-bold text-white">
-                      {t.assigne.initiales}
-                    </span>
-                    {t.assigne.nom_complet}
+                <div className="min-w-0 flex-1">
+                  <div
+                    className={`text-sm font-semibold ${
+                      t.statut === 'fait' ? 'text-muted line-through' : 'text-ink'
+                    }`}
+                  >
+                    {t.titre}
                   </div>
-                )}
-              </div>
-              <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
-                {due.label}
-              </span>
-            </button>
+                  {t.assigne && (
+                    <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted">
+                      <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-primary text-[8.5px] font-bold text-white">
+                        {t.assigne.initiales}
+                      </span>
+                      {t.assigne.nom_complet}
+                    </div>
+                  )}
+                </div>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
+                  {due.label}
+                </span>
+              </button>
+              <button
+                type="button"
+                disabled={isPending}
+                onClick={() => {
+                  if (confirm(`Supprimer la tâche « ${t.titre} » ?`)) {
+                    startTransition(() => supprimerTache(t.id))
+                  }
+                }}
+                aria-label="Supprimer la tâche"
+                className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+              >
+                ×
+              </button>
+            </div>
           )
         })}
       </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from './actions'
 import { ajouterOuMettreAJourCompte } from '@/lib/comptes-appareil'
@@ -8,6 +8,7 @@ import { ajouterOuMettreAJourCompte } from '@/lib/comptes-appareil'
 export function LoginForm() {
   const router = useRouter()
   const [state, action, pending] = useActionState(signIn, undefined)
+  const [email, setEmail] = useState('')
   const traite = useRef(false)
 
   const succes = state && 'success' in state && state.success ? state : null
@@ -41,6 +42,8 @@ export function LoginForm() {
           type="email"
           required
           autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
           placeholder="prenom@pharmacie-romevillage.fr"
         />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { envoyerMessage, marquerLu } from '@/app/actions/liaison'
+import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 
 const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
@@ -67,6 +67,21 @@ export function FilDeMessages({
                 >
                   {cat.label}
                 </span>
+                {m.auteur?.id === profilActuelId && (
+                  <button
+                    type="button"
+                    disabled={isPending}
+                    onClick={() => {
+                      if (confirm('Supprimer ce message ?')) {
+                        startTransition(() => supprimerMessage(m.id))
+                      }
+                    }}
+                    aria-label="Supprimer le message"
+                    className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
 
               <p className="text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>

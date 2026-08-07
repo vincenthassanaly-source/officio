@@ -16,12 +16,45 @@ export async function envoyerMessage(formData: FormData) {
   if (!profil || !officine) throw new Error('Non connecté')
 
   const supabase = await createClient()
-  const { error } = await supabase.from('messages').insert({
-    officine_id: officine.officine_id,
-    auteur_id: profil.id,
-    contenu,
-    categorie,
-  })
+  const { data: message, error } = await supabase
+    .from('messages')
+    .insert({
+      officine_id: officine.officine_id,
+      auteur_id: profil.id,
+      contenu,
+      categorie,
+    })
+    .select('id')
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  await supabase
+    .from('messages_lus')
+    .upsert({ message_id: message.id, profil_id: profil.id }, { onConflict: 'message_id,profil_id' })
+
+  revalidatePath('/')
+}
+
+export async function supprimerMessage(messageId: string) {
+  const profil = await getCurrentProfil()
+  if (!profil) throw new Error('Non connecté')
+
+  const supabase = await createClient()
+
+  const { data: message } = await supabase
+    .from('messages')
+    .select('auteur_id')
+    .eq('id', messageId)
+    .single()
+
+  if (!message || message.auteur_id !== profil.id) {
+    throw new Error('Tu ne peux supprimer que tes propres messages.')
+  }
+
+  await supabase.from('messages_lus').delete().eq('message_id', messageId)
+
+  const { error } = await supabase.from('messages').delete().eq('id', messageId)
 
   if (error) throw new Error(error.message)
 

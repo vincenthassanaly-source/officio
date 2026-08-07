@@ -31,6 +31,15 @@ export async function creerTache(formData: FormData) {
   revalidatePath('/')
 }
 
+export async function supprimerTache(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('taches').delete().eq('id', id)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/')
+}
+
 export async function toggleTache(id: string, statutActuel: StatutTache) {
   const supabase = await createClient()
   const { error } = await supabase
