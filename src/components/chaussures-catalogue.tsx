@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { modifierPrixChaussure } from '@/app/actions/chaussures'
+import { ChaussuresScanner } from '@/components/chaussures-scanner'
 import type { ChaussureModele, GenreChaussure, RayonChaussure } from '@/lib/data/chaussures'
 
 const RAYONS: RayonChaussure[] = ['ÉTÉ', 'HIVER', 'PERMANENT', 'FINS DE SÉRIE']
@@ -229,6 +230,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 }
 
 export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModele[] }) {
+  const [vue, setVue] = useState<'catalogue' | 'scanner'>('catalogue')
   const [rayon, setRayon] = useState<RayonChaussure>('ÉTÉ')
   const [genre, setGenre] = useState<GenreFiltre>(GENRE_TOUS)
   const [recherche, setRecherche] = useState('')
@@ -291,26 +293,47 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
             type="button"
             key={r}
             onClick={() => {
+              setVue('catalogue')
               setRayon(r)
               setGenre(GENRE_TOUS)
             }}
             className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-              rayon === r ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
+              vue === 'catalogue' && rayon === r
+                ? 'border-primary bg-primary text-white'
+                : 'border-border bg-surface text-muted'
             }`}
           >
             {r}
             <span
               className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold ${
-                rayon === r ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
+                vue === 'catalogue' && rayon === r ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
               }`}
             >
               {comptesRayon[r]}
             </span>
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => setVue('scanner')}
+          className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+            vue === 'scanner' ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
+          }`}
+        >
+          Scanner
+        </button>
       </div>
 
-      {tabsGenre.length > 0 && (
+      {vue === 'scanner' && (
+        <ChaussuresScanner
+          onSelectionner={(id) => {
+            setChaussureOuverteId(id)
+            setVue('catalogue')
+          }}
+        />
+      )}
+
+      {vue === 'catalogue' && tabsGenre.length > 0 && (
         <div className="flex gap-1.5">
           {tabsGenre.map((g) => (
             <button
@@ -334,31 +357,35 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
         </div>
       )}
 
-      <input
-        value={recherche}
-        onChange={(e) => setRecherche(e.target.value)}
-        placeholder="Rechercher un modèle ou une catégorie…"
-        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
-      />
+      {vue === 'catalogue' && (
+        <>
+          <input
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Rechercher un modèle ou une catégorie…"
+            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+          />
 
-      {totalVisible === 0 && (
-        <p className="py-10 text-center text-sm text-muted">Aucun modèle ne correspond.</p>
-      )}
+          {totalVisible === 0 && (
+            <p className="py-10 text-center text-sm text-muted">Aucun modèle ne correspond.</p>
+          )}
 
-      <div className="flex flex-col gap-4">
-        {groupes.map(([categorie, liste]) => (
-          <div key={categorie} className="flex flex-col gap-2">
-            <div className="text-[11px] font-bold uppercase tracking-wide text-muted">
-              {categorie} · {liste.length}
-            </div>
-            <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-              {liste.map((ch) => (
-                <ChaussureCarte key={ch.id} chaussure={ch} onOuvrir={() => setChaussureOuverteId(ch.id)} />
-              ))}
-            </div>
+          <div className="flex flex-col gap-4">
+            {groupes.map(([categorie, liste]) => (
+              <div key={categorie} className="flex flex-col gap-2">
+                <div className="text-[11px] font-bold uppercase tracking-wide text-muted">
+                  {categorie} · {liste.length}
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+                  {liste.map((ch) => (
+                    <ChaussureCarte key={ch.id} chaussure={ch} onOuvrir={() => setChaussureOuverteId(ch.id)} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
       {chaussureOuverte && (
         <ChaussureDetail
