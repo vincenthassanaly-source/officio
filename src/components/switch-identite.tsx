@@ -119,7 +119,7 @@ export function SwitchIdentite({
             ))
           )}
           <Link
-            href="/login"
+            href="/login?mode=ajouter"
             className="mt-1 block rounded-lg px-2 py-2 text-[12.5px] font-semibold text-primary"
           >
             + Se connecter avec un autre compte

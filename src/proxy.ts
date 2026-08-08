@@ -42,13 +42,18 @@ export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   const isPublicRoute = estRoutePublique(pathname)
 
+  // /login?mode=ajouter permet à un utilisateur déjà connecté d'ajouter un
+  // compte supplémentaire sur cet appareil sans être renvoyé sur '/' : voir
+  // src/components/switch-identite.tsx et src/app/login/login-form.tsx.
+  const estAjoutDeCompte = pathname === '/login' && request.nextUrl.searchParams.get('mode') === 'ajouter'
+
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && PUBLIC_EXACT.includes(pathname)) {
+  if (user && PUBLIC_EXACT.includes(pathname) && !estAjoutDeCompte) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)

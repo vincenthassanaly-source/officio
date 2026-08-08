@@ -1,37 +1,74 @@
 'use client'
 
-import { useActionState, useEffect, useRef, useState } from 'react'
+import { useActionState, useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { signIn } from './actions'
 import { ajouterOuMettreAJourCompte } from '@/lib/comptes-appareil'
+import { authentifierCompteAppareil } from '@/lib/supabase/authentification-appareil'
 
-export function LoginForm() {
+export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
   const router = useRouter()
-  const [state, action, pending] = useActionState(signIn, undefined)
   const [email, setEmail] = useState('')
-  const traite = useRef(false)
 
-  const succes = state && 'success' in state && state.success ? state : null
+  // --- connexion classique (aucune session active à protéger) : la session
+  // est ouverte via l'action serveur `signIn`, qui écrit les cookies partagés. ---
+  const [state, action, pendingConnexion] = useActionState(signIn, undefined)
+  const traite = useRef(false)
+  const succesConnexion = !modeAjout && state && 'success' in state && state.success ? state : null
 
   useEffect(() => {
-    if (!succes || traite.current) return
+    if (modeAjout || !succesConnexion || traite.current) return
     traite.current = true
 
-    if (succes.profil) {
+    if (succesConnexion.profil) {
       ajouterOuMettreAJourCompte({
-        profilId: succes.profil.id,
-        nomComplet: succes.profil.nom_complet,
-        initiales: succes.profil.initiales,
-        accessToken: succes.session.accessToken,
-        refreshToken: succes.session.refreshToken,
+        profilId: succesConnexion.profil.id,
+        nomComplet: succesConnexion.profil.nom_complet,
+        initiales: succesConnexion.profil.initiales,
+        email: succesConnexion.session.email,
+        accessToken: succesConnexion.session.accessToken,
+        refreshToken: succesConnexion.session.refreshToken,
       })
     }
 
     router.push('/')
-  }, [succes, router])
+  }, [succesConnexion, router, modeAjout])
+
+  // --- ajout d'un compte supplémentaire sur cet appareil (session déjà
+  // active) : authentification isolée, aucune écriture de cookies, donc la
+  // session en cours n'est jamais affectée. ---
+  const [pendingAjout, startAjout] = useTransition()
+  const [resultatAjout, setResultatAjout] = useState<{ erreur?: string; succes?: string } | null>(null)
+
+  function soumettreAjout(formData: FormData) {
+    setResultatAjout(null)
+    const emailSaisi = String(formData.get('email') ?? '').trim()
+    const password = String(formData.get('password') ?? '')
+
+    if (!emailSaisi || !password) {
+      setResultatAjout({ erreur: 'Merci de renseigner ton email et ton mot de passe.' })
+      return
+    }
+
+    startAjout(async () => {
+      const resultat = await authentifierCompteAppareil(emailSaisi, password)
+      if ('erreur' in resultat) {
+        setResultatAjout({ erreur: resultat.erreur })
+        return
+      }
+      ajouterOuMettreAJourCompte(resultat)
+      setEmail('')
+      setResultatAjout({
+        succes: `Compte de ${resultat.nomComplet.split(' ')[0]} ajouté sur cet ordinateur. Ouvre le menu du bas pour basculer dessus.`,
+      })
+    })
+  }
+
+  const pending = modeAjout ? pendingAjout : pendingConnexion
+  const erreur = modeAjout ? resultatAjout?.erreur : state && 'error' in state ? state.error : undefined
 
   return (
-    <form action={action} className="flex flex-col gap-4">
+    <form action={modeAjout ? soumettreAjout : action} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted">
           Email
@@ -64,8 +101,9 @@ export function LoginForm() {
         />
       </div>
 
-      {state && 'error' in state && (
-        <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{state.error}</p>
+      {erreur && <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{erreur}</p>}
+      {modeAjout && resultatAjout?.succes && (
+        <p className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary">{resultatAjout.succes}</p>
       )}
 
       <button
@@ -73,7 +111,7 @@ export function LoginForm() {
         disabled={pending}
         className="mt-2 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
       >
-        {pending ? 'Connexion…' : 'Se connecter'}
+        {pending ? (modeAjout ? 'Ajout…' : 'Connexion…') : modeAjout ? 'Ajouter ce compte' : 'Se connecter'}
       </button>
     </form>
   )

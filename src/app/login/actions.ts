@@ -7,7 +7,7 @@ export type LoginState =
   | {
       success: true
       profil: { id: string; nom_complet: string; initiales: string } | null
-      session: { accessToken: string; refreshToken: string }
+      session: { accessToken: string; refreshToken: string; email?: string }
     }
   | undefined
 
@@ -41,6 +41,7 @@ export async function signIn(
     session: {
       accessToken: data.session.access_token,
       refreshToken: data.session.refresh_token,
+      email: data.session.user.email ?? undefined,
     },
   }
 }

@@ -2,6 +2,7 @@ export type CompteAppareil = {
   profilId: string
   nomComplet: string
   initiales: string
+  email?: string
   accessToken: string
   refreshToken: string
 }
@@ -37,6 +38,7 @@ export function ajouterOuMettreAJourCompte(compte: {
   profilId: string
   nomComplet: string
   initiales: string
+  email?: string
   accessToken: string
   refreshToken: string
 }): void {

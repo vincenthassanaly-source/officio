@@ -27,6 +27,7 @@ export function EcouteurSession() {
         profilId,
         nomComplet: profil.nom_complet,
         initiales: profil.initiales,
+        email: session.user.email ?? undefined,
         accessToken: session.access_token,
         refreshToken: session.refresh_token,
       })
