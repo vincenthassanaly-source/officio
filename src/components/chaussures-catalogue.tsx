@@ -18,9 +18,16 @@ type GenreFiltre = GenreChaussure | 'tous'
 
 const GENRE_TOUS: GenreFiltre = 'tous'
 
+const MONTANT_REMBOURSEMENT_SECU = 50
+
 function formatPrix(prix: number | null) {
   if (prix === null) return null
   return prix.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function calculerDepassement(prix: number | null) {
+  if (prix === null || prix <= MONTANT_REMBOURSEMENT_SECU) return null
+  return prix - MONTANT_REMBOURSEMENT_SECU
 }
 
 function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
@@ -80,6 +87,8 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
 }
 
 function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; onOuvrir: () => void }) {
+  const depassement = calculerDepassement(chaussure.prix)
+
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface">
       <button type="button" onClick={onOuvrir} className="relative aspect-square w-full bg-neutral-soft">
@@ -105,8 +114,11 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
         {chaussure.reference && (
           <div className="truncate font-mono text-[10px] text-muted">Réf. {chaussure.reference}</div>
         )}
-        <div className="mt-1">
+        <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
           <PrixEditable chaussure={chaussure} />
+          {depassement !== null && (
+            <span className="text-[10px] font-semibold text-rec">+{formatPrix(depassement)} € à charge</span>
+          )}
         </div>
       </div>
     </div>
@@ -116,6 +128,7 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
 function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; onFermer: () => void }) {
   const photos = chaussure.variantes.length > 0 ? chaussure.variantes : null
   const [couleurIndex, setCouleurIndex] = useState(0)
+  const depassement = calculerDepassement(chaussure.prix)
 
   const photoAffichee = photos ? photos[couleurIndex]?.photo_url : chaussure.photo_url
 
@@ -203,6 +216,11 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
           <div>
             <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-muted">Prix</div>
             <PrixEditable chaussure={chaussure} />
+            {depassement !== null && (
+              <p className="mt-1.5 rounded-lg bg-rec-soft px-2.5 py-1.5 text-[12px] font-medium text-rec">
+                Dépassement de {formatPrix(depassement)} € à charge du patient (au-delà des {MONTANT_REMBOURSEMENT_SECU} € remboursés par la sécurité sociale)
+              </p>
+            )}
           </div>
         </div>
       </div>
