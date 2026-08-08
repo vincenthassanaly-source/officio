@@ -14,6 +14,10 @@ const GENRES: { value: GenreChaussure; label: string }[] = [
   { value: 'permanent', label: 'Autre' },
 ]
 
+type GenreFiltre = GenreChaussure | 'tous'
+
+const GENRE_TOUS: GenreFiltre = 'tous'
+
 function formatPrix(prix: number | null) {
   if (prix === null) return null
   return prix.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -208,7 +212,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 
 export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModele[] }) {
   const [rayon, setRayon] = useState<RayonChaussure>('ÉTÉ')
-  const [genre, setGenre] = useState<GenreChaussure | null>(null)
+  const [genre, setGenre] = useState<GenreFiltre>(GENRE_TOUS)
   const [recherche, setRecherche] = useState('')
   const [chaussureOuverteId, setChaussureOuverteId] = useState<string | null>(null)
   const chaussureOuverte = chaussures.find((ch) => ch.id === chaussureOuverteId) ?? null
@@ -231,12 +235,18 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
     return GENRES.filter((g) => c[g.value]).map((g) => ({ ...g, compte: c[g.value] ?? 0 }))
   }, [chaussuresDuRayon])
 
-  const genreActif = genre && genresDisponibles.some((g) => g.value === genre) ? genre : (genresDisponibles[0]?.value ?? null)
+  const genreActif: GenreFiltre =
+    genre === GENRE_TOUS || genresDisponibles.some((g) => g.value === genre) ? genre : GENRE_TOUS
+
+  const tabsGenre = useMemo(() => {
+    if (genresDisponibles.length <= 1) return []
+    return [{ value: GENRE_TOUS, label: 'Tous', compte: chaussuresDuRayon.length }, ...genresDisponibles]
+  }, [genresDisponibles, chaussuresDuRayon])
 
   const groupes = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
     const visibles = chaussuresDuRayon
-      .filter((ch) => ch.genre === genreActif)
+      .filter((ch) => genreActif === GENRE_TOUS || ch.genre === genreActif)
       .filter(
         (ch) =>
           !rechercheNormalisee ||
@@ -264,7 +274,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
             key={r}
             onClick={() => {
               setRayon(r)
-              setGenre(null)
+              setGenre(GENRE_TOUS)
             }}
             className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
               rayon === r ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
@@ -282,9 +292,9 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
         ))}
       </div>
 
-      {genresDisponibles.length > 1 && (
+      {tabsGenre.length > 0 && (
         <div className="flex gap-1.5">
-          {genresDisponibles.map((g) => (
+          {tabsGenre.map((g) => (
             <button
               type="button"
               key={g.value}
