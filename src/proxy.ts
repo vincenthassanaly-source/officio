@@ -2,7 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 const PUBLIC_EXACT = ['/login', '/inscription']
-const PUBLIC_PREFIX = ['/rejoindre']
+// /api n'est pas protégé par la session utilisateur : chaque route sous
+// /api gère sa propre authentification (ex: /api/cron/* vérifie un header
+// Authorization dédié, cf. src/app/api/cron/rappels-taches/route.ts). Sans
+// ça, le cron Vercel (qui n'a pas de session Supabase) serait redirigé vers
+// /login avant même d'atteindre le handler.
+const PUBLIC_PREFIX = ['/rejoindre', '/api']
 
 function estRoutePublique(pathname: string) {
   return (
