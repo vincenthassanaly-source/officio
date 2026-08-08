@@ -52,8 +52,8 @@ export async function supprimerMessage(messageId: string) {
     throw new Error('Tu ne peux supprimer que tes propres messages.')
   }
 
-  await supabase.from('messages_lus').delete().eq('message_id', messageId)
-
+  // Les accusés de lecture (messages_lus) sont supprimés automatiquement par
+  // la contrainte messages_lus_message_id_fkey (ON DELETE CASCADE).
   const { error } = await supabase.from('messages').delete().eq('id', messageId)
 
   if (error) throw new Error(error.message)
