@@ -225,11 +225,19 @@ async function recupererFicheProduit(page) {
       }
     }
     if (!produit) return null
+
+    // Constaté sur 4/351 fiches : aucun champ "image" dans le JSON-LD, et la
+    // page n'affiche que le placeholder générique PrestaShop (le carrousel
+    // "produits similaires" contient bien des photos, mais ce sont celles
+    // d'autres modèles — les utiliser serait recréer le bug qu'on corrige).
+    // Ces fiches n'ont donc réellement aucune photo côté fournisseur.
+    const photoUrl = produit.image ? produit.image.replace('home_default', 'large_default') : null
+
     return {
       nom: produit.name,
       description: produit.description ? produit.description.trim() : null,
       reference: produit.sku ?? null,
-      photoUrl: produit.image ? produit.image.replace('home_default', 'large_default') : null,
+      photoUrl,
     }
   })
 }
@@ -394,7 +402,7 @@ async function main() {
 
     const { data: existants, error: erreurExistants } = await supabase
       .from('chaussures_orthopediques')
-      .select('id, url_source, nom_modele, genre, categorie, rayon')
+      .select('id, url_source, nom_modele, genre, categorie, rayon, photo_url')
       .eq('officine_id', officineId)
     if (erreurExistants) {
       console.error('Impossible de lire les fiches existantes :', erreurExistants.message)
@@ -488,7 +496,16 @@ async function main() {
       const existant = fichesExistantes.get(url)
       let chaussureId = existant?.id
 
-      const photoCouverture = await telechargerEtStocker(officineId, slugifier(donnees.nom), donnees.photoUrlSite)
+      // Certaines fiches n'ont vraiment aucune photo côté fournisseur (le
+      // JSON-LD n'a pas de champ "image" et la page n'affiche que le
+      // placeholder générique PrestaShop "pas de photo") : pas la peine
+      // d'essayer de télécharger, on le signale plutôt que de deviner.
+      const photoCouverture = donnees.photoUrlSite
+        ? await telechargerEtStocker(officineId, slugifier(donnees.nom), donnees.photoUrlSite)
+        : existant?.photo_url ?? null
+      if (!donnees.photoUrlSite) {
+        logChangement({ type: 'photo_manquante_source', url, nom: donnees.nom })
+      }
 
       if (chaussureId) {
         const changements = []
