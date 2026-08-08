@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import type { HuileEssentielle } from '@/lib/data/huiles-essentielles'
 
 const CHAMP_CLASS =
@@ -30,6 +30,123 @@ function arrondirDixCentimesSuperieur(montant: number): number {
   const centimes = Math.round(montant * 100)
   const dizainesDeCentimes = Math.ceil(centimes / 10)
   return dizainesDeCentimes / 10
+}
+
+function normaliser(texte: string): string {
+  return texte
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+}
+
+function SelecteurHuile({
+  huiles,
+  valeur,
+  onChange,
+  className,
+}: {
+  huiles: HuileEssentielle[]
+  valeur: string
+  onChange: (huileId: string) => void
+  className?: string
+}) {
+  const listboxId = useId()
+  const huileSelectionnee = useMemo(() => huiles.find((h) => h.id === valeur) ?? null, [huiles, valeur])
+  // brouillon === null : champ fermé, on affiche le nom de l'huile sélectionnée.
+  // brouillon !== null : champ en cours d'édition, on affiche/filtre sur ce texte.
+  const [brouillon, setBrouillon] = useState<string | null>(null)
+  const [indexActif, setIndexActif] = useState(0)
+
+  const ouvert = brouillon !== null
+  const texte = brouillon ?? huileSelectionnee?.nom ?? ''
+
+  const suggestions = useMemo(() => {
+    const recherche = normaliser((brouillon ?? '').trim())
+    if (!recherche) return huiles
+    return huiles.filter((h) => normaliser(h.nom).includes(recherche))
+  }, [huiles, brouillon])
+
+  function ouvrir() {
+    setBrouillon(huileSelectionnee?.nom ?? '')
+    setIndexActif(0)
+  }
+
+  function selectionner(h: HuileEssentielle) {
+    onChange(h.id)
+    setBrouillon(null)
+  }
+
+  function fermer() {
+    setBrouillon(null)
+  }
+
+  return (
+    <div className={`relative min-w-0 ${className ?? ''}`}>
+      <input
+        type="text"
+        role="combobox"
+        aria-expanded={ouvert}
+        aria-controls={listboxId}
+        aria-autocomplete="list"
+        placeholder="Rechercher une huile…"
+        value={texte}
+        onFocus={ouvrir}
+        onClick={() => {
+          if (!ouvert) ouvrir()
+        }}
+        onChange={(e) => {
+          setBrouillon(e.target.value)
+          setIndexActif(0)
+        }}
+        onBlur={fermer}
+        onKeyDown={(e) => {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault()
+            if (!ouvert) ouvrir()
+            setIndexActif((i) => Math.min(i + 1, suggestions.length - 1))
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault()
+            setIndexActif((i) => Math.max(i - 1, 0))
+          } else if (e.key === 'Enter') {
+            if (ouvert && suggestions[indexActif]) {
+              e.preventDefault()
+              selectionner(suggestions[indexActif])
+            }
+          } else if (e.key === 'Escape') {
+            fermer()
+          }
+        }}
+        className={`w-full ${CHAMP_CLASS}`}
+      />
+
+      {ouvert && (
+        <ul
+          id={listboxId}
+          role="listbox"
+          className="absolute left-0 right-0 top-full z-20 mt-1 max-h-56 overflow-y-auto rounded-xl border border-border bg-surface p-1 shadow-lg"
+        >
+          {suggestions.length === 0 ? (
+            <li className="px-3 py-2.5 text-[13px] text-muted">Aucune huile trouvée</li>
+          ) : (
+            suggestions.map((h, index) => (
+              <li key={h.id} role="option" aria-selected={h.id === valeur}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => selectionner(h)}
+                  className={`block w-full rounded-lg px-3 py-2.5 text-left text-[13px] ${
+                    index === indexActif ? 'bg-primary text-white' : 'text-ink hover:bg-neutral-soft'
+                  }`}
+                >
+                  {h.nom}
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  )
 }
 
 export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssentielle[] }) {
@@ -82,18 +199,12 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
             key={ligne.id}
             className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-3"
           >
-            <select
-              value={ligne.huileId}
-              onChange={(e) => modifierLigne(ligne.id, { huileId: e.target.value })}
-              className={`min-w-0 flex-[2] ${CHAMP_CLASS}`}
-            >
-              <option value="">Choisir une huile…</option>
-              {huiles.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.nom}
-                </option>
-              ))}
-            </select>
+            <SelecteurHuile
+              huiles={huiles}
+              valeur={ligne.huileId}
+              onChange={(huileId) => modifierLigne(ligne.id, { huileId })}
+              className="flex-[2]"
+            />
             <input
               type="number"
               min="0"
