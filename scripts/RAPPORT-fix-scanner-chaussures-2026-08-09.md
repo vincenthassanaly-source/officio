@@ -43,6 +43,14 @@ La vraie cause : Next.js limite par défaut à **1 Mo** le corps d'une requête 
 
 En testant avec une photo générée à très haute résolution (6000×4500), Voyage AI a renvoyé une erreur 400 distincte : *"The image resolution is not within the permitted range"*. Ce n'est pas la cause du bug d'aujourd'hui (résolutions de téléphone courantes comme 12 Mpx passent sans problème), mais si un téléphone à très haute résolution capture parfois ce cas à l'avenir, le message clair ajouté aujourd'hui ("Échec de l'analyse de la photo. Réessayez dans quelques instants.") s'affichera correctement au lieu du digest générique — pas d'action supplémentaire nécessaire pour l'instant.
 
+## Mise à jour — deuxième cause trouvée après ton premier test réel
+
+Ton premier test sur téléphone (photo réelle) a fait remonter un nouveau message : *"Impossible de contacter le serveur pour analyser la photo."* Vérification dans les logs Vercel : **aucune requête `POST /chaussures` n'apparaît** au moment du test — la requête n'a jamais atteint le serveur.
+
+Cause : **Vercel impose un plafond strict et non configurable de 4,5 Mo** sur le corps de toute requête vers une fonction serverless (`FUNCTION_PAYLOAD_TOO_LARGE`), quelle que soit la config `bodySizeLimit` de Next.js. Le correctif précédent (10 Mo côté Next.js) n'avait donc aucun effet réel : une vraie photo de téléphone à pleine résolution peut dépasser 4,5 Mo, auquel cas la plateforme rejette la requête *avant* qu'elle n'atteigne Next.js ou notre code — d'où l'absence totale de trace dans les logs applicatifs, et une erreur de transport générique côté client plutôt qu'un message clair.
+
+**Correction (3ᵉ commit, `f27db57`)** : la photo est maintenant systématiquement redimensionnée et recompressée **dans le navigateur** avant l'envoi (1600 px de long côté max, JPEG qualité 0,85), avec repli sur le fichier original si la compression échoue pour une raison quelconque. Sur la photo de test réaliste (12 Mpx, ~0,8 Mo), la taille finale tombe à ~120 Ko — largement sous la limite Vercel, et aussi sous la limite de résolution de Voyage AI repérée plus haut. `bodySizeLimit` ramené à 4 Mo dans `next.config.ts` pour rester cohérent avec la vraie contrainte de la plateforme (Vercel, pas Next.js, a le dernier mot).
+
 ## Ce qu'il te reste à faire
 
-**Tester en vrai sur ton téléphone** : ouvre `/chaussures` → onglet Scanner → prends une photo réelle d'un modèle du comptoir, et vérifie que les bons résultats remontent (et qu'en cas de souci, un message clair s'affiche désormais au lieu de l'erreur générique).
+**Retester en vrai sur ton téléphone** : ouvre `/chaussures` → onglet Scanner → reprends une photo réelle d'un modèle du comptoir. Cette fois la photo est compressée avant l'envoi, ce qui devrait passer sous le plafond Vercel. Dis-moi si le bon résultat remonte, ou si un message d'erreur clair (et non plus générique) s'affiche en cas de souci restant.
