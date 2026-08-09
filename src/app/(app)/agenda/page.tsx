@@ -1,5 +1,7 @@
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getRendezVous } from '@/lib/data/rendez-vous'
+import { getTachesEcheancePeriode } from '@/lib/data/taches'
+import { getRegularisationsPeriode } from '@/lib/data/regularisations'
 import { getPlannings } from '@/lib/data/plannings'
 import { getEquipe } from '@/lib/data/equipe'
 import { Agenda } from '@/components/agenda/agenda'
@@ -19,8 +21,10 @@ export default async function AgendaPage({
   const dateDebut = toISODate(weekDates[0])
   const dateFin = toISODate(weekDates[6])
 
-  const [rendezVous, creneaux, equipe] = await Promise.all([
+  const [rendezVous, taches, regularisations, creneaux, equipe] = await Promise.all([
     getRendezVous(officine.officine_id, dateDebut, dateFin),
+    getTachesEcheancePeriode(officine.officine_id, dateDebut, dateFin),
+    getRegularisationsPeriode(officine.officine_id, dateDebut, dateFin),
     getPlannings(officine.officine_id, dateDebut, dateFin),
     getEquipe(officine.officine_id),
   ])
@@ -28,7 +32,14 @@ export default async function AgendaPage({
   return (
     <>
       <h1 className="mb-4 font-heading text-2xl text-ink">Agenda</h1>
-      <Agenda rendezVous={rendezVous} creneaux={creneaux} equipe={equipe} weekDates={weekDates} />
+      <Agenda
+        rendezVous={rendezVous}
+        taches={taches}
+        regularisations={regularisations}
+        creneaux={creneaux}
+        equipe={equipe}
+        weekDates={weekDates}
+      />
     </>
   )
 }
