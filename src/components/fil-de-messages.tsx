@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 
@@ -9,6 +9,14 @@ const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
   { value: 'stock', label: 'Stock', className: 'bg-accent-soft text-accent' },
   { value: 'urgent', label: 'Urgent', className: 'bg-rec-soft text-rec' },
 ]
+
+// Insensible aux accents (ex: "regularisation" doit trouver "régularisation").
+function normaliser(texte: string): string {
+  return texte
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+}
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -32,10 +40,39 @@ export function FilDeMessages({
 }) {
   const [categorie, setCategorie] = useState<Categorie>('info')
   const [contenu, setContenu] = useState('')
+  const [recherche, setRecherche] = useState('')
   const [isPending, startTransition] = useTransition()
+
+  const filtresActifs = recherche.trim() !== ''
+
+  const messagesFiltres = useMemo(() => {
+    const rechercheNormalisee = normaliser(recherche.trim())
+    if (!rechercheNormalisee) return messages
+    return messages.filter((m) => normaliser(m.contenu).includes(rechercheNormalisee))
+  }, [messages, recherche])
 
   return (
     <div className="flex flex-1 flex-col gap-4">
+      {messages.length > 0 && (
+        <div className="flex items-center gap-2">
+          <input
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Rechercher dans les messages…"
+            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+          />
+          {filtresActifs && (
+            <button
+              type="button"
+              onClick={() => setRecherche('')}
+              className="shrink-0 text-[11.5px] font-semibold text-muted"
+            >
+              Réinitialiser
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-1 flex-col gap-3">
         {messages.length === 0 && (
           <p className="py-10 text-center text-sm text-muted">
@@ -43,7 +80,13 @@ export function FilDeMessages({
           </p>
         )}
 
-        {messages.map((m) => {
+        {messages.length > 0 && messagesFiltres.length === 0 && (
+          <p className="py-10 text-center text-sm text-muted">
+            Aucun message ne correspond à ta recherche.
+          </p>
+        )}
+
+        {messagesFiltres.map((m) => {
           const dejaLu = m.lecteurs.some((l) => l.profil_id === profilActuelId)
           const cat = CATEGORIES.find((c) => c.value === m.categorie) ?? CATEGORIES[0]
 
