@@ -9,6 +9,8 @@ import { getMesAdhesions } from '@/lib/data/adhesions'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getNotifications, getNombreNotificationsNonLues } from '@/lib/data/notifications'
+import { getCouleursMembres } from '@/lib/data/couleurs-membres'
+import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { signOut } from '../actions/auth'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -17,10 +19,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const [officineActive, profilActuel] = await Promise.all([getOfficineActive(), getCurrentProfil()])
 
-  const [notifications, nombreNonLues] = await Promise.all([
+  const [notifications, nombreNonLues, couleursMembres] = await Promise.all([
     getNotifications(officineActive!.officine_id, profilActuel?.id ?? ''),
     getNombreNotificationsNonLues(officineActive!.officine_id, profilActuel?.id ?? ''),
+    getCouleursMembres(officineActive!.officine_id),
   ])
+  const couleurProfilActuel = couleursMembres.get(profilActuel?.id ?? '') ?? COULEUR_PAR_DEFAUT
 
   return (
     <div className="flex w-full flex-1 flex-col overflow-x-hidden lg:flex-row lg:overflow-x-visible">
@@ -29,6 +33,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         adhesions={adhesions}
         officineActiveId={officineActive!.officine_id}
         profilActuel={profilActuel}
+        couleurProfilActuel={couleurProfilActuel}
         notifications={notifications}
         nombreNonLues={nombreNonLues}
       />

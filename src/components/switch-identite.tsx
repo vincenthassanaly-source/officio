@@ -7,6 +7,7 @@ import { listerComptes, retirerCompte, ajouterOuMettreAJourCompte, type CompteAp
 import { authentifierCompteAppareil } from '@/lib/supabase/authentification-appareil'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
 function ReconnexionCompte({
   compte,
@@ -92,10 +93,14 @@ export function SwitchIdentite({
   profilActuelId,
   nomComplet,
   initiales,
+  couleurProfilActuel,
 }: {
   profilActuelId: string
   nomComplet: string
   initiales: string
+  // Couleur par rang dans l'officine active (getCouleursMembres), pas par
+  // hash : c'est le seul avatar de ce composant dont on connaît l'équipe.
+  couleurProfilActuel: CouleurAvatar
 }) {
   const [panelOuvert, setPanelOuvert] = useState(false)
   const [comptes, setComptes] = useState<CompteAppareil[]>([])
@@ -159,7 +164,7 @@ export function SwitchIdentite({
         className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-neutral-soft"
       >
         <span
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurAvatar(profilActuelId)} ${texteAvatar(profilActuelId)}`}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurProfilActuel.fond} ${couleurProfilActuel.texte}`}
         >
           {initiales}
         </span>

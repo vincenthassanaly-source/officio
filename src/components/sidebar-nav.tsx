@@ -17,6 +17,7 @@ import {
 import { signOut } from '@/app/actions/auth'
 import type { Adhesion } from '@/lib/data/adhesions'
 import type { NotificationInApp } from '@/lib/data/notifications'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
 const ICONES: Record<string, React.ComponentType<{ className?: string }>> = {
   '/': IconAccueil,
@@ -31,12 +32,14 @@ export function SidebarNav({
   adhesions,
   officineActiveId,
   profilActuel,
+  couleurProfilActuel,
   notifications,
   nombreNonLues,
 }: {
   adhesions: Adhesion[]
   officineActiveId: string
   profilActuel: { id: string; nom_complet: string; initiales: string } | null
+  couleurProfilActuel: CouleurAvatar
   notifications: NotificationInApp[]
   nombreNonLues: number
 }) {
@@ -74,6 +77,7 @@ export function SidebarNav({
             profilActuelId={profilActuel.id}
             nomComplet={profilActuel.nom_complet}
             initiales={profilActuel.initiales}
+            couleurProfilActuel={couleurProfilActuel}
           />
         )}
         <Link
