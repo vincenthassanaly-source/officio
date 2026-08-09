@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { creerTache, toggleTache, supprimerTache } from '@/app/actions/taches'
+import { ChampPhoto } from '@/components/champ-photo'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
 
@@ -38,6 +39,7 @@ export function TachesList({
 }) {
   const [filtre, setFiltre] = useState('tous')
   const [formOuvert, setFormOuvert] = useState(false)
+  const [photo, setPhoto] = useState<File | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const visibles = filtre === 'tous' ? taches : taches.filter((t) => t.assigne?.id === filtre)
@@ -80,9 +82,11 @@ export function TachesList({
       {formOuvert && (
         <form
           action={(formData) => {
+            if (photo) formData.set('photo', photo)
             startTransition(async () => {
               await creerTache(formData)
               setFormOuvert(false)
+              setPhoto(null)
             })
           }}
           className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
@@ -112,6 +116,7 @@ export function TachesList({
               className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
             />
           </div>
+          <ChampPhoto onChange={setPhoto} />
           <button
             type="submit"
             disabled={isPending}
@@ -133,6 +138,12 @@ export function TachesList({
               key={t.id}
               className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-3.5"
             >
+              {t.photoUrl && (
+                <a href={t.photoUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage, pas une image du projet */}
+                  <img src={t.photoUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
+                </a>
+              )}
               <button
                 type="button"
                 onClick={() => startTransition(() => toggleTache(t.id, t.statut))}

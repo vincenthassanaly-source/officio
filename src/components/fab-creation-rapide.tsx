@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { IconLiaison } from '@/components/nav-icons'
+import { ChampPhoto } from '@/components/champ-photo'
 import { envoyerMessage } from '@/app/actions/liaison'
 import { creerTache } from '@/app/actions/taches'
 import type { Categorie } from '@/lib/data/messages'
@@ -144,11 +145,13 @@ function FormulaireTache({
   profilActuelId: string
   onCree: () => void
 }) {
+  const [photo, setPhoto] = useState<File | null>(null)
   const [isPending, startTransition] = useTransition()
 
   return (
     <form
       action={(formData) => {
+        if (photo) formData.set('photo', photo)
         startTransition(async () => {
           await creerTache(formData)
           onCree()
@@ -182,6 +185,7 @@ function FormulaireTache({
           className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
         />
       </div>
+      <ChampPhoto onChange={setPhoto} />
       <button
         type="submit"
         disabled={isPending}
