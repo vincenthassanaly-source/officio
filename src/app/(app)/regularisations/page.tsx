@@ -1,6 +1,7 @@
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getRegularisations, getRegularisationsPeriode } from '@/lib/data/regularisations'
 import { Regularisations } from '@/components/regularisations'
+import { LienRetour } from '@/components/lien-retour'
 import { toISODate } from '@/lib/dates'
 
 export default async function RegularisationsPage({
@@ -28,6 +29,7 @@ export default async function RegularisationsPage({
 
   return (
     <>
+      <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Régularisation ordonnances</h1>
       <Regularisations vue={vue} regularisations={regularisations} moisAffiche={moisAffiche} />
     </>

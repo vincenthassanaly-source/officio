@@ -4,6 +4,7 @@ import { getPreferencesNotification } from '@/lib/data/notifications'
 import { createClient } from '@/lib/supabase/server'
 import { ProfilForm } from '@/components/profil-form'
 import { NotificationsParametres } from '@/components/notifications-parametres'
+import { LienRetour } from '@/components/lien-retour'
 
 export default async function ProfilPage() {
   const supabase = await createClient()
@@ -21,6 +22,7 @@ export default async function ProfilPage() {
 
   return (
     <>
+      <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Profil</h1>
       <div className="flex flex-col gap-4">
         <ProfilForm

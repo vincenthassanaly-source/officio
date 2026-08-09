@@ -4,6 +4,7 @@ import { getEquipe } from '@/lib/data/equipe'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { InviterCard } from '@/components/inviter-card'
 import { MembresOfficine } from '@/components/membres-officine'
+import { LienRetour } from '@/components/lien-retour'
 
 export default async function InviterPage() {
   const officineActive = await getOfficineActive()
@@ -15,6 +16,7 @@ export default async function InviterPage() {
 
   return (
     <>
+      <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Mon équipe</h1>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
