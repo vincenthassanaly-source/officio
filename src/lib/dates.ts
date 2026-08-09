@@ -51,6 +51,34 @@ export function formatDateCourte(dateISO: string): string {
   return `${jour} ${MOIS_COURT[mois - 1]} ${annee}`
 }
 
+// Grille complète (semaines entières, lundi en premier) couvrant le mois de
+// `reference`, avec les jours des mois voisins nécessaires pour remplir la
+// première et la dernière semaine.
+export function getMonthGridDates(reference: Date): Date[] {
+  const premierJourMois = new Date(reference.getFullYear(), reference.getMonth(), 1)
+  const decalageDebut = premierJourMois.getDay() === 0 ? 6 : premierJourMois.getDay() - 1
+  const debutGrille = new Date(premierJourMois)
+  debutGrille.setDate(premierJourMois.getDate() - decalageDebut)
+
+  const dernierJourMois = new Date(reference.getFullYear(), reference.getMonth() + 1, 0)
+  const decalageFin = dernierJourMois.getDay() === 0 ? 0 : 7 - dernierJourMois.getDay()
+  const finGrille = new Date(dernierJourMois)
+  finGrille.setDate(dernierJourMois.getDate() + decalageFin)
+
+  const dates: Date[] = []
+  const curseur = new Date(debutGrille)
+  while (curseur <= finGrille) {
+    dates.push(new Date(curseur))
+    curseur.setDate(curseur.getDate() + 1)
+  }
+  return dates
+}
+
+export function formatMoisAnnee(reference: Date): string {
+  const mois = MOIS_LONG[reference.getMonth()]
+  return `${mois.charAt(0).toUpperCase()}${mois.slice(1)} ${reference.getFullYear()}`
+}
+
 export function formatPeriodeSemaine(weekDates: Date[]): string {
   const debut = weekDates[0]
   const fin = weekDates[6]
