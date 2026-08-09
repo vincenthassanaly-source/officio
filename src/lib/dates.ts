@@ -79,6 +79,22 @@ export function formatMoisAnnee(reference: Date): string {
   return `${mois.charAt(0).toUpperCase()}${mois.slice(1)} ${reference.getFullYear()}`
 }
 
+// Horodatage relatif ("Aujourd'hui · 14:32", "Hier · 09:10", "05/08 · 11:00")
+// — extrait de fil-de-messages.tsx pour être réutilisé ailleurs (ex. le
+// centre de notifications) sans dupliquer la logique.
+export function formatDateRelative(iso: string): string {
+  const date = new Date(iso)
+  const maintenant = new Date()
+  const hier = new Date(maintenant)
+  hier.setDate(maintenant.getDate() - 1)
+
+  const heure = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+  if (date.toDateString() === maintenant.toDateString()) return `Aujourd'hui · ${heure}`
+  if (date.toDateString() === hier.toDateString()) return `Hier · ${heure}`
+  return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} · ${heure}`
+}
+
 export function formatPeriodeSemaine(weekDates: Date[]): string {
   const debut = weekDates[0]
   const fin = weekDates[6]

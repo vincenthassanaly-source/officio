@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
+import { formatDateRelative } from '@/lib/dates'
 
 const FILTRE_TOUS = 'tous'
 const FILTRE_TOUTES = 'toutes'
@@ -20,19 +21,6 @@ function normaliser(texte: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
-}
-
-function formatDate(iso: string) {
-  const date = new Date(iso)
-  const now = new Date()
-  const hier = new Date(now)
-  hier.setDate(now.getDate() - 1)
-
-  const heure = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-
-  if (date.toDateString() === now.toDateString()) return `Aujourd'hui · ${heure}`
-  if (date.toDateString() === hier.toDateString()) return `Hier · ${heure}`
-  return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} · ${heure}`
 }
 
 export function FilDeMessages({
@@ -179,7 +167,7 @@ export function FilDeMessages({
                   <div className="truncate text-[13.5px] font-semibold text-ink">
                     {m.auteur?.nom_complet ?? 'Ancien collègue'}
                   </div>
-                  <div className="text-[11px] text-muted">{formatDate(m.created_at)}</div>
+                  <div className="text-[11px] text-muted">{formatDateRelative(m.created_at)}</div>
                 </div>
                 <span
                   className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${cat.className}`}
