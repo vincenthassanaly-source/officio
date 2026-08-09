@@ -55,3 +55,38 @@ export async function getTaches(officineId: string): Promise<Tache[]> {
     })
   )
 }
+
+export type TacheEcheance = {
+  id: string
+  titre: string
+  statut: StatutTache
+  echeance: string
+}
+
+// Pour la vue globale de l'agenda (src/components/agenda/agenda-vue-globale.tsx) :
+// filtré côté requête comme getRegularisationsPeriode (src/lib/data/
+// regularisations.ts), pas récupéré en entier puis filtré côté client. Les
+// tâches sans échéance sont naturellement exclues : `gte`/`lte` sur une
+// colonne ne retiennent jamais les lignes où elle est NULL.
+export async function getTachesEcheancePeriode(
+  officineId: string,
+  dateDebut: string,
+  dateFin: string
+): Promise<TacheEcheance[]> {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('taches')
+    .select('id, titre, statut, echeance')
+    .eq('officine_id', officineId)
+    .gte('echeance', dateDebut)
+    .lte('echeance', dateFin)
+    .order('echeance', { ascending: true })
+
+  if (error) {
+    console.error('getTachesEcheancePeriode', error)
+    return []
+  }
+
+  return (data ?? []) as TacheEcheance[]
+}
