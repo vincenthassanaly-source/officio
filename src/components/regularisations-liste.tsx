@@ -11,14 +11,20 @@ import {
 import type { Regularisation } from '@/lib/data/regularisations'
 import { formatDateCourte, toISODate } from '@/lib/dates'
 
-const CHAMP_CLASS =
+export const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
 
 function estEnRetard(r: Regularisation, aujourdhui: string) {
   return r.statut === 'a_faire' && r.date_regularisation < aujourdhui
 }
 
-function ChampsFormulaire({ regularisation }: { regularisation?: Regularisation }) {
+export function ChampsFormulaire({
+  regularisation,
+  dateRegularisationParDefaut,
+}: {
+  regularisation?: Regularisation
+  dateRegularisationParDefaut?: string
+}) {
   return (
     <>
       <div className="flex gap-2">
@@ -53,7 +59,7 @@ function ChampsFormulaire({ regularisation }: { regularisation?: Regularisation 
           <input
             type="date"
             name="date_regularisation"
-            defaultValue={regularisation?.date_regularisation}
+            defaultValue={regularisation?.date_regularisation ?? dateRegularisationParDefaut}
             required
             className={`w-full ${CHAMP_CLASS}`}
           />

@@ -1,7 +1,8 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { marquerAFaire, marquerFacture } from '@/app/actions/regularisations'
+import { ajouterRegularisation, marquerAFaire, marquerFacture } from '@/app/actions/regularisations'
+import { ChampsFormulaire } from '@/components/regularisations-liste'
 import type { Regularisation } from '@/lib/data/regularisations'
 import { formatDateLongue, formatJourCourt, formatMoisAnnee, getMonthGridDates, toISODate } from '@/lib/dates'
 
@@ -21,6 +22,7 @@ export function RegularisationsCalendrier({
   onAujourdhui: () => void
 }) {
   const [jourSelectionne, setJourSelectionne] = useState<string | null>(null)
+  const [formOuvert, setFormOuvert] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   const aujourdhui = toISODate(new Date())
@@ -93,7 +95,10 @@ export function RegularisationsCalendrier({
             <button
               type="button"
               key={iso}
-              onClick={() => setJourSelectionne(iso)}
+              onClick={() => {
+                setJourSelectionne(iso)
+                setFormOuvert(false)
+              }}
               className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] ${
                 !dansMoisAffiche ? 'text-muted/40' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
@@ -117,7 +122,10 @@ export function RegularisationsCalendrier({
             <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(jourSelectionne)}</span>
             <button
               type="button"
-              onClick={() => setJourSelectionne(null)}
+              onClick={() => {
+                setJourSelectionne(null)
+                setFormOuvert(false)
+              }}
               className="text-[11px] font-semibold text-muted"
             >
               Fermer
@@ -152,6 +160,44 @@ export function RegularisationsCalendrier({
                 </div>
               )
             })
+          )}
+
+          {formOuvert ? (
+            <form
+              action={(formData) => {
+                startTransition(async () => {
+                  await ajouterRegularisation(formData)
+                  setFormOuvert(false)
+                })
+              }}
+              className="flex flex-col gap-2 rounded-xl border border-primary p-3"
+            >
+              <ChampsFormulaire dateRegularisationParDefaut={jourSelectionne} />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="flex-1 rounded-xl bg-primary py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+                >
+                  Ajouter
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormOuvert(false)}
+                  className="rounded-xl border border-border px-4 py-2.5 text-[13px] font-semibold text-muted"
+                >
+                  Annuler
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setFormOuvert(true)}
+              className="self-start text-[12.5px] font-semibold text-primary"
+            >
+              + Ajouter une régularisation ce jour
+            </button>
           )}
         </div>
       )}
