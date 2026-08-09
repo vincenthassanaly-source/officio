@@ -48,7 +48,13 @@ const FORCE = process.argv.includes('--force')
 const MODEL = 'voyage-multimodal-3.5'
 const VOYAGE_URL = 'https://api.voyageai.com/v1/multimodalembeddings'
 const DIMENSIONS = 1024
-const DELAI_ENTRE_REQUETES_MS = 300
+// Compte Voyage AI sans moyen de paiement enregistré = palier gratuit
+// limité à 3 requêtes/minute (429 sinon). 21s entre deux appels reste
+// sous cette limite avec une marge de sécurité. À réduire une fois un
+// moyen de paiement ajouté sur dashboard.voyageai.com (rate limits
+// standards, largement plus élevés).
+const DELAI_ENTRE_REQUETES_MS = 21000
+const DELAI_APRES_429_MS = 65000
 
 function attendre(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -66,7 +72,7 @@ async function telechargerImageEnBase64(url) {
 // directement photo_url à Voyage AI : ça évite de dépendre d'un éventuel
 // fetch d'URL distante côté Voyage (pas garanti selon les fournisseurs
 // d'API image), au prix d'un aller-retour réseau de plus par modèle.
-async function genererEmbedding(photoUrl, tentatives = 3) {
+async function genererEmbedding(photoUrl, tentatives = 4) {
   const imageBase64 = await telechargerImageEnBase64(photoUrl)
 
   for (let essai = 1; essai <= tentatives; essai += 1) {
@@ -84,6 +90,16 @@ async function genererEmbedding(photoUrl, tentatives = 3) {
         }),
       })
 
+      if (reponse.status === 429) {
+        if (essai === tentatives) {
+          const texte = await reponse.text()
+          throw new Error(`Voyage AI a répondu 429 (limite de débit) : ${texte.slice(0, 200)}`)
+        }
+        console.warn(`  429 (limite de débit) — pause de ${DELAI_APRES_429_MS / 1000}s avant nouvel essai (${essai}/${tentatives})`)
+        await attendre(DELAI_APRES_429_MS)
+        continue
+      }
+
       if (!reponse.ok) {
         const texte = await reponse.text()
         throw new Error(`Voyage AI a répondu ${reponse.status} : ${texte.slice(0, 300)}`)
@@ -100,7 +116,7 @@ async function genererEmbedding(photoUrl, tentatives = 3) {
     } catch (err) {
       if (essai === tentatives) throw err
       console.warn(`  Nouvel essai (${essai}/${tentatives}) : ${err.message}`)
-      await attendre(1500 * essai)
+      await attendre(3000 * essai)
     }
   }
 }
