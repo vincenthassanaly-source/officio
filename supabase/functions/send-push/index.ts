@@ -16,14 +16,16 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import webpush from 'npm:web-push@3.6.7'
 
 type CategorieNotification =
-  | 'messages_urgents'
+  | 'messages'
   | 'taches_assignees'
+  | 'taches_non_assignees'
   | 'taches_echeance'
   | 'agenda_rappel'
 
 const CATEGORIES_VALIDES: CategorieNotification[] = [
-  'messages_urgents',
+  'messages',
   'taches_assignees',
+  'taches_non_assignees',
   'taches_echeance',
   'agenda_rappel',
 ]

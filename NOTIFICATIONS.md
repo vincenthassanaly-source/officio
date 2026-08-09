@@ -119,7 +119,7 @@ const reponse = await fetch(
     },
     body: JSON.stringify({
       officineId,          // toujours requis
-      categorie,            // 'messages_urgents' | 'taches_assignees' | 'taches_echeance' | 'agenda_rappel'
+      categorie,            // 'messages' | 'taches_assignees' | 'taches_non_assignees' | 'taches_echeance' | 'agenda_rappel'
       titre: '...',
       corps: '...',
       url: '/liaison',      // optionnel, page ouverte au clic (défaut '/')

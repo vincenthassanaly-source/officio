@@ -1,11 +1,11 @@
 // Catégories de notification — à garder synchronisées avec la contrainte
-// CHECK de notification_preferences (scripts/migration-notifications.sql).
-// Certaines catégories ne sont pas encore déclenchées par du code métier :
-// elles existent dès maintenant pour que le centre de préférences soit
-// complet, les déclencheurs réels arrivent dans des prompts suivants.
+// CHECK de notification_preferences et notifications (scripts/migration-
+// notifications-messages-elargies.sql, qui a le détail le plus récent) et
+// avec CATEGORIES_VALIDES dans supabase/functions/send-push/index.ts.
 export type CategorieNotification =
-  | 'messages_urgents'
+  | 'messages'
   | 'taches_assignees'
+  | 'taches_non_assignees'
   | 'taches_echeance'
   | 'agenda_rappel'
 
@@ -15,14 +15,19 @@ export const CATEGORIES_NOTIFICATION: {
   description: string
 }[] = [
   {
-    value: 'messages_urgents',
-    label: 'Messages urgents',
-    description: 'Nouveau message marqué « Urgent » dans le Cahier de liaison.',
+    value: 'messages',
+    label: 'Messages',
+    description: 'Nouveau message dans le Cahier de liaison (le titre précise « Urgent » le cas échéant).',
   },
   {
     value: 'taches_assignees',
     label: 'Tâches assignées',
     description: "Une tâche t'est assignée par un collègue.",
+  },
+  {
+    value: 'taches_non_assignees',
+    label: 'Tâches non assignées',
+    description: "Une nouvelle tâche est créée sans être assignée à quelqu'un en particulier.",
   },
   {
     value: 'taches_echeance',
