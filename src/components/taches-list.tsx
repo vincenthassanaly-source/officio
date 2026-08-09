@@ -7,7 +7,11 @@ import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
 
-function dueInfo(tache: Tache): { label: string; className: string } {
+// Exportée pour être réutilisée par agenda-vue-globale.tsx (même code
+// couleur/urgence que dans cette liste). Type relâché à Pick<...> plutôt que
+// Tache entière : la vue globale de l'agenda ne récupère que id/titre/
+// statut/echeance (getTachesEcheancePeriode), pas assigne/photoUrl.
+export function dueInfo(tache: Pick<Tache, 'statut' | 'echeance'>): { label: string; className: string } {
   if (tache.statut === 'fait') {
     return { label: 'Fait', className: 'bg-neutral-soft text-muted' }
   }
