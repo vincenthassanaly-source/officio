@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { listerComptes, retirerCompte, ajouterOuMettreAJourCompte, type CompteAppareil } from '@/lib/comptes-appareil'
 import { authentifierCompteAppareil } from '@/lib/supabase/authentification-appareil'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
 
 function ReconnexionCompte({
   compte,
@@ -157,7 +158,9 @@ export function SwitchIdentite({
         onClick={togglePanel}
         className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-neutral-soft"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white">
+        <span
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurAvatar(profilActuelId)} ${texteAvatar(profilActuelId)}`}
+        >
           {initiales}
         </span>
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{nomComplet}</span>
@@ -180,7 +183,9 @@ export function SwitchIdentite({
                     disabled={enCoursId === c.profilId || Boolean(comptesExpires[c.profilId])}
                     className="flex flex-1 items-center gap-2.5 px-2 py-2 text-left disabled:opacity-60"
                   >
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-semibold text-white">
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${couleurAvatar(c.profilId)} ${texteAvatar(c.profilId)}`}
+                    >
                       {c.initiales}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-ink">
