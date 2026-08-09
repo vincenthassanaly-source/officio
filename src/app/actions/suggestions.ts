@@ -25,6 +25,20 @@ export async function envoyerSuggestion(formData: FormData) {
   revalidatePath('/suggestions')
 }
 
+// Contrairement à la suppression (réservée à l'auteur), cocher une
+// suggestion comme faite est ouvert à toute l'équipe — aucune vérification
+// d'auteur ici, seule la policy RLS "suggestions_update" (est_membre) fait foi.
+export async function basculerSuggestionFaite(id: string, fait: boolean) {
+  const profil = await getCurrentProfil()
+  if (!profil) throw new Error('Non connecté')
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('suggestions').update({ fait }).eq('id', id)
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/suggestions')
+}
+
 export async function supprimerSuggestion(id: string) {
   const profil = await getCurrentProfil()
   if (!profil) throw new Error('Non connecté')

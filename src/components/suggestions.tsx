@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { envoyerSuggestion, supprimerSuggestion } from '@/app/actions/suggestions'
+import { envoyerSuggestion, supprimerSuggestion, basculerSuggestionFaite } from '@/app/actions/suggestions'
 import type { SuggestionAvecAuteur } from '@/lib/data/suggestions'
 
 function formatDate(iso: string) {
@@ -63,8 +63,19 @@ export function Suggestions({
         )}
 
         {suggestions.map((s) => (
-          <div key={s.id} className="rounded-2xl border border-border bg-surface p-4">
+          <div
+            key={s.id}
+            className={`rounded-2xl border border-border bg-surface p-4 ${s.fait ? 'opacity-60' : ''}`}
+          >
             <div className="mb-2 flex items-center gap-2.5">
+              <input
+                type="checkbox"
+                checked={s.fait}
+                disabled={isPending}
+                onChange={() => startTransition(() => basculerSuggestionFaite(s.id, !s.fait))}
+                aria-label={s.fait ? 'Marquer comme non traitée' : 'Marquer comme traitée'}
+                className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
+              />
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white">
                 {s.auteur?.initiales ?? '?'}
               </div>
@@ -90,7 +101,13 @@ export function Suggestions({
                 </button>
               )}
             </div>
-            <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{s.message}</p>
+            <p
+              className={`whitespace-pre-wrap text-[13.5px] leading-relaxed ${
+                s.fait ? 'text-muted line-through' : 'text-ink'
+              }`}
+            >
+              {s.message}
+            </p>
           </div>
         ))}
       </div>
