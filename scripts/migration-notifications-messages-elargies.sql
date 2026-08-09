@@ -166,3 +166,14 @@ create trigger taches_non_assignee_push
   for each row
   when (new.assigne_id is null)
   execute function notifier_tache_non_assignee();
+
+-- Contraintes CHECK réintroduites avec la liste finale des catégories :
+-- 'messages_urgents' remplacée par 'messages' (voir décision en tête de
+-- fichier), 'taches_non_assignees' ajoutée. À garder synchronisé avec
+-- src/lib/notifications/types.ts (CATEGORIES_NOTIFICATION) et
+-- supabase/functions/send-push/index.ts (CATEGORIES_VALIDES).
+alter table notification_preferences add constraint notification_preferences_categorie_check
+  check (categorie in ('messages', 'taches_assignees', 'taches_echeance', 'agenda_rappel', 'taches_non_assignees'));
+
+alter table notifications add constraint notifications_categorie_check
+  check (categorie in ('messages', 'taches_assignees', 'taches_echeance', 'agenda_rappel', 'taches_non_assignees'));
