@@ -3,17 +3,19 @@ import { getOfficineActive } from '@/lib/data/officine-active'
 import { getMessages } from '@/lib/data/messages'
 import { getTaches } from '@/lib/data/taches'
 import { getEquipe } from '@/lib/data/equipe'
+import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { CahierDeLiaison } from '@/components/cahier-de-liaison'
 
 export default async function LiaisonPage() {
   const officine = await getOfficineActive()
   if (!officine) return null
 
-  const [profil, messages, taches, equipe] = await Promise.all([
+  const [profil, messages, taches, equipe, couleurs] = await Promise.all([
     getCurrentProfil(),
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
     getEquipe(officine.officine_id),
+    getCouleursMembres(officine.officine_id),
   ])
 
   return (
@@ -24,6 +26,7 @@ export default async function LiaisonPage() {
         taches={taches}
         equipe={equipe}
         profilActuelId={profil?.id ?? ''}
+        couleurs={couleurs}
       />
     </>
   )

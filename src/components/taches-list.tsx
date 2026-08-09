@@ -5,7 +5,8 @@ import { creerTache, toggleTache, supprimerTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
-import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
+import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
 // Exportée pour être réutilisée par agenda-vue-globale.tsx (même code
 // couleur/urgence que dans cette liste). Type relâché à Pick<...> plutôt que
@@ -37,10 +38,12 @@ export function TachesList({
   taches,
   equipe,
   profilActuelId,
+  couleurs,
 }: {
   taches: Tache[]
   equipe: MembreEquipe[]
   profilActuelId: string
+  couleurs: Map<string, CouleurAvatar>
 }) {
   const [filtre, setFiltre] = useState('tous')
   const [formOuvert, setFormOuvert] = useState(false)
@@ -138,6 +141,7 @@ export function TachesList({
         )}
         {visibles.map((t) => {
           const due = dueInfo(t)
+          const couleurAssigne = (t.assigne ? couleurs.get(t.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
           return (
             <div
               key={t.id}
@@ -173,7 +177,7 @@ export function TachesList({
                   {t.assigne && (
                     <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted">
                       <span
-                        className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAvatar(t.assigne.id)} ${texteAvatar(t.assigne.id)}`}
+                        className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
                       >
                         {t.assigne.initiales}
                       </span>

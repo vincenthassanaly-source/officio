@@ -4,7 +4,8 @@ import { useMemo, useRef, useState, useTransition } from 'react'
 import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 import { formatDateRelative } from '@/lib/dates'
-import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
+import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
 const FILTRE_TOUTES = 'toutes'
 
@@ -24,9 +25,11 @@ function normaliser(texte: string): string {
 export function FilDeMessages({
   messages,
   profilActuelId,
+  couleurs,
 }: {
   messages: MessageAvecDetails[]
   profilActuelId: string
+  couleurs: Map<string, CouleurAvatar>
 }) {
   const [categorie, setCategorie] = useState<Categorie>('info')
   const [contenu, setContenu] = useState('')
@@ -118,6 +121,7 @@ export function FilDeMessages({
           const dejaLu = m.lecteurs.some((l) => l.profil_id === profilActuelId)
           const cat = CATEGORIES.find((c) => c.value === m.categorie) ?? CATEGORIES[0]
           const urgent = m.categorie === 'urgent'
+          const couleurAuteur = (m.auteur ? couleurs.get(m.auteur.id) : null) ?? COULEUR_PAR_DEFAUT
 
           return (
             <div
@@ -128,11 +132,7 @@ export function FilDeMessages({
             >
               <div className="mb-2.5 flex items-center gap-2.5">
                 <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                    m.auteur
-                      ? `${couleurAvatar(m.auteur.id)} ${texteAvatar(m.auteur.id)}`
-                      : 'bg-primary text-white'
-                  }`}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
                 >
                   {m.auteur?.initiales ?? '?'}
                 </div>
@@ -168,15 +168,18 @@ export function FilDeMessages({
 
               <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5">
                 <div className="flex">
-                  {m.lecteurs.map((l, i) => (
-                    <div
-                      key={l.profil_id}
-                      className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${couleurAvatar(l.profil_id)} ${texteAvatar(l.profil_id)}`}
-                      style={{ zIndex: m.lecteurs.length - i }}
-                    >
-                      {l.initiales}
-                    </div>
-                  ))}
+                  {m.lecteurs.map((l, i) => {
+                    const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
+                    return (
+                      <div
+                        key={l.profil_id}
+                        className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+                        style={{ zIndex: m.lecteurs.length - i }}
+                      >
+                        {l.initiales}
+                      </div>
+                    )
+                  })}
                 </div>
                 {dejaLu ? (
                   <span className="text-[11px] font-semibold text-muted">Lu</span>

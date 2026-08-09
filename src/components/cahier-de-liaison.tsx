@@ -6,17 +6,20 @@ import { TachesList } from './taches-list'
 import type { MessageAvecDetails } from '@/lib/data/messages'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
 export function CahierDeLiaison({
   messages,
   taches,
   equipe,
   profilActuelId,
+  couleurs,
 }: {
   messages: MessageAvecDetails[]
   taches: Tache[]
   equipe: MembreEquipe[]
   profilActuelId: string
+  couleurs: Map<string, CouleurAvatar>
 }) {
   const [onglet, setOnglet] = useState<'fil' | 'taches'>('fil')
   const tachesEnAttente = taches.filter((t) => t.statut === 'a_faire').length
@@ -50,9 +53,9 @@ export function CahierDeLiaison({
       </div>
 
       {onglet === 'fil' ? (
-        <FilDeMessages messages={messages} profilActuelId={profilActuelId} />
+        <FilDeMessages messages={messages} profilActuelId={profilActuelId} couleurs={couleurs} />
       ) : (
-        <TachesList taches={taches} equipe={equipe} profilActuelId={profilActuelId} />
+        <TachesList taches={taches} equipe={equipe} profilActuelId={profilActuelId} couleurs={couleurs} />
       )}
     </div>
   )
