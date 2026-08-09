@@ -1,9 +1,11 @@
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
+import { getMesAdhesions } from '@/lib/data/adhesions'
 import { getPreferencesNotification } from '@/lib/data/notifications'
 import { createClient } from '@/lib/supabase/server'
 import { ProfilForm } from '@/components/profil-form'
 import { NotificationsParametres } from '@/components/notifications-parametres'
+import { GestionOfficines } from '@/components/gestion-officines'
 import { LienRetour } from '@/components/lien-retour'
 
 export default async function ProfilPage() {
@@ -14,7 +16,13 @@ export default async function ProfilPage() {
     },
     profil,
     officine,
-  ] = await Promise.all([supabase.auth.getUser(), getCurrentProfil(), getOfficineActive()])
+    adhesions,
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    getCurrentProfil(),
+    getOfficineActive(),
+    getMesAdhesions(),
+  ])
 
   if (!profil || !user) return null
 
@@ -31,6 +39,7 @@ export default async function ProfilPage() {
           email={user.email ?? ''}
         />
         {officine && <NotificationsParametres preferences={preferences} />}
+        <GestionOfficines adhesions={adhesions} officineActiveId={officine?.officine_id ?? ''} />
       </div>
     </>
   )
