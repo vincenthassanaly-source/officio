@@ -15,7 +15,11 @@ const nextConfig: NextConfig = {
       // Une vraie photo de comptoir (caméra téléphone, non compressée) dépasse
       // largement la limite par défaut de 1 Mo et faisait échouer le Scanner
       // chaussures en production avec un 413 avant même d'atteindre l'action.
-      bodySizeLimit: '10mb',
+      // Plafonné à 4 Mo (et non plus haut) car Vercel impose de toute façon un
+      // maximum absolu et non configurable de 4,5 Mo par requête de fonction :
+      // voir compresserPhoto() dans chaussures-scanner.tsx, qui redimensionne
+      // la photo côté client bien en-dessous de cette limite avant l'envoi.
+      bodySizeLimit: '4mb',
     },
   },
 };

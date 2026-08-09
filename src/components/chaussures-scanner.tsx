@@ -7,6 +7,41 @@ import { identifierChaussure, type CandidatChaussure, type NiveauConfiance } fro
 const MESSAGE_ERREUR_RESEAU =
   "Impossible de contacter le serveur pour analyser la photo. Vérifiez votre connexion et réessayez."
 
+// Vercel plafonne le corps d'une requête vers une Server Action à 4,5 Mo, en
+// dur, indépendamment de la config Next.js (voir next.config.ts). Une vraie
+// photo de téléphone à pleine résolution dépasse fréquemment cette limite et
+// se fait rejeter par la plateforme avant même d'atteindre le serveur — d'où
+// la compression systématique côté client avant l'envoi. En prime, ça reste
+// sous la limite de résolution de Voyage AI et accélère l'envoi au comptoir.
+const DIMENSION_MAX_PX = 1600
+const QUALITE_JPEG = 0.85
+
+async function compresserPhoto(fichier: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(fichier)
+    const ratio = Math.min(1, DIMENSION_MAX_PX / Math.max(bitmap.width, bitmap.height))
+    const largeur = Math.round(bitmap.width * ratio)
+    const hauteur = Math.round(bitmap.height * ratio)
+
+    const canvas = document.createElement('canvas')
+    canvas.width = largeur
+    canvas.height = hauteur
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return fichier
+
+    ctx.drawImage(bitmap, 0, 0, largeur, hauteur)
+    bitmap.close()
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', QUALITE_JPEG))
+    if (!blob) return fichier
+
+    return new File([blob], 'photo-comptoir.jpg', { type: 'image/jpeg' })
+  } catch (err) {
+    console.error('[chaussures-scanner] Compression de la photo impossible, envoi de l’originale :', err)
+    return fichier
+  }
+}
+
 const BADGES: Record<NiveauConfiance, { label: string; className: string }> = {
   'très probable': { label: 'Très probable', className: 'bg-primary text-white' },
   possible: { label: 'Possible', className: 'bg-accent-soft text-accent' },
@@ -49,16 +84,17 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
   const [erreur, setErreur] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  function analyser(fichier: File) {
+  function analyser(fichierOriginal: File) {
     setErreur(null)
     setCandidats(null)
-    setPhotoApercu(URL.createObjectURL(fichier))
-
-    const formData = new FormData()
-    formData.set('photo', fichier)
+    setPhotoApercu(URL.createObjectURL(fichierOriginal))
 
     startTransition(async () => {
       try {
+        const fichier = await compresserPhoto(fichierOriginal)
+        const formData = new FormData()
+        formData.set('photo', fichier)
+
         const resultat = await identifierChaussure(formData)
         if (resultat.succes) {
           setCandidats(resultat.candidats)
