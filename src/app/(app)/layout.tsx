@@ -43,7 +43,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
                 href="/inviter"
                 className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
               >
-                Inviter
+                Mon équipe
               </Link>
               <Link
                 href="/profil"

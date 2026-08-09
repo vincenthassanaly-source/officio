@@ -80,7 +80,7 @@ export function SidebarNav({
           href="/inviter"
           className="rounded-lg px-3 py-2 text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink"
         >
-          Inviter
+          Mon équipe
         </Link>
         <Link
           href="/profil"
