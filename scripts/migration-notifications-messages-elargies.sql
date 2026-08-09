@@ -108,3 +108,61 @@ create trigger messages_push
   after insert on messages
   for each row
   execute function notifier_nouveau_message();
+
+-- Tâche créée sans assigné → notifie toute l'officine (sauf le créateur).
+-- Complète notifier_tache_assignee() (inchangée, scripts/migration-
+-- notifications-taches-assignees.sql) qui ne se déclenche que lorsqu'un
+-- assigne_id précis est fourni (à l'insertion ou à une réassignation) — les
+-- deux triggers sont mutuellement exclusifs sur une même ligne insérée
+-- (assigne_id est soit null, soit renseigné).
+create function notifier_tache_non_assignee()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform net.http_post(
+    url := 'https://hjerdcehdzfjhzefnnel.supabase.co/functions/v1/send-push',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer sb_publishable_pOJAnLUbz1AELiFnXUYU_w_N7GOxXqJ'
+    ),
+    body := jsonb_build_object(
+      'officineId', new.officine_id,
+      'categorie', 'taches_non_assignees',
+      'titre', 'Nouvelle tâche à faire',
+      'corps', new.titre,
+      'url', '/liaison',
+      -- created_by est renseigné par l'app à la création (creerTache), mais
+      -- reste nullable en base : on ne construit l'exclusion que s'il y a
+      -- effectivement un créateur à exclure.
+      'exclureProfilIds', case
+        when new.created_by is not null then jsonb_build_array(new.created_by)
+        else '[]'::jsonb
+      end
+    )
+  );
+
+  -- Fil in-app : une ligne par membre de l'officine, sauf le créateur.
+  insert into notifications (officine_id, profil_id, categorie, titre, corps, url)
+  select
+    new.officine_id,
+    a.profil_id,
+    'taches_non_assignees',
+    'Nouvelle tâche à faire',
+    new.titre,
+    '/liaison'
+  from adhesions a
+  where a.officine_id = new.officine_id
+    and (new.created_by is null or a.profil_id <> new.created_by);
+
+  return new;
+end;
+$$;
+
+create trigger taches_non_assignee_push
+  after insert on taches
+  for each row
+  when (new.assigne_id is null)
+  execute function notifier_tache_non_assignee();
