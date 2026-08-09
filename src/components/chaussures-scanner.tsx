@@ -4,6 +4,9 @@ import { useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { identifierChaussure, type CandidatChaussure, type NiveauConfiance } from '@/app/actions/scanner-chaussures'
 
+const MESSAGE_ERREUR_RESEAU =
+  "Impossible de contacter le serveur pour analyser la photo. Vérifiez votre connexion et réessayez."
+
 const BADGES: Record<NiveauConfiance, { label: string; className: string }> = {
   'très probable': { label: 'Très probable', className: 'bg-primary text-white' },
   possible: { label: 'Possible', className: 'bg-accent-soft text-accent' },
@@ -56,10 +59,18 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
 
     startTransition(async () => {
       try {
-        const resultats = await identifierChaussure(formData)
-        setCandidats(resultats)
+        const resultat = await identifierChaussure(formData)
+        if (resultat.succes) {
+          setCandidats(resultat.candidats)
+        } else {
+          setErreur(resultat.message)
+        }
       } catch (err) {
-        setErreur(err instanceof Error ? err.message : "Erreur lors de l'analyse de la photo.")
+        // N'arrive qu'en cas d'échec de transport avant même l'exécution de
+        // l'action (ex. requête coupée) : l'action elle-même ne throw plus,
+        // voir src/app/actions/scanner-chaussures.ts.
+        console.error('[chaussures-scanner] Échec de transport vers le serveur :', err)
+        setErreur(MESSAGE_ERREUR_RESEAU)
       }
     })
   }
