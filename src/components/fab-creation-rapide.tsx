@@ -1,10 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { IconLiaison } from '@/components/nav-icons'
+import { envoyerMessage } from '@/app/actions/liaison'
+import type { Categorie } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
 
 type Vue = 'ferme' | 'menu' | 'message' | 'tache'
+
+// Mêmes catégories/couleurs que le formulaire de fil-de-messages.tsx.
+const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
+  { value: 'info', label: 'Info', className: 'bg-primary-soft text-primary' },
+  { value: 'stock', label: 'Stock', className: 'bg-accent-soft text-accent' },
+  { value: 'urgent', label: 'Urgent', className: 'bg-rec-soft text-rec' },
+]
 
 function IconPlus({ className }: { className?: string }) {
   return (
@@ -75,6 +84,56 @@ function MenuChoix({ onChoisir }: { onChoisir: (vue: 'message' | 'tache') => voi
   )
 }
 
+function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
+  const [categorie, setCategorie] = useState<Categorie>('info')
+  const [contenu, setContenu] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <form
+      action={(formData) => {
+        startTransition(async () => {
+          await envoyerMessage(formData)
+          setContenu('')
+          onEnvoye()
+        })
+      }}
+      className="flex flex-col gap-3 p-4"
+    >
+      <div className="font-heading text-lg text-ink">Nouveau message</div>
+      <div className="flex gap-1.5">
+        {CATEGORIES.map((c) => (
+          <button
+            key={c.value}
+            type="button"
+            onClick={() => setCategorie(c.value)}
+            className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+              categorie === c.value ? c.className : 'bg-bg text-muted'
+            }`}
+          >
+            {c.label}
+          </button>
+        ))}
+      </div>
+      <input type="hidden" name="categorie" value={categorie} />
+      <input
+        name="contenu"
+        value={contenu}
+        onChange={(e) => setContenu(e.target.value)}
+        placeholder="Écrire une consigne à l'équipe…"
+        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+      />
+      <button
+        type="submit"
+        disabled={isPending || !contenu.trim()}
+        className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+      >
+        Envoyer
+      </button>
+    </form>
+  )
+}
+
 export function FabCreationRapide({
   equipe,
   profilActuelId,
@@ -115,7 +174,7 @@ export function FabCreationRapide({
             </button>
 
             {vue === 'menu' && <MenuChoix onChoisir={setVue} />}
-            {vue === 'message' && <p className="p-4 text-[13.5px] text-muted">Formulaire à venir.</p>}
+            {vue === 'message' && <FormulaireMessage onEnvoye={fermer} />}
             {vue === 'tache' && <p className="p-4 text-[13.5px] text-muted">Formulaire à venir.</p>}
           </div>
         </div>
