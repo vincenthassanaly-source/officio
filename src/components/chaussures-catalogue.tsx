@@ -313,15 +313,6 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
             </span>
           </button>
         ))}
-        <button
-          type="button"
-          onClick={() => setVue('scanner')}
-          className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-            vue === 'scanner' ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
-          }`}
-        >
-          SCANNER
-        </button>
       </div>
 
       {vue === 'scanner' && (
@@ -359,12 +350,34 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
 
       {vue === 'catalogue' && (
         <>
-          <input
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            placeholder="Rechercher un modèle ou une catégorie…"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
-          />
+          <div className="flex gap-1.5">
+            <input
+              value={recherche}
+              onChange={(e) => setRecherche(e.target.value)}
+              placeholder="Rechercher un modèle ou une catégorie…"
+              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+            />
+            <button
+              type="button"
+              onClick={() => setVue('scanner')}
+              aria-label="Scanner une chaussure"
+              title="Scanner une chaussure"
+              className="flex shrink-0 items-center justify-center rounded-xl border border-border bg-surface px-3 text-muted"
+            >
+              <svg
+                className="h-5 w-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            </button>
+          </div>
 
           {totalVisible === 0 && (
             <p className="py-10 text-center text-sm text-muted">Aucun modèle ne correspond.</p>
