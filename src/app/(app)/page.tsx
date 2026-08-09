@@ -13,6 +13,7 @@ import { AccueilDashboard } from '@/components/accueil-dashboard'
 
 const MAX_RDV_APERCU = 4
 const MAX_TACHES_APERCU = 4
+const MAX_MESSAGES_APERCU = 3
 
 export default async function AccueilPage() {
   const [officine, profil] = await Promise.all([getOfficineActive(), getCurrentProfil()])
@@ -35,9 +36,9 @@ export default async function AccueilPage() {
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
   const chaussuresSansPrix = chaussures.filter((c) => c.prix === null).length
 
-  const nonLus = messages.filter(
-    (m) => !m.lecteurs.some((l) => l.profil_id === profil?.id)
-  ).length
+  const messagesNonLusTous = messages.filter((m) => !m.lecteurs.some((l) => l.profil_id === profil?.id))
+  const nonLus = messagesNonLusTous.length
+  const messagesNonLusApercu = messagesNonLusTous.slice(0, MAX_MESSAGES_APERCU)
 
   const rdvDuJourTous = rendezVous.filter((r) => r.date === aujourdhuiIso)
   const rdvDuJour = rdvDuJourTous.slice(0, MAX_RDV_APERCU)
@@ -75,6 +76,8 @@ export default async function AccueilPage() {
         totalRdvDuJour={rdvDuJourTous.length}
         tachesDuJour={tachesDuJour}
         totalTachesAFaire={tachesAFaireTous.length}
+        messagesNonLusApercu={messagesNonLusApercu}
+        totalMessagesNonLus={nonLus}
       />
 
       <div className="mt-5 grid grid-cols-2 gap-2.5">

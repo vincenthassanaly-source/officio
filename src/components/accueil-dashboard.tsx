@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { toggleTache } from '@/app/actions/taches'
 import type { CategorieRdv, RendezVous } from '@/lib/data/rendez-vous'
 import type { Tache } from '@/lib/data/taches'
+import type { MessageAvecDetails } from '@/lib/data/messages'
 import { toISODate } from '@/lib/dates'
 
 const LABEL_CATEGORIE_RDV: Record<CategorieRdv, string> = {
@@ -26,14 +27,31 @@ export function AccueilDashboard({
   totalRdvDuJour,
   tachesDuJour,
   totalTachesAFaire,
+  messagesNonLusApercu,
+  totalMessagesNonLus,
 }: {
   rdvDuJour: RendezVous[]
   totalRdvDuJour: number
   tachesDuJour: Tache[]
   totalTachesAFaire: number
+  messagesNonLusApercu: MessageAvecDetails[]
+  totalMessagesNonLus: number
 }) {
   const [isPending, startTransition] = useTransition()
   const aujourdhuiIso = toISODate(new Date())
+
+  const toutEstAJour = totalRdvDuJour === 0 && totalTachesAFaire === 0 && totalMessagesNonLus === 0
+
+  if (toutEstAJour) {
+    return (
+      <div className="mt-4 rounded-2xl border border-border bg-surface p-4 text-center">
+        <p className="text-[13.5px] font-semibold text-ink">Tout est à jour ✓</p>
+        <p className="mt-0.5 text-[11.5px] text-muted">
+          Rien de prévu aujourd&rsquo;hui, aucune tâche ni message en attente.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="mt-4 flex flex-col gap-3">
@@ -65,16 +83,18 @@ export function AccueilDashboard({
         )}
       </div>
 
-      {tachesDuJour.length > 0 && (
-        <div className="rounded-2xl border border-border bg-surface p-3.5">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Tâches</span>
-            {totalTachesAFaire > tachesDuJour.length && (
-              <Link href="/liaison" className="text-[11px] font-semibold text-primary">
-                Voir tout ({totalTachesAFaire})
-              </Link>
-            )}
-          </div>
+      <div className="rounded-2xl border border-border bg-surface p-3.5">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Tâches</span>
+          {totalTachesAFaire > tachesDuJour.length && (
+            <Link href="/liaison" className="text-[11px] font-semibold text-primary">
+              Voir tout ({totalTachesAFaire})
+            </Link>
+          )}
+        </div>
+        {tachesDuJour.length === 0 ? (
+          <p className="py-2 text-center text-[12.5px] text-muted">Aucune tâche en attente</p>
+        ) : (
           <div className="flex flex-col gap-2">
             {tachesDuJour.map((t) => {
               const badge = badgeEcheance(t.echeance, aujourdhuiIso)
@@ -95,8 +115,33 @@ export function AccueilDashboard({
               )
             })}
           </div>
+        )}
+      </div>
+
+      <div className="rounded-2xl border border-border bg-surface p-3.5">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Messages non lus</span>
+          {totalMessagesNonLus > messagesNonLusApercu.length && (
+            <Link href="/liaison" className="text-[11px] font-semibold text-primary">
+              Voir tout ({totalMessagesNonLus})
+            </Link>
+          )}
         </div>
-      )}
+        {messagesNonLusApercu.length === 0 ? (
+          <p className="py-2 text-center text-[12.5px] text-muted">Aucun message non lu</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {messagesNonLusApercu.map((m) => (
+              <Link key={m.id} href="/liaison" className="flex items-start gap-1.5">
+                <span className="shrink-0 text-[12.5px] font-semibold text-ink">
+                  {m.auteur?.nom_complet.split(' ')[0] ?? 'Ancien collègue'} ·
+                </span>
+                <span className="min-w-0 flex-1 truncate text-[12.5px] text-muted">{m.contenu}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
