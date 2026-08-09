@@ -121,6 +121,28 @@ export async function creerCreneau(formData: FormData) {
   revalidatePath('/agenda')
 }
 
+export async function modifierCreneau(id: string, formData: FormData) {
+  const type = String(formData.get('type') ?? 'travail') as TypeCreneau
+  const heureDebut = String(formData.get('heure_debut') ?? '') || null
+  const heureFin = String(formData.get('heure_fin') ?? '') || null
+  const note = String(formData.get('note') ?? '').trim() || null
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('plannings')
+    .update({
+      type,
+      heure_debut: type === 'travail' ? heureDebut : null,
+      heure_fin: type === 'travail' ? heureFin : null,
+      note,
+    })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/agenda')
+}
+
 export async function supprimerCreneau(
   id: string,
   serieId?: string | null,

@@ -20,9 +20,16 @@ export function getWeekDates(reference: Date): Date[] {
 }
 
 const JOURS_COURTS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+const JOURS_LONGS = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
 
 export function formatJourCourt(d: Date): string {
   return JOURS_COURTS[d.getDay()]
+}
+
+export function formatDateLongue(dateISO: string): string {
+  const [annee, mois, jour] = dateISO.split('-').map(Number)
+  const d = new Date(annee, mois - 1, jour)
+  return `${JOURS_LONGS[d.getDay()]} ${jour} ${MOIS_LONG[mois - 1]} ${annee}`
 }
 
 export function formatHeure(heure: string): string {

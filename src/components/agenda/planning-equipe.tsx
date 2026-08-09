@@ -1,11 +1,17 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { creerCreneau, supprimerCreneau, type RecurrenceCreneau } from '@/app/actions/agenda'
+import { creerCreneau, modifierCreneau, supprimerCreneau, type RecurrenceCreneau } from '@/app/actions/agenda'
 import type { Creneau, TypeCreneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
-import { formatHeure, formatJourCourt, toISODate } from '@/lib/dates'
+import { formatDateLongue, formatHeure, formatJourCourt, toISODate } from '@/lib/dates'
 import { couleurEmploye } from '@/lib/couleur-equipe'
+
+const LIBELLE_TYPE: Record<TypeCreneau, string> = {
+  travail: 'Travail',
+  repos: 'Repos',
+  conge: 'Congé',
+}
 
 const HEURE_DEBUT_DEFAUT = 8
 const HEURE_FIN_DEFAUT = 20
@@ -45,6 +51,36 @@ export function PlanningEquipe({
   const [typeForm, setTypeForm] = useState<TypeCreneau>('travail')
   const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceCreneau>('aucune')
   const [isPending, startTransition] = useTransition()
+
+  const [creneauDetail, setCreneauDetail] = useState<Creneau | null>(null)
+  const [edition, setEdition] = useState(false)
+  const [typeEdition, setTypeEdition] = useState<TypeCreneau>('travail')
+
+  function fermerDetail() {
+    setCreneauDetail(null)
+    setEdition(false)
+  }
+
+  function ouvrirModification(c: Creneau) {
+    setTypeEdition(c.type)
+    setEdition(true)
+  }
+
+  function demanderSuppression(c: Creneau) {
+    const membre = equipe.find((m) => m.id === c.profil_id)
+    const horaire = c.type === 'travail' && c.heure_debut && c.heure_fin
+      ? ` (${formatHeure(c.heure_debut)}-${formatHeure(c.heure_fin)})`
+      : ''
+    if (
+      confirmerSuppression(
+        `Supprimer « ${LIBELLE_TYPE[c.type]} » pour ${membre?.nom_complet ?? 'cette personne'}${horaire} ?`
+      )
+    ) {
+      const portee = demanderPorteeSuppression(c.serie_id)
+      startTransition(() => supprimerCreneau(c.id, c.serie_id, portee))
+      fermerDetail()
+    }
+  }
 
   const { heureMin, heureMax } = useMemo(() => {
     let min = HEURE_DEBUT_DEFAUT
@@ -212,15 +248,9 @@ export function PlanningEquipe({
                   <button
                     type="button"
                     key={c.id}
-                    onClick={() => {
-                      const libelle = c.type === 'repos' ? 'Repos' : 'Congé'
-                      if (confirmerSuppression(`Supprimer « ${libelle} » pour ${membre?.nom_complet ?? 'cette personne'} ?`)) {
-                        const portee = demanderPorteeSuppression(c.serie_id)
-                        startTransition(() => supprimerCreneau(c.id, c.serie_id, portee))
-                      }
-                    }}
+                    onClick={() => setCreneauDetail(c)}
                     disabled={isPending}
-                    title={`${membre?.nom_complet ?? ''} — ${c.type === 'repos' ? 'Repos' : 'Congé'} (cliquer pour supprimer)`}
+                    title={`${membre?.nom_complet ?? ''} — ${c.type === 'repos' ? 'Repos' : 'Congé'} (cliquer pour le détail)`}
                     className={`rounded px-1 py-0.5 text-[8px] font-bold ${
                       c.type === 'repos' ? 'bg-neutral-soft text-neutral-text' : 'bg-accent-soft text-accent'
                     }`}
@@ -268,19 +298,9 @@ export function PlanningEquipe({
                   <button
                     type="button"
                     key={c.id}
-                    onClick={() => {
-                      const horaire = `${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)}`
-                      if (
-                        confirmerSuppression(
-                          `Supprimer le créneau de ${membre?.nom_complet ?? 'cette personne'} (${horaire}) ?`
-                        )
-                      ) {
-                        const portee = demanderPorteeSuppression(c.serie_id)
-                        startTransition(() => supprimerCreneau(c.id, c.serie_id, portee))
-                      }
-                    }}
+                    onClick={() => setCreneauDetail(c)}
                     disabled={isPending}
-                    title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour supprimer)`}
+                    title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour le détail)`}
                     className="absolute inset-x-0.5 overflow-hidden rounded-md px-1 py-0.5 text-left text-[8px] font-semibold leading-tight text-white disabled:opacity-70"
                     style={{ top, height: hauteur, background: couleurEmploye(c.profil_id, equipe) }}
                   >
@@ -297,6 +317,141 @@ export function PlanningEquipe({
           )
         })}
       </div>
+
+      {creneauDetail && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center">
+          <button type="button" aria-label="Fermer" onClick={fermerDetail} className="absolute inset-0" />
+          <div className="relative w-full rounded-t-3xl bg-surface p-4 lg:max-w-sm lg:rounded-3xl">
+            <button
+              type="button"
+              onClick={fermerDetail}
+              aria-label="Fermer"
+              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-neutral-soft text-ink"
+            >
+              ×
+            </button>
+
+            {(() => {
+              const c = creneauDetail
+              const membre = equipe.find((m) => m.id === c.profil_id)
+
+              if (edition) {
+                return (
+                  <form
+                    action={(formData) => {
+                      startTransition(async () => {
+                        await modifierCreneau(c.id, formData)
+                        fermerDetail()
+                      })
+                    }}
+                    className="flex flex-col gap-2 pt-2"
+                  >
+                    <div className="mb-1 flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ background: couleurEmploye(c.profil_id, equipe) }}
+                      />
+                      <span className="text-[13.5px] font-semibold text-ink">{membre?.nom_complet ?? 'Employé'}</span>
+                    </div>
+                    <p className="text-[11.5px] text-muted">{formatDateLongue(c.date)}</p>
+                    <select
+                      name="type"
+                      value={typeEdition}
+                      onChange={(e) => setTypeEdition(e.target.value as TypeCreneau)}
+                      className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+                    >
+                      <option value="travail">Travail</option>
+                      <option value="repos">Repos</option>
+                      <option value="conge">Congé</option>
+                    </select>
+                    {typeEdition === 'travail' && (
+                      <div className="flex gap-2">
+                        <input
+                          type="time"
+                          name="heure_debut"
+                          required
+                          defaultValue={c.heure_debut ?? ''}
+                          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+                        />
+                        <input
+                          type="time"
+                          name="heure_fin"
+                          required
+                          defaultValue={c.heure_fin ?? ''}
+                          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+                        />
+                      </div>
+                    )}
+                    <input
+                      name="note"
+                      placeholder="Note (ex: motif du congé)"
+                      defaultValue={c.note ?? ''}
+                      className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+                    />
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setEdition(false)}
+                        className="flex-1 rounded-xl border border-border py-2.5 text-[13px] font-semibold text-ink"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isPending}
+                        className="flex-1 rounded-xl bg-primary py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+                      >
+                        Enregistrer
+                      </button>
+                    </div>
+                  </form>
+                )
+              }
+
+              return (
+                <div className="flex flex-col gap-3 pt-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full"
+                      style={{ background: couleurEmploye(c.profil_id, equipe) }}
+                    />
+                    <span className="text-[14.5px] font-semibold text-ink">{membre?.nom_complet ?? 'Employé'}</span>
+                  </div>
+                  <p className="text-[12.5px] text-muted">{formatDateLongue(c.date)}</p>
+                  <div className="rounded-xl bg-bg px-3 py-2.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                      {LIBELLE_TYPE[c.type]}
+                    </p>
+                    {c.type === 'travail' && c.heure_debut && c.heure_fin && (
+                      <p className="font-heading text-[20px] text-ink">
+                        {formatHeure(c.heure_debut)} – {formatHeure(c.heure_fin)}
+                      </p>
+                    )}
+                  </div>
+                  {c.note && <p className="text-[13px] text-ink">{c.note}</p>}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => ouvrirModification(c)}
+                      className="flex-1 rounded-xl border border-border py-2.5 text-[13px] font-semibold text-ink"
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => demanderSuppression(c)}
+                      disabled={isPending}
+                      className="flex-1 rounded-xl bg-rec-soft py-2.5 text-[13px] font-semibold text-rec disabled:opacity-60"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
