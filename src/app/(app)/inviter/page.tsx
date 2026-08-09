@@ -1,6 +1,7 @@
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getOfficine } from '@/lib/data/officines'
 import { getEquipe } from '@/lib/data/equipe'
+import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { InviterCard } from '@/components/inviter-card'
 import { MembresOfficine } from '@/components/membres-officine'
@@ -12,7 +13,11 @@ export default async function InviterPage() {
 
   if (!officine) return null
 
-  const [membres, profil] = await Promise.all([getEquipe(officine.id), getCurrentProfil()])
+  const [membres, couleurs, profil] = await Promise.all([
+    getEquipe(officine.id),
+    getCouleursMembres(officine.id),
+    getCurrentProfil(),
+  ])
 
   return (
     <>
@@ -21,7 +26,7 @@ export default async function InviterPage() {
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
           <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Équipe</div>
-          <MembresOfficine membres={membres} profilActuelId={profil?.id ?? ''} />
+          <MembresOfficine membres={membres} profilActuelId={profil?.id ?? ''} couleurs={couleurs} />
         </div>
         <div className="flex flex-col gap-2">
           <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Inviter un collègue</div>
