@@ -50,7 +50,7 @@ export function CahierDeLiaison({
       </div>
 
       {onglet === 'fil' ? (
-        <FilDeMessages messages={messages} equipe={equipe} profilActuelId={profilActuelId} />
+        <FilDeMessages messages={messages} profilActuelId={profilActuelId} />
       ) : (
         <TachesList taches={taches} equipe={equipe} profilActuelId={profilActuelId} />
       )}

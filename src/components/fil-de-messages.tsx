@@ -3,10 +3,8 @@
 import { useMemo, useRef, useState, useTransition } from 'react'
 import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
-import type { MembreEquipe } from '@/lib/data/equipe'
 import { formatDateRelative } from '@/lib/dates'
 
-const FILTRE_TOUS = 'tous'
 const FILTRE_TOUTES = 'toutes'
 
 const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
@@ -24,38 +22,33 @@ function normaliser(texte: string): string {
 
 export function FilDeMessages({
   messages,
-  equipe,
   profilActuelId,
 }: {
   messages: MessageAvecDetails[]
-  equipe: MembreEquipe[]
   profilActuelId: string
 }) {
   const [categorie, setCategorie] = useState<Categorie>('info')
   const [contenu, setContenu] = useState('')
   const [recherche, setRecherche] = useState('')
-  const [filtreMembre, setFiltreMembre] = useState<string>(FILTRE_TOUS)
   const [filtreCategorie, setFiltreCategorie] = useState<string>(FILTRE_TOUTES)
   const [isPending, startTransition] = useTransition()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const filtresActifs = recherche.trim() !== '' || filtreMembre !== FILTRE_TOUS || filtreCategorie !== FILTRE_TOUTES
+  const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
 
   function reinitialiserFiltres() {
     setRecherche('')
-    setFiltreMembre(FILTRE_TOUS)
     setFiltreCategorie(FILTRE_TOUTES)
   }
 
   const messagesFiltres = useMemo(() => {
     const rechercheNormalisee = normaliser(recherche.trim())
     return messages.filter((m) => {
-      if (filtreMembre !== FILTRE_TOUS && m.auteur?.id !== filtreMembre) return false
       if (filtreCategorie !== FILTRE_TOUTES && m.categorie !== filtreCategorie) return false
       if (rechercheNormalisee && !normaliser(m.contenu).includes(rechercheNormalisee)) return false
       return true
     })
-  }, [messages, recherche, filtreMembre, filtreCategorie])
+  }, [messages, recherche, filtreCategorie])
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -78,36 +71,6 @@ export function FilDeMessages({
               </button>
             )}
           </div>
-
-          {equipe.length > 0 && (
-            <div className="flex gap-1.5 overflow-x-auto pb-0.5">
-              <button
-                type="button"
-                onClick={() => setFiltreMembre(FILTRE_TOUS)}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold ${
-                  filtreMembre === FILTRE_TOUS
-                    ? 'border-primary bg-primary text-white'
-                    : 'border-border bg-surface text-muted'
-                }`}
-              >
-                Tous
-              </button>
-              {equipe.map((m) => (
-                <button
-                  type="button"
-                  key={m.id}
-                  onClick={() => setFiltreMembre(m.id)}
-                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold ${
-                    filtreMembre === m.id
-                      ? 'border-primary bg-primary text-white'
-                      : 'border-border bg-surface text-muted'
-                  }`}
-                >
-                  {m.id === profilActuelId ? 'Moi' : m.nom_complet.split(' ')[0]}
-                </button>
-              ))}
-            </div>
-          )}
 
           <div className="flex gap-1.5 overflow-x-auto pb-0.5">
             <button
