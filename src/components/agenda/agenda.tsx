@@ -2,26 +2,32 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { RendezVousList } from './rendez-vous-list'
+import { AgendaVueGlobale } from './agenda-vue-globale'
 import { PlanningEquipe } from './planning-equipe'
 import type { RendezVous } from '@/lib/data/rendez-vous'
+import type { TacheEcheance } from '@/lib/data/taches'
+import type { Regularisation } from '@/lib/data/regularisations'
 import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import { formatPeriodeSemaine, getWeekDates, toISODate } from '@/lib/dates'
 
 export function Agenda({
   rendezVous,
+  taches,
+  regularisations,
   creneaux,
   equipe,
   weekDates,
 }: {
   rendezVous: RendezVous[]
+  taches: TacheEcheance[]
+  regularisations: Regularisation[]
   creneaux: Creneau[]
   equipe: MembreEquipe[]
   weekDates: Date[]
 }) {
   const router = useRouter()
-  const [onglet, setOnglet] = useState<'rdv' | 'planning'>('rdv')
+  const [onglet, setOnglet] = useState<'globale' | 'planning'>('globale')
 
   const lundiAffiche = toISODate(weekDates[0])
   const estSemaineActuelle = lundiAffiche === toISODate(getWeekDates(new Date())[0])
@@ -72,12 +78,12 @@ export function Agenda({
       <div className="mb-4 flex shrink-0 rounded-xl bg-track p-1">
         <button
           type="button"
-          onClick={() => setOnglet('rdv')}
+          onClick={() => setOnglet('globale')}
           className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
-            onglet === 'rdv' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+            onglet === 'globale' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
-          Rendez-vous
+          Vue globale
         </button>
         <button
           type="button"
@@ -90,8 +96,14 @@ export function Agenda({
         </button>
       </div>
 
-      {onglet === 'rdv' ? (
-        <RendezVousList key={lundiAffiche} rendezVous={rendezVous} weekDates={weekDates} />
+      {onglet === 'globale' ? (
+        <AgendaVueGlobale
+          key={lundiAffiche}
+          rendezVous={rendezVous}
+          taches={taches}
+          regularisations={regularisations}
+          weekDates={weekDates}
+        />
       ) : (
         <PlanningEquipe key={lundiAffiche} creneaux={creneaux} equipe={equipe} weekDates={weekDates} />
       )}
