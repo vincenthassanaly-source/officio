@@ -12,6 +12,7 @@ import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
 
 const MAX_RDV_APERCU = 4
+const MAX_TACHES_APERCU = 4
 
 export default async function AccueilPage() {
   const [officine, profil] = await Promise.all([getOfficineActive(), getCurrentProfil()])
@@ -41,6 +42,20 @@ export default async function AccueilPage() {
   const rdvDuJourTous = rendezVous.filter((r) => r.date === aujourdhuiIso)
   const rdvDuJour = rdvDuJourTous.slice(0, MAX_RDV_APERCU)
 
+  // Priorité aux tâches en retard ou dues aujourd'hui, puis échéances futures,
+  // puis sans échéance — pour que la vue "Aujourd'hui" mette en avant ce qui
+  // presse plutôt que l'ordre de création.
+  const tachesAFaireTous = taches
+    .filter((t) => t.statut === 'a_faire')
+    .sort((a, b) => {
+      const rangA = a.echeance ? (a.echeance <= aujourdhuiIso ? 0 : 1) : 2
+      const rangB = b.echeance ? (b.echeance <= aujourdhuiIso ? 0 : 1) : 2
+      if (rangA !== rangB) return rangA - rangB
+      if (a.echeance && b.echeance) return a.echeance.localeCompare(b.echeance)
+      return 0
+    })
+  const tachesDuJour = tachesAFaireTous.slice(0, MAX_TACHES_APERCU)
+
   const prenom = profil?.nom_complet.split(' ')[0] ?? ''
   const dateLabel = aujourdhui.toLocaleDateString('fr-FR', {
     weekday: 'long',
@@ -55,7 +70,12 @@ export default async function AccueilPage() {
         <p className="mt-0.5 text-[12.5px] capitalize text-muted">{dateLabel}</p>
       </div>
 
-      <AccueilDashboard rdvDuJour={rdvDuJour} totalRdvDuJour={rdvDuJourTous.length} />
+      <AccueilDashboard
+        rdvDuJour={rdvDuJour}
+        totalRdvDuJour={rdvDuJourTous.length}
+        tachesDuJour={tachesDuJour}
+        totalTachesAFaire={tachesAFaireTous.length}
+      />
 
       <div className="mt-5 grid grid-cols-2 gap-2.5">
         <Link
