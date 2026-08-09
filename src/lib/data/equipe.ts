@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import type { Role } from './profils'
 
@@ -8,7 +9,11 @@ export type MembreEquipe = {
   initiales: string
 }
 
-export async function getEquipe(officineId: string): Promise<MembreEquipe[]> {
+// cache() (dédup par requête, comme getMesAdhesions) : getCouleursMembres
+// (src/lib/data/couleurs-membres.ts) appelle getEquipe en interne, souvent
+// en plus d'un appel direct par la même page pour afficher l'équipe elle-
+// même — sans ce cache, ce serait deux requêtes identiques par rendu.
+export const getEquipe = cache(async (officineId: string): Promise<MembreEquipe[]> => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('adhesions')
@@ -33,4 +38,4 @@ export async function getEquipe(officineId: string): Promise<MembreEquipe[]> {
       }
     })
     .filter((m): m is MembreEquipe => m !== null)
-}
+})
