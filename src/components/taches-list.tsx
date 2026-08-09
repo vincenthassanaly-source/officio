@@ -96,9 +96,10 @@ export function TachesList({
           <div className="flex gap-2">
             <select
               name="assigne_id"
-              defaultValue={profilActuelId}
+              defaultValue=""
               className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
             >
+              <option value="">Non assignée (toute l&rsquo;équipe)</option>
               {equipe.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.id === profilActuelId ? 'Moi' : m.nom_complet}
