@@ -3,7 +3,8 @@
 import { useState, useTransition } from 'react'
 import { envoyerSuggestion, supprimerSuggestion, basculerSuggestionFaite } from '@/app/actions/suggestions'
 import type { SuggestionAvecAuteur } from '@/lib/data/suggestions'
-import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
+import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -21,9 +22,11 @@ function formatDate(iso: string) {
 export function Suggestions({
   suggestions,
   profilActuelId,
+  couleurs,
 }: {
   suggestions: SuggestionAvecAuteur[]
   profilActuelId: string
+  couleurs: Map<string, CouleurAvatar>
 }) {
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
@@ -63,7 +66,9 @@ export function Suggestions({
           </p>
         )}
 
-        {suggestions.map((s) => (
+        {suggestions.map((s) => {
+          const couleurAuteur = (s.auteur ? couleurs.get(s.auteur.id) : null) ?? COULEUR_PAR_DEFAUT
+          return (
           <div
             key={s.id}
             className={`rounded-2xl border border-border bg-surface p-4 ${s.fait ? 'opacity-60' : ''}`}
@@ -78,9 +83,7 @@ export function Suggestions({
                 className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
               />
               <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                  s.auteur ? `${couleurAvatar(s.auteur.id)} ${texteAvatar(s.auteur.id)}` : 'bg-primary text-white'
-                }`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
               >
                 {s.auteur?.initiales ?? '?'}
               </div>
@@ -114,7 +117,8 @@ export function Suggestions({
               {s.message}
             </p>
           </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
