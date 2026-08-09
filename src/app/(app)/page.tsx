@@ -8,8 +8,10 @@ import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
 import { getChaussures } from '@/lib/data/chaussures'
 import { getCnoPatients } from '@/lib/data/cno'
 import { getSuggestions } from '@/lib/data/suggestions'
+import { getEquipe } from '@/lib/data/equipe'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
+import { FabCreationRapide } from '@/components/fab-creation-rapide'
 
 const MAX_RDV_APERCU = 4
 const MAX_TACHES_APERCU = 4
@@ -23,7 +25,7 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
-  const [messages, taches, rendezVous, huiles, chaussures, patientsCno, suggestions] = await Promise.all([
+  const [messages, taches, rendezVous, huiles, chaussures, patientsCno, suggestions, equipe] = await Promise.all([
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
     getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
@@ -31,6 +33,7 @@ export default async function AccueilPage() {
     getChaussures(officine.officine_id),
     getCnoPatients(officine.officine_id),
     getSuggestions(officine.officine_id),
+    getEquipe(officine.officine_id),
   ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
@@ -162,6 +165,8 @@ export default async function AccueilPage() {
           </div>
         </Link>
       </div>
+
+      <FabCreationRapide equipe={equipe} profilActuelId={profil?.id ?? ''} />
     </>
   )
 }
