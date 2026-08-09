@@ -3,6 +3,10 @@
 import { useMemo, useState, useTransition } from 'react'
 import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
+import type { MembreEquipe } from '@/lib/data/equipe'
+
+const FILTRE_TOUS = 'tous'
+const FILTRE_TOUTES = 'toutes'
 
 const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
   { value: 'info', label: 'Info', className: 'bg-primary-soft text-primary' },
@@ -33,43 +37,117 @@ function formatDate(iso: string) {
 
 export function FilDeMessages({
   messages,
+  equipe,
   profilActuelId,
 }: {
   messages: MessageAvecDetails[]
+  equipe: MembreEquipe[]
   profilActuelId: string
 }) {
   const [categorie, setCategorie] = useState<Categorie>('info')
   const [contenu, setContenu] = useState('')
   const [recherche, setRecherche] = useState('')
+  const [filtreMembre, setFiltreMembre] = useState<string>(FILTRE_TOUS)
+  const [filtreCategorie, setFiltreCategorie] = useState<string>(FILTRE_TOUTES)
   const [isPending, startTransition] = useTransition()
 
-  const filtresActifs = recherche.trim() !== ''
+  const filtresActifs = recherche.trim() !== '' || filtreMembre !== FILTRE_TOUS || filtreCategorie !== FILTRE_TOUTES
+
+  function reinitialiserFiltres() {
+    setRecherche('')
+    setFiltreMembre(FILTRE_TOUS)
+    setFiltreCategorie(FILTRE_TOUTES)
+  }
 
   const messagesFiltres = useMemo(() => {
     const rechercheNormalisee = normaliser(recherche.trim())
-    if (!rechercheNormalisee) return messages
-    return messages.filter((m) => normaliser(m.contenu).includes(rechercheNormalisee))
-  }, [messages, recherche])
+    return messages.filter((m) => {
+      if (filtreMembre !== FILTRE_TOUS && m.auteur?.id !== filtreMembre) return false
+      if (filtreCategorie !== FILTRE_TOUTES && m.categorie !== filtreCategorie) return false
+      if (rechercheNormalisee && !normaliser(m.contenu).includes(rechercheNormalisee)) return false
+      return true
+    })
+  }, [messages, recherche, filtreMembre, filtreCategorie])
 
   return (
     <div className="flex flex-1 flex-col gap-4">
       {messages.length > 0 && (
-        <div className="flex items-center gap-2">
-          <input
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            placeholder="Rechercher dans les messages…"
-            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
-          />
-          {filtresActifs && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <input
+              value={recherche}
+              onChange={(e) => setRecherche(e.target.value)}
+              placeholder="Rechercher dans les messages…"
+              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+            />
+            {filtresActifs && (
+              <button
+                type="button"
+                onClick={reinitialiserFiltres}
+                className="shrink-0 text-[11.5px] font-semibold text-muted"
+              >
+                Réinitialiser
+              </button>
+            )}
+          </div>
+
+          {equipe.length > 0 && (
+            <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+              <button
+                type="button"
+                onClick={() => setFiltreMembre(FILTRE_TOUS)}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold ${
+                  filtreMembre === FILTRE_TOUS
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-border bg-surface text-muted'
+                }`}
+              >
+                Tous
+              </button>
+              {equipe.map((m) => (
+                <button
+                  type="button"
+                  key={m.id}
+                  onClick={() => setFiltreMembre(m.id)}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold ${
+                    filtreMembre === m.id
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-border bg-surface text-muted'
+                  }`}
+                >
+                  {m.id === profilActuelId ? 'Moi' : m.nom_complet.split(' ')[0]}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5">
             <button
               type="button"
-              onClick={() => setRecherche('')}
-              className="shrink-0 text-[11.5px] font-semibold text-muted"
+              onClick={() => setFiltreCategorie(FILTRE_TOUTES)}
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold ${
+                filtreCategorie === FILTRE_TOUTES
+                  ? 'border-primary bg-primary text-white'
+                  : 'border-border bg-surface text-muted'
+              }`}
             >
-              Réinitialiser
+              Toutes
             </button>
-          )}
+            {CATEGORIES.map((c) => (
+              <button
+                type="button"
+                key={c.value}
+                onClick={() => setFiltreCategorie(c.value)}
+                className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold ${
+                  filtreCategorie === c.value
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-border bg-surface text-muted'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -81,9 +159,7 @@ export function FilDeMessages({
         )}
 
         {messages.length > 0 && messagesFiltres.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted">
-            Aucun message ne correspond à ta recherche.
-          </p>
+          <p className="py-10 text-center text-sm text-muted">Aucun message ne correspond aux filtres.</p>
         )}
 
         {messagesFiltres.map((m) => {
