@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/rappels-agenda",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }
