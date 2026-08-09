@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { NAV_ITEMS, estLienActif } from '@/lib/nav-items'
 import { OfficineSwitcher } from '@/components/officine-switcher'
 import { SwitchIdentite } from '@/components/switch-identite'
+import { NotificationsCloche } from '@/components/notifications-cloche'
 import {
   IconAccueil,
   IconAgenda,
@@ -15,6 +16,7 @@ import {
 } from '@/components/nav-icons'
 import { signOut } from '@/app/actions/auth'
 import type { Adhesion } from '@/lib/data/adhesions'
+import type { NotificationInApp } from '@/lib/data/notifications'
 
 const ICONES: Record<string, React.ComponentType<{ className?: string }>> = {
   '/': IconAccueil,
@@ -29,16 +31,23 @@ export function SidebarNav({
   adhesions,
   officineActiveId,
   profilActuel,
+  notifications,
+  nombreNonLues,
 }: {
   adhesions: Adhesion[]
   officineActiveId: string
   profilActuel: { id: string; nom_complet: string; initiales: string } | null
+  notifications: NotificationInApp[]
+  nombreNonLues: number
 }) {
   const pathname = usePathname()
 
   return (
     <aside className="hidden shrink-0 flex-col border-r border-border bg-surface px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-60 lg:overflow-y-auto">
-      <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActiveId} />
+      <div className="flex items-start gap-2">
+        <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActiveId} />
+        <NotificationsCloche notifications={notifications} nombreNonLues={nombreNonLues} />
+      </div>
 
       <nav className="mt-6 flex flex-col gap-1">
         {NAV_ITEMS.map((item) => {

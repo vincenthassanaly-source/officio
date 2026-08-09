@@ -29,6 +29,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         adhesions={adhesions}
         officineActiveId={officineActive!.officine_id}
         profilActuel={profilActuel}
+        notifications={notifications}
+        nombreNonLues={nombreNonLues}
       />
 
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col lg:mx-0 lg:max-w-none">
