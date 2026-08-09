@@ -72,3 +72,35 @@ export async function definirPreferenceNotification(categorie: CategorieNotifica
 
   revalidatePath('/profil')
 }
+
+// Fil in-app (icône cloche) — RLS restreint déjà la mise à jour à
+// profil_id = auth.uid() (voir scripts/migration-notifications-in-app.sql),
+// pas besoin de revérifier le propriétaire ici. `revalidatePath('/', 'layout')`
+// plutôt qu'un chemin précis : la cloche vit dans le layout partagé
+// (app)/layout.tsx, affiché sur toutes les routes, pas seulement '/'.
+export async function marquerNotificationLue(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('notifications').update({ lu: true }).eq('id', id)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/', 'layout')
+}
+
+export async function marquerToutesNotificationsLues() {
+  const profil = await getCurrentProfil()
+  const officine = await getOfficineActive()
+  if (!profil || !officine) throw new Error('Non connecté')
+
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('notifications')
+    .update({ lu: true })
+    .eq('profil_id', profil.id)
+    .eq('officine_id', officine.officine_id)
+    .eq('lu', false)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/', 'layout')
+}
