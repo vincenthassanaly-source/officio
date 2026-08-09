@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { IconLiaison } from '@/components/nav-icons'
 import { envoyerMessage } from '@/app/actions/liaison'
+import { creerTache } from '@/app/actions/taches'
 import type { Categorie } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
 
@@ -134,6 +135,63 @@ function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
   )
 }
 
+function FormulaireTache({
+  equipe,
+  profilActuelId,
+  onCree,
+}: {
+  equipe: MembreEquipe[]
+  profilActuelId: string
+  onCree: () => void
+}) {
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <form
+      action={(formData) => {
+        startTransition(async () => {
+          await creerTache(formData)
+          onCree()
+        })
+      }}
+      className="flex flex-col gap-3 p-4"
+    >
+      <div className="font-heading text-lg text-ink">Nouvelle tâche</div>
+      <input
+        name="titre"
+        required
+        placeholder="Titre de la tâche"
+        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+      />
+      <div className="flex gap-2">
+        <select
+          name="assigne_id"
+          defaultValue={profilActuelId}
+          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+        >
+          {equipe.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.id === profilActuelId ? 'Moi' : m.nom_complet}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          name="echeance"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+        />
+      </div>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+      >
+        Ajouter la tâche
+      </button>
+    </form>
+  )
+}
+
 export function FabCreationRapide({
   equipe,
   profilActuelId,
@@ -175,7 +233,9 @@ export function FabCreationRapide({
 
             {vue === 'menu' && <MenuChoix onChoisir={setVue} />}
             {vue === 'message' && <FormulaireMessage onEnvoye={fermer} />}
-            {vue === 'tache' && <p className="p-4 text-[13.5px] text-muted">Formulaire à venir.</p>}
+            {vue === 'tache' && (
+              <FormulaireTache equipe={equipe} profilActuelId={profilActuelId} onCree={fermer} />
+            )}
           </div>
         </div>
       )}
