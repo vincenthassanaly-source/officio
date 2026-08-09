@@ -68,6 +68,9 @@ export async function GET(request: Request) {
   let envoyes = 0
 
   for (const rdv of (rendezVous ?? []) as RendezVousARappeler[]) {
+    const titreNotif = `Rappel — ${rdv.titre}`
+    const corpsNotif = construireCorps(rdv)
+
     try {
       await fetch(`${supabaseUrl}/functions/v1/send-push`, {
         method: 'POST',
@@ -78,8 +81,8 @@ export async function GET(request: Request) {
         body: JSON.stringify({
           officineId: rdv.officine_id,
           categorie: 'agenda_rappel',
-          titre: `Rappel — ${rdv.titre}`,
-          corps: construireCorps(rdv),
+          titre: titreNotif,
+          corps: corpsNotif,
           url: '/agenda',
           // Pas de profilIds : toute l'officine, filtrée par la préférence
           // agenda_rappel (contrairement aux tâches assignées).
@@ -90,6 +93,30 @@ export async function GET(request: Request) {
       // Une erreur réseau sur un rendez-vous ne doit pas empêcher de
       // traiter les suivants — même choix que pour rappels-taches.
       console.error('rappels-agenda: envoi', rdv.id, e)
+    }
+
+    // Fil in-app : une ligne par membre de l'officine, comme send-push sans
+    // profilIds ci-dessus. Contrairement au push (filtré par préférence),
+    // le fil in-app reste exhaustif — voir scripts/migration-notifications-
+    // in-app-triggers.sql pour le raisonnement.
+    const { data: membres, error: erreurMembres } = await supabase
+      .from('adhesions')
+      .select('profil_id')
+      .eq('officine_id', rdv.officine_id)
+
+    if (erreurMembres) {
+      console.error('rappels-agenda: membres', rdv.id, erreurMembres)
+    } else if (membres && membres.length > 0) {
+      await supabase.from('notifications').insert(
+        membres.map((m) => ({
+          officine_id: rdv.officine_id,
+          profil_id: m.profil_id,
+          categorie: 'agenda_rappel',
+          titre: titreNotif,
+          corps: corpsNotif,
+          url: '/agenda',
+        }))
+      )
     }
 
     await supabase.from('rendez_vous').update({ rappel_envoye: true }).eq('id', rdv.id)

@@ -47,6 +47,8 @@ export async function GET(request: Request) {
   let envoyees = 0
 
   for (const tache of taches ?? []) {
+    const titreNotif = "Échéance aujourd'hui"
+
     try {
       await fetch(`${supabaseUrl}/functions/v1/send-push`, {
         method: 'POST',
@@ -57,7 +59,7 @@ export async function GET(request: Request) {
         body: JSON.stringify({
           officineId: tache.officine_id,
           categorie: 'taches_echeance',
-          titre: "Échéance aujourd'hui",
+          titre: titreNotif,
           corps: tache.titre,
           url: '/liaison',
           profilIds: [tache.assigne_id],
@@ -69,6 +71,20 @@ export async function GET(request: Request) {
       // les suivantes, ni de marquer celle-ci comme traitée (pas de
       // logique de retry pour cette première version — cf. contraintes).
       console.error('rappels-taches: envoi', tache.id, e)
+    }
+
+    // Fil in-app : exhaustif, indépendant de la préférence de push (voir
+    // scripts/migration-notifications-in-app-triggers.sql).
+    const { error: erreurNotif } = await supabase.from('notifications').insert({
+      officine_id: tache.officine_id,
+      profil_id: tache.assigne_id,
+      categorie: 'taches_echeance',
+      titre: titreNotif,
+      corps: tache.titre,
+      url: '/liaison',
+    })
+    if (erreurNotif) {
+      console.error('rappels-taches: notification in-app', tache.id, erreurNotif)
     }
 
     // Marqué "envoyé" que l'appel ait réussi ou non : le cron ne tourne
