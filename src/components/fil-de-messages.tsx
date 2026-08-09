@@ -11,7 +11,6 @@ const FILTRE_TOUTES = 'toutes'
 
 const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
   { value: 'info', label: 'Info', className: 'bg-primary-soft text-primary' },
-  { value: 'stock', label: 'Stock', className: 'bg-accent-soft text-accent' },
   { value: 'urgent', label: 'Urgent', className: 'bg-rec-soft text-rec' },
 ]
 

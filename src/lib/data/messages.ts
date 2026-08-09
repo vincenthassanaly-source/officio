@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
-export type Categorie = 'info' | 'stock' | 'urgent'
+export type Categorie = 'info' | 'urgent'
 
 export type MessageAvecDetails = {
   id: string
