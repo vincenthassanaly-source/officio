@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { envoyerSuggestion, supprimerSuggestion, basculerSuggestionFaite } from '@/app/actions/suggestions'
 import type { SuggestionAvecAuteur } from '@/lib/data/suggestions'
+import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -76,7 +77,11 @@ export function Suggestions({
                 aria-label={s.fait ? 'Marquer comme non traitée' : 'Marquer comme traitée'}
                 className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
               />
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white">
+              <div
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                  s.auteur ? `${couleurAvatar(s.auteur.id)} ${texteAvatar(s.auteur.id)}` : 'bg-primary text-white'
+                }`}
+              >
                 {s.auteur?.initiales ?? '?'}
               </div>
               <div className="min-w-0 flex-1">
