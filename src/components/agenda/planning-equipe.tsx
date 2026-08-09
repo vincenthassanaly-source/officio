@@ -5,7 +5,8 @@ import { creerCreneau, modifierCreneau, supprimerCreneau, type RecurrenceCreneau
 import type { Creneau, TypeCreneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import { formatDateLongue, formatHeure, formatJourCourt, toISODate } from '@/lib/dates'
-import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
+import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
 const LIBELLE_TYPE: Record<TypeCreneau, string> = {
   travail: 'Travail',
@@ -42,11 +43,16 @@ export function PlanningEquipe({
   creneaux,
   equipe,
   weekDates,
+  couleurs,
 }: {
   creneaux: Creneau[]
   equipe: MembreEquipe[]
   weekDates: Date[]
+  couleurs: Map<string, CouleurAvatar>
 }) {
+  function couleurMembre(profilId: string): CouleurAvatar {
+    return couleurs.get(profilId) ?? COULEUR_PAR_DEFAUT
+  }
   const [formOuvert, setFormOuvert] = useState(false)
   const [typeForm, setTypeForm] = useState<TypeCreneau>('travail')
   const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceCreneau>('aucune')
@@ -107,7 +113,7 @@ export function PlanningEquipe({
       <div className="flex flex-wrap gap-x-3 gap-y-1.5">
         {equipe.map((m) => (
           <span key={m.id} className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
-            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurAvatar(m.id)}`} />
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
           </span>
         ))}
@@ -298,7 +304,7 @@ export function PlanningEquipe({
                     onClick={() => setCreneauDetail(c)}
                     disabled={isPending}
                     title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour le détail)`}
-                    className={`absolute inset-x-0.5 overflow-hidden rounded-md px-1 py-0.5 text-left text-[8px] font-semibold leading-tight disabled:opacity-70 ${couleurAvatar(c.profil_id)} ${texteAvatar(c.profil_id)}`}
+                    className={`absolute inset-x-0.5 overflow-hidden rounded-md px-1 py-0.5 text-left text-[8px] font-semibold leading-tight disabled:opacity-70 ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
                     style={{ top, height: hauteur }}
                   >
                     <div className="truncate">{membre?.initiales ?? '?'}</div>
@@ -344,7 +350,7 @@ export function PlanningEquipe({
                     className="flex flex-col gap-2 pt-2"
                   >
                     <div className="mb-1 flex items-center gap-2">
-                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurAvatar(c.profil_id)}`} />
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(c.profil_id).fond}`} />
                       <span className="text-[13.5px] font-semibold text-ink">{membre?.nom_complet ?? 'Employé'}</span>
                     </div>
                     <p className="text-[11.5px] text-muted">{formatDateLongue(c.date)}</p>
@@ -405,7 +411,7 @@ export function PlanningEquipe({
               return (
                 <div className="flex flex-col gap-3 pt-2">
                   <div className="flex items-center gap-2">
-                    <span className={`h-3 w-3 shrink-0 rounded-full ${couleurAvatar(c.profil_id)}`} />
+                    <span className={`h-3 w-3 shrink-0 rounded-full ${couleurMembre(c.profil_id).fond}`} />
                     <span className="text-[14.5px] font-semibold text-ink">{membre?.nom_complet ?? 'Employé'}</span>
                   </div>
                   <p className="text-[12.5px] text-muted">{formatDateLongue(c.date)}</p>

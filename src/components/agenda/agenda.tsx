@@ -9,6 +9,7 @@ import type { TacheEcheance } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
 import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { formatPeriodeSemaine, getWeekDates, toISODate } from '@/lib/dates'
 
 export function Agenda({
@@ -18,6 +19,7 @@ export function Agenda({
   creneaux,
   equipe,
   weekDates,
+  couleurs,
 }: {
   rendezVous: RendezVous[]
   taches: TacheEcheance[]
@@ -25,6 +27,7 @@ export function Agenda({
   creneaux: Creneau[]
   equipe: MembreEquipe[]
   weekDates: Date[]
+  couleurs: Map<string, CouleurAvatar>
 }) {
   const router = useRouter()
   const [onglet, setOnglet] = useState<'globale' | 'planning'>('globale')
@@ -105,7 +108,13 @@ export function Agenda({
           weekDates={weekDates}
         />
       ) : (
-        <PlanningEquipe key={lundiAffiche} creneaux={creneaux} equipe={equipe} weekDates={weekDates} />
+        <PlanningEquipe
+          key={lundiAffiche}
+          creneaux={creneaux}
+          equipe={equipe}
+          weekDates={weekDates}
+          couleurs={couleurs}
+        />
       )}
     </div>
   )
