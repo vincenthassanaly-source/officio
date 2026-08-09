@@ -5,6 +5,7 @@ import { creerTache, toggleTache, supprimerTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
+import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
 
 function dueInfo(tache: Tache): { label: string; className: string } {
   if (tache.statut === 'fait') {
@@ -167,7 +168,9 @@ export function TachesList({
                   </div>
                   {t.assigne && (
                     <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted">
-                      <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-primary text-[8.5px] font-bold text-white">
+                      <span
+                        className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAvatar(t.assigne.id)} ${texteAvatar(t.assigne.id)}`}
+                      >
                         {t.assigne.initiales}
                       </span>
                       {t.assigne.nom_complet}
