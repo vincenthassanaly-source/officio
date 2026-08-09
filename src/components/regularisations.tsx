@@ -22,13 +22,15 @@ export function Regularisations({
 
   const estMoisActuel = moisISO(moisAffiche) === moisISO(new Date())
 
+  // replace plutôt que push : changer de vue ou de mois ne doit pas empiler
+  // une étape d'historique à chaque clic (voir le même choix dans Agenda).
   function allerVersVue(v: 'liste' | 'calendrier') {
-    router.push(`/regularisations?vue=${v}&mois=${moisISO(moisAffiche)}`)
+    router.replace(`/regularisations?vue=${v}&mois=${moisISO(moisAffiche)}`)
   }
 
   function allerVersMois(offsetMois: number) {
     const cible = new Date(moisAffiche.getFullYear(), moisAffiche.getMonth() + offsetMois, 1)
-    router.push(`/regularisations?vue=calendrier&mois=${moisISO(cible)}`)
+    router.replace(`/regularisations?vue=calendrier&mois=${moisISO(cible)}`)
   }
 
   return (
@@ -64,7 +66,7 @@ export function Regularisations({
           estMoisActuel={estMoisActuel}
           onMoisPrecedent={() => allerVersMois(-1)}
           onMoisSuivant={() => allerVersMois(1)}
-          onAujourdhui={() => router.push('/regularisations?vue=calendrier')}
+          onAujourdhui={() => router.replace('/regularisations?vue=calendrier')}
         />
       )}
     </div>

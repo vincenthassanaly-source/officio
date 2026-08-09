@@ -26,10 +26,14 @@ export function Agenda({
   const lundiAffiche = toISODate(weekDates[0])
   const estSemaineActuelle = lundiAffiche === toISODate(getWeekDates(new Date())[0])
 
+  // replace plutôt que push : changer de semaine ne doit pas empiler une
+  // étape d'historique par clic — sinon revenir en arrière depuis l'Agenda
+  // demande un retour par semaine traversée au lieu d'un retour direct vers
+  // la page précédente.
   function allerVersSemaine(offsetJours: number) {
     const cible = new Date(weekDates[0])
     cible.setDate(cible.getDate() + offsetJours)
-    router.push(`/agenda?semaine=${toISODate(cible)}`)
+    router.replace(`/agenda?semaine=${toISODate(cible)}`)
   }
 
   return (
@@ -48,7 +52,7 @@ export function Agenda({
           {!estSemaineActuelle && (
             <button
               type="button"
-              onClick={() => router.push('/agenda')}
+              onClick={() => router.replace('/agenda')}
               className="text-[11px] font-semibold text-primary"
             >
               Aujourd&rsquo;hui
