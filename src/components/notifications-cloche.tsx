@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { marquerNotificationLue, marquerToutesNotificationsLues } from '@/app/actions/notifications'
 import type { NotificationInApp } from '@/lib/data/notifications'
 import { formatDateRelative } from '@/lib/dates'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 // Doit rester synchronisée avec la classe `w-[320px]` du panneau plus bas.
 const LARGEUR_PANNEAU = 320
@@ -42,6 +43,8 @@ export function NotificationsCloche({
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const boutonRef = useRef<HTMLButtonElement>(null)
+
+  useFermerAvecRetour(ouvert, () => setOuvert(false))
 
   function ouvrirNotification(n: NotificationInApp) {
     setOuvert(false)

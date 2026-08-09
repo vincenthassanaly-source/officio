@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { listerComptes, retirerCompte, ajouterOuMettreAJourCompte, type CompteAppareil } from '@/lib/comptes-appareil'
 import { authentifierCompteAppareil } from '@/lib/supabase/authentification-appareil'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 function ReconnexionCompte({
   compte,
@@ -99,6 +100,8 @@ export function SwitchIdentite({
   const [comptes, setComptes] = useState<CompteAppareil[]>([])
   const [comptesExpires, setComptesExpires] = useState<Record<string, true>>({})
   const [enCoursId, setEnCoursId] = useState<string | null>(null)
+
+  useFermerAvecRetour(panelOuvert, () => setPanelOuvert(false))
 
   function togglePanel() {
     if (!panelOuvert) {

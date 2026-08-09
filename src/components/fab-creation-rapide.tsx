@@ -5,6 +5,7 @@ import { IconLiaison } from '@/components/nav-icons'
 import { ChampPhoto } from '@/components/champ-photo'
 import { envoyerMessage } from '@/app/actions/liaison'
 import { creerTache } from '@/app/actions/taches'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import type { Categorie } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
 
@@ -209,6 +210,8 @@ export function FabCreationRapide({
   function fermer() {
     setVue('ferme')
   }
+
+  useFermerAvecRetour(vue !== 'ferme', fermer)
 
   return (
     <>

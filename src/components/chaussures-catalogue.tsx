@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { modifierPrixChaussure } from '@/app/actions/chaussures'
 import { ChaussuresScanner } from '@/components/chaussures-scanner'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import type { ChaussureModele, GenreChaussure, RayonChaussure } from '@/lib/data/chaussures'
 
 const RAYONS: RayonChaussure[] = ['ÉTÉ', 'HIVER', 'PERMANENT', 'FINS DE SÉRIE']
@@ -236,6 +237,8 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
   const [recherche, setRecherche] = useState('')
   const [chaussureOuverteId, setChaussureOuverteId] = useState<string | null>(null)
   const chaussureOuverte = chaussures.find((ch) => ch.id === chaussureOuverteId) ?? null
+
+  useFermerAvecRetour(chaussureOuverteId !== null, () => setChaussureOuverteId(null))
 
   const comptesRayon = useMemo(() => {
     const c: Record<RayonChaussure, number> = { 'ÉTÉ': 0, HIVER: 0, PERMANENT: 0, 'FINS DE SÉRIE': 0 }
