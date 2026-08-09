@@ -31,7 +31,6 @@ export function ChampPhoto({ onChange }: { onChange: (fichier: File | null) => v
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={(e) => {
           const fichier = e.target.files?.[0]
