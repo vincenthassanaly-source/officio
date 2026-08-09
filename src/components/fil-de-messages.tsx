@@ -4,6 +4,7 @@ import { useMemo, useRef, useState, useTransition } from 'react'
 import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 import { formatDateRelative } from '@/lib/dates'
+import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
 
 const FILTRE_TOUTES = 'toutes'
 
@@ -127,8 +128,11 @@ export function FilDeMessages({
             >
               <div className="mb-2.5 flex items-center gap-2.5">
                 <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-                  style={{ background: 'var(--color-primary)' }}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                    m.auteur
+                      ? `${couleurAvatar(m.auteur.id)} ${texteAvatar(m.auteur.id)}`
+                      : 'bg-primary text-white'
+                  }`}
                 >
                   {m.auteur?.initiales ?? '?'}
                 </div>
@@ -167,7 +171,7 @@ export function FilDeMessages({
                   {m.lecteurs.map((l, i) => (
                     <div
                       key={l.profil_id}
-                      className="-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface bg-primary text-[7.5px] font-bold text-white first:ml-0"
+                      className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${couleurAvatar(l.profil_id)} ${texteAvatar(l.profil_id)}`}
                       style={{ zIndex: m.lecteurs.length - i }}
                     >
                       {l.initiales}
