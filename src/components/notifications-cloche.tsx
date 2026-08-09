@@ -6,6 +6,9 @@ import { marquerNotificationLue, marquerToutesNotificationsLues } from '@/app/ac
 import type { NotificationInApp } from '@/lib/data/notifications'
 import { formatDateRelative } from '@/lib/dates'
 
+// Doit rester synchronisée avec la classe `w-[320px]` du panneau plus bas.
+const LARGEUR_PANNEAU = 320
+
 // Même style que les icônes de src/components/nav-icons.tsx (viewBox 24x24,
 // stroke currentColor, strokeWidth 2, traits arrondis) — définie ici plutôt
 // que dans nav-icons.tsx car ce n'est pas un lien de nav (pas de route
@@ -51,13 +54,18 @@ export function NotificationsCloche({
       // Position calculée depuis le bouton plutôt que déduite en CSS
       // (`right-0` sur le wrapper) : la cloche n'est pas forcément près du
       // bord droit de l'écran (header mobile : OfficineSwitcher, cloche,
-      // puis Inviter/Profil/déconnexion après) — un panneau de largeur fixe
-      // ancré uniquement en CSS peut déborder hors écran à gauche. `right`
-      // est plafonné à 16px minimum pour ne jamais coller au bord.
+      // puis Inviter/Profil/déconnexion après). `right` doit être plafonné
+      // dans LES DEUX sens : pas trop petit (le panneau collerait/dépasserait
+      // le bord droit) et pas trop grand (le panneau, ancré à droite,
+      // déborderait à gauche si le bouton est loin du bord droit — c'était le
+      // bug du premier correctif, qui ne plafonnait que le minimum).
       const rect = boutonRef.current.getBoundingClientRect()
+      const margeMin = 16
+      const rightMax = Math.max(window.innerWidth - LARGEUR_PANNEAU - margeMin, margeMin)
+      const rightIdeal = window.innerWidth - rect.right
       setPosition({
         top: rect.bottom + 8,
-        right: Math.max(window.innerWidth - rect.right, 16),
+        right: Math.min(Math.max(rightIdeal, margeMin), rightMax),
       })
     }
     setOuvert((v) => !v)
