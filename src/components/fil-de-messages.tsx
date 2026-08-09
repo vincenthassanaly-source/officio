@@ -152,9 +152,15 @@ export function FilDeMessages({
         {messagesFiltres.map((m) => {
           const dejaLu = m.lecteurs.some((l) => l.profil_id === profilActuelId)
           const cat = CATEGORIES.find((c) => c.value === m.categorie) ?? CATEGORIES[0]
+          const urgent = m.categorie === 'urgent'
 
           return (
-            <div key={m.id} className="rounded-2xl border border-border bg-surface p-4">
+            <div
+              key={m.id}
+              className={`rounded-2xl border p-4 ${
+                urgent ? 'border-rec bg-rec-soft' : 'border-border bg-surface'
+              }`}
+            >
               <div className="mb-2.5 flex items-center gap-2.5">
                 <div
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
