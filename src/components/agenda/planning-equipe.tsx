@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import { creerCreneau, supprimerCreneau } from '@/app/actions/agenda'
+import { creerCreneau, supprimerCreneau, type RecurrenceCreneau } from '@/app/actions/agenda'
 import type { Creneau, TypeCreneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import { formatHeure, formatJourCourt, toISODate } from '@/lib/dates'
@@ -20,6 +20,18 @@ function confirmerSuppression(message: string): boolean {
   return confirm(message)
 }
 
+// Un créneau récurrent est composé de plusieurs lignes reliées par serie_id
+// (voir creerCreneau). On demande explicitement la portée seulement dans ce
+// cas — un créneau ponctuel garde son comportement de suppression simple.
+function demanderPorteeSuppression(serieId: string | null): 'occurrence' | 'serie' {
+  if (!serieId) return 'occurrence'
+  return confirm(
+    'Ce créneau fait partie d’une série récurrente.\n\nOK : supprimer toute la série\nAnnuler : supprimer seulement ce jour'
+  )
+    ? 'serie'
+    : 'occurrence'
+}
+
 export function PlanningEquipe({
   creneaux,
   equipe,
@@ -31,6 +43,7 @@ export function PlanningEquipe({
 }) {
   const [formOuvert, setFormOuvert] = useState(false)
   const [typeForm, setTypeForm] = useState<TypeCreneau>('travail')
+  const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceCreneau>('aucune')
   const [isPending, startTransition] = useTransition()
 
   const { heureMin, heureMax } = useMemo(() => {
@@ -72,6 +85,7 @@ export function PlanningEquipe({
         onClick={() => {
           setFormOuvert((v) => !v)
           setTypeForm('travail')
+          setRecurrenceForm('aucune')
         }}
         className="self-start text-xs font-semibold text-primary"
       >
@@ -112,6 +126,30 @@ export function PlanningEquipe({
               ))}
             </select>
           </div>
+          <div className="flex gap-2">
+            <select
+              name="recurrence"
+              value={recurrenceForm}
+              onChange={(e) => setRecurrenceForm(e.target.value as RecurrenceCreneau)}
+              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+            >
+              <option value="aucune">Créneau ponctuel</option>
+              <option value="hebdomadaire">Toutes les semaines</option>
+              <option value="toutes_les_2_semaines">Une semaine sur deux</option>
+            </select>
+            {recurrenceForm !== 'aucune' && (
+              <input
+                type="date"
+                name="recurrence_fin"
+                required
+                aria-label="Jusqu'au"
+                className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+              />
+            )}
+          </div>
+          {recurrenceForm !== 'aucune' && (
+            <p className="text-[11px] text-muted">Jusqu&apos;à la date choisie ci-dessus (incluse).</p>
+          )}
           <select
             name="type"
             value={typeForm}
@@ -177,7 +215,8 @@ export function PlanningEquipe({
                     onClick={() => {
                       const libelle = c.type === 'repos' ? 'Repos' : 'Congé'
                       if (confirmerSuppression(`Supprimer « ${libelle} » pour ${membre?.nom_complet ?? 'cette personne'} ?`)) {
-                        startTransition(() => supprimerCreneau(c.id))
+                        const portee = demanderPorteeSuppression(c.serie_id)
+                        startTransition(() => supprimerCreneau(c.id, c.serie_id, portee))
                       }
                     }}
                     disabled={isPending}
@@ -236,7 +275,8 @@ export function PlanningEquipe({
                           `Supprimer le créneau de ${membre?.nom_complet ?? 'cette personne'} (${horaire}) ?`
                         )
                       ) {
-                        startTransition(() => supprimerCreneau(c.id))
+                        const portee = demanderPorteeSuppression(c.serie_id)
+                        startTransition(() => supprimerCreneau(c.id, c.serie_id, portee))
                       }
                     }}
                     disabled={isPending}

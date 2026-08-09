@@ -10,6 +10,7 @@ export type Creneau = {
   heure_debut: string | null
   heure_fin: string | null
   note: string | null
+  serie_id: string | null
 }
 
 export async function getPlannings(
@@ -21,7 +22,7 @@ export async function getPlannings(
 
   const { data, error } = await supabase
     .from('plannings')
-    .select('id, profil_id, date, type, heure_debut, heure_fin, note')
+    .select('id, profil_id, date, type, heure_debut, heure_fin, note, serie_id')
     .eq('officine_id', officineId)
     .gte('date', dateDebut)
     .lte('date', dateFin)
