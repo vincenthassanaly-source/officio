@@ -320,7 +320,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
             vue === 'scanner' ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
           }`}
         >
-          Scanner
+          SCANNER
         </button>
       </div>
 
