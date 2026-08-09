@@ -5,7 +5,7 @@ import { creerCreneau, modifierCreneau, supprimerCreneau, type RecurrenceCreneau
 import type { Creneau, TypeCreneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import { formatDateLongue, formatHeure, formatJourCourt, toISODate } from '@/lib/dates'
-import { couleurEmploye } from '@/lib/couleur-equipe'
+import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
 
 const LIBELLE_TYPE: Record<TypeCreneau, string> = {
   travail: 'Travail',
@@ -107,10 +107,7 @@ export function PlanningEquipe({
       <div className="flex flex-wrap gap-x-3 gap-y-1.5">
         {equipe.map((m) => (
           <span key={m.id} className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
-            <span
-              className="h-2.5 w-2.5 shrink-0 rounded-full"
-              style={{ background: couleurEmploye(m.id, equipe) }}
-            />
+            <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurAvatar(m.id)}`} />
             {m.nom_complet}
           </span>
         ))}
@@ -301,8 +298,8 @@ export function PlanningEquipe({
                     onClick={() => setCreneauDetail(c)}
                     disabled={isPending}
                     title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour le détail)`}
-                    className="absolute inset-x-0.5 overflow-hidden rounded-md px-1 py-0.5 text-left text-[8px] font-semibold leading-tight text-white disabled:opacity-70"
-                    style={{ top, height: hauteur, background: couleurEmploye(c.profil_id, equipe) }}
+                    className={`absolute inset-x-0.5 overflow-hidden rounded-md px-1 py-0.5 text-left text-[8px] font-semibold leading-tight disabled:opacity-70 ${couleurAvatar(c.profil_id)} ${texteAvatar(c.profil_id)}`}
+                    style={{ top, height: hauteur }}
                   >
                     <div className="truncate">{membre?.initiales ?? '?'}</div>
                     {hauteur > 26 && (
@@ -347,10 +344,7 @@ export function PlanningEquipe({
                     className="flex flex-col gap-2 pt-2"
                   >
                     <div className="mb-1 flex items-center gap-2">
-                      <span
-                        className="h-2.5 w-2.5 shrink-0 rounded-full"
-                        style={{ background: couleurEmploye(c.profil_id, equipe) }}
-                      />
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurAvatar(c.profil_id)}`} />
                       <span className="text-[13.5px] font-semibold text-ink">{membre?.nom_complet ?? 'Employé'}</span>
                     </div>
                     <p className="text-[11.5px] text-muted">{formatDateLongue(c.date)}</p>
@@ -411,10 +405,7 @@ export function PlanningEquipe({
               return (
                 <div className="flex flex-col gap-3 pt-2">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="h-3 w-3 shrink-0 rounded-full"
-                      style={{ background: couleurEmploye(c.profil_id, equipe) }}
-                    />
+                    <span className={`h-3 w-3 shrink-0 rounded-full ${couleurAvatar(c.profil_id)}`} />
                     <span className="text-[14.5px] font-semibold text-ink">{membre?.nom_complet ?? 'Employé'}</span>
                   </div>
                   <p className="text-[12.5px] text-muted">{formatDateLongue(c.date)}</p>
