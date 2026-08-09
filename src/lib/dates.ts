@@ -46,6 +46,11 @@ const MOIS_LONG = [
   'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
 ]
 
+export function formatDateCourte(dateISO: string): string {
+  const [annee, mois, jour] = dateISO.split('-').map(Number)
+  return `${jour} ${MOIS_COURT[mois - 1]} ${annee}`
+}
+
 export function formatPeriodeSemaine(weekDates: Date[]): string {
   const debut = weekDates[0]
   const fin = weekDates[6]
