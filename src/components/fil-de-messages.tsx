@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -37,6 +37,7 @@ export function FilDeMessages({
   const [filtreMembre, setFiltreMembre] = useState<string>(FILTRE_TOUS)
   const [filtreCategorie, setFiltreCategorie] = useState<string>(FILTRE_TOUTES)
   const [isPending, startTransition] = useTransition()
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const filtresActifs = recherche.trim() !== '' || filtreMembre !== FILTRE_TOUS || filtreCategorie !== FILTRE_TOUTES
 
@@ -233,6 +234,7 @@ export function FilDeMessages({
           startTransition(async () => {
             await envoyerMessage(formData)
             setContenu('')
+            if (textareaRef.current) textareaRef.current.style.height = 'auto'
           })
         }}
         className="sticky bottom-4 flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3 shadow-sm"
@@ -252,13 +254,19 @@ export function FilDeMessages({
           ))}
         </div>
         <input type="hidden" name="categorie" value={categorie} />
-        <div className="flex items-center gap-2">
-          <input
+        <div className="flex items-end gap-2">
+          <textarea
+            ref={textareaRef}
             name="contenu"
             value={contenu}
-            onChange={(e) => setContenu(e.target.value)}
+            onChange={(e) => {
+              setContenu(e.target.value)
+              e.target.style.height = 'auto'
+              e.target.style.height = `${e.target.scrollHeight}px`
+            }}
+            rows={1}
             placeholder="Écrire une consigne à l'équipe…"
-            className="flex-1 rounded-full border border-border bg-bg px-4 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+            className="max-h-40 flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-bg px-4 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
           />
           <button
             type="submit"
