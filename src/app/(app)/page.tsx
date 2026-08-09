@@ -9,6 +9,9 @@ import { getChaussures } from '@/lib/data/chaussures'
 import { getCnoPatients } from '@/lib/data/cno'
 import { getSuggestions } from '@/lib/data/suggestions'
 import { getWeekDates, toISODate } from '@/lib/dates'
+import { AccueilDashboard } from '@/components/accueil-dashboard'
+
+const MAX_RDV_APERCU = 4
 
 export default async function AccueilPage() {
   const [officine, profil] = await Promise.all([getOfficineActive(), getCurrentProfil()])
@@ -34,8 +37,9 @@ export default async function AccueilPage() {
   const nonLus = messages.filter(
     (m) => !m.lecteurs.some((l) => l.profil_id === profil?.id)
   ).length
-  const tachesEnCours = taches.filter((t) => t.statut === 'a_faire').length
-  const rdvAujourdhui = rendezVous.filter((r) => r.date === aujourdhuiIso).length
+
+  const rdvDuJourTous = rendezVous.filter((r) => r.date === aujourdhuiIso)
+  const rdvDuJour = rdvDuJourTous.slice(0, MAX_RDV_APERCU)
 
   const prenom = profil?.nom_complet.split(' ')[0] ?? ''
   const dateLabel = aujourdhui.toLocaleDateString('fr-FR', {
@@ -51,20 +55,7 @@ export default async function AccueilPage() {
         <p className="mt-0.5 text-[12.5px] capitalize text-muted">{dateLabel}</p>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto">
-        <div className="shrink-0 rounded-xl bg-primary-soft px-4 py-2.5">
-          <div className="font-heading text-lg font-bold text-primary">{nonLus}</div>
-          <div className="text-[10px] font-semibold text-muted">msgs non lus</div>
-        </div>
-        <div className="shrink-0 rounded-xl bg-accent-soft px-4 py-2.5">
-          <div className="font-heading text-lg font-bold text-accent">{tachesEnCours}</div>
-          <div className="text-[10px] font-semibold text-muted">tâches en cours</div>
-        </div>
-        <div className="shrink-0 rounded-xl bg-primary-soft px-4 py-2.5">
-          <div className="font-heading text-lg font-bold text-primary">{rdvAujourdhui}</div>
-          <div className="text-[10px] font-semibold text-muted">RDV aujourd&rsquo;hui</div>
-        </div>
-      </div>
+      <AccueilDashboard rdvDuJour={rdvDuJour} totalRdvDuJour={rdvDuJourTous.length} />
 
       <div className="mt-5 grid grid-cols-2 gap-2.5">
         <Link
