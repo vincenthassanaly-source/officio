@@ -1,4 +1,5 @@
 import type { MembreEquipe } from '@/lib/data/equipe'
+import { couleurEmploye } from '@/lib/couleur-equipe'
 
 export function MembresOfficine({
   membres,
@@ -13,7 +14,7 @@ export function MembresOfficine({
         <div key={m.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5">
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white"
-            style={{ background: 'var(--color-primary)' }}
+            style={{ background: couleurEmploye(m.id, membres) }}
           >
             {m.initiales}
           </div>
