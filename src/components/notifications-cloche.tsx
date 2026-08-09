@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { marquerNotificationLue, marquerToutesNotificationsLues } from '@/app/actions/notifications'
 import type { NotificationInApp } from '@/lib/data/notifications'
@@ -35,8 +35,10 @@ export function NotificationsCloche({
   nombreNonLues: number
 }) {
   const [ouvert, setOuvert] = useState(false)
+  const [position, setPosition] = useState({ top: 0, right: 0 })
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const boutonRef = useRef<HTMLButtonElement>(null)
 
   function ouvrirNotification(n: NotificationInApp) {
     setOuvert(false)
@@ -44,11 +46,29 @@ export function NotificationsCloche({
     router.push(n.url)
   }
 
+  function toggle() {
+    if (!ouvert && boutonRef.current) {
+      // Position calculée depuis le bouton plutôt que déduite en CSS
+      // (`right-0` sur le wrapper) : la cloche n'est pas forcément près du
+      // bord droit de l'écran (header mobile : OfficineSwitcher, cloche,
+      // puis Inviter/Profil/déconnexion après) — un panneau de largeur fixe
+      // ancré uniquement en CSS peut déborder hors écran à gauche. `right`
+      // est plafonné à 16px minimum pour ne jamais coller au bord.
+      const rect = boutonRef.current.getBoundingClientRect()
+      setPosition({
+        top: rect.bottom + 8,
+        right: Math.max(window.innerWidth - rect.right, 16),
+      })
+    }
+    setOuvert((v) => !v)
+  }
+
   return (
     <div className="relative">
       <button
+        ref={boutonRef}
         type="button"
-        onClick={() => setOuvert((v) => !v)}
+        onClick={toggle}
         aria-label="Notifications"
         className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-neutral-soft hover:text-ink"
       >
@@ -73,7 +93,10 @@ export function NotificationsCloche({
             onClick={() => setOuvert(false)}
             className="fixed inset-0 z-40"
           />
-          <div className="absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-[320px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-border bg-surface shadow-lg">
+          <div
+            style={{ top: position.top, right: position.right }}
+            className="fixed z-50 max-h-[70vh] w-[320px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-border bg-surface shadow-lg"
+          >
             <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
               <span className="text-[13px] font-semibold text-ink">Notifications</span>
               {nombreNonLues > 0 && (
