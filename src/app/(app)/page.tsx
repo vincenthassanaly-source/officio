@@ -35,6 +35,7 @@ export default async function AccueilPage() {
   ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
+  const suggestionsNonTraitees = suggestions.filter((s) => !s.fait).length
 
   const messagesNonLusTous = messages.filter((m) => !m.lecteurs.some((l) => l.profil_id === profil?.id))
   const nonLus = messagesNonLusTous.length
@@ -158,7 +159,7 @@ export default async function AccueilPage() {
           <div className="h-7 w-7 rounded-lg bg-primary-light" />
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suggestions</div>
-            <div className="mt-0.5 text-[11px] text-muted">{suggestions.length} propositions</div>
+            <div className="mt-0.5 text-[11px] text-muted">{suggestionsNonTraitees} propositions</div>
           </div>
         </Link>
       </div>

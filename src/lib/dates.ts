@@ -95,6 +95,21 @@ export function formatDateRelative(iso: string): string {
   return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} · ${heure}`
 }
 
+// Étiquette de séparateur de jour pour un fil de messages ("Aujourd'hui",
+// "Hier", ou "Mercredi 6 août" pour les jours plus anciens).
+export function formatSeparateurJour(iso: string): string {
+  const date = new Date(iso)
+  const maintenant = new Date()
+  const hier = new Date(maintenant)
+  hier.setDate(maintenant.getDate() - 1)
+
+  if (date.toDateString() === maintenant.toDateString()) return "Aujourd'hui"
+  if (date.toDateString() === hier.toDateString()) return 'Hier'
+
+  const memeAnnee = date.getFullYear() === maintenant.getFullYear()
+  return `${JOURS_LONGS[date.getDay()]} ${date.getDate()} ${MOIS_LONG[date.getMonth()]}${memeAnnee ? '' : ' ' + date.getFullYear()}`
+}
+
 export function formatPeriodeSemaine(weekDates: Date[]): string {
   const debut = weekDates[0]
   const fin = weekDates[6]

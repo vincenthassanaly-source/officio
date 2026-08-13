@@ -1,9 +1,9 @@
 'use client'
 
-import { useMemo, useRef, useState, useTransition } from 'react'
-import { envoyerMessage, marquerLu, supprimerMessage } from '@/app/actions/liaison'
+import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { envoyerMessage, marquerPlusieursLus, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
-import { formatDateRelative } from '@/lib/dates'
+import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
@@ -39,6 +39,17 @@ export function FilDeMessages({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
+
+  // Ouvrir le fil vaut lecture : on marque automatiquement comme lus tous les
+  // messages affichés, sans action manuelle de l'utilisateur.
+  useEffect(() => {
+    const idsNonLus = messages
+      .filter((m) => !m.lecteurs.some((l) => l.profil_id === profilActuelId))
+      .map((m) => m.id)
+    if (idsNonLus.length > 0) {
+      startTransition(() => marquerPlusieursLus(idsNonLus))
+    }
+  }, [messages, profilActuelId])
 
   function reinitialiserFiltres() {
     setRecherche('')
@@ -117,84 +128,87 @@ export function FilDeMessages({
           <p className="py-10 text-center text-sm text-muted">Aucun message ne correspond aux filtres.</p>
         )}
 
-        {messagesFiltres.map((m) => {
+        {messagesFiltres.map((m, index) => {
           const dejaLu = m.lecteurs.some((l) => l.profil_id === profilActuelId)
           const cat = CATEGORIES.find((c) => c.value === m.categorie) ?? CATEGORIES[0]
           const urgent = m.categorie === 'urgent'
           const couleurAuteur = (m.auteur ? couleurs.get(m.auteur.id) : null) ?? COULEUR_PAR_DEFAUT
 
+          const jourPrecedent =
+            index > 0 ? new Date(messagesFiltres[index - 1].created_at).toDateString() : null
+          const changeDeJour = new Date(m.created_at).toDateString() !== jourPrecedent
+
           return (
-            <div
-              key={m.id}
-              className={`rounded-2xl border p-4 ${
-                urgent ? 'border-rec bg-rec-soft' : 'border-border bg-surface'
-              }`}
-            >
-              <div className="mb-2.5 flex items-center gap-2.5">
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
-                >
-                  {m.auteur?.initiales ?? '?'}
+            <Fragment key={m.id}>
+              {changeDeJour && (
+                <div className="flex items-center gap-2.5 py-1">
+                  <span className="h-px flex-1 bg-border" />
+                  <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-muted">
+                    {formatSeparateurJour(m.created_at)}
+                  </span>
+                  <span className="h-px flex-1 bg-border" />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13.5px] font-semibold text-ink">
-                    {m.auteur?.nom_complet ?? 'Ancien collègue'}
+              )}
+              <div
+                className={`rounded-2xl border p-4 ${
+                  urgent ? 'border-rec bg-rec-soft' : 'border-border bg-surface'
+                }`}
+              >
+                <div className="mb-2.5 flex items-center gap-2.5">
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
+                  >
+                    {m.auteur?.initiales ?? '?'}
                   </div>
-                  <div className="text-[11px] text-muted">{formatDateRelative(m.created_at)}</div>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${cat.className}`}
-                >
-                  {cat.label}
-                </span>
-                {m.auteur?.id === profilActuelId && (
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => {
-                      if (confirm('Supprimer ce message ?')) {
-                        startTransition(() => supprimerMessage(m.id))
-                      }
-                    }}
-                    aria-label="Supprimer le message"
-                    className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13.5px] font-semibold text-ink">
+                      {m.auteur?.nom_complet ?? 'Ancien collègue'}
+                    </div>
+                    <div className="text-[11px] text-muted">{formatDateRelative(m.created_at)}</div>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${cat.className}`}
                   >
-                    ×
-                  </button>
-                )}
-              </div>
-
-              <p className="text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>
-
-              <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5">
-                <div className="flex">
-                  {m.lecteurs.map((l, i) => {
-                    const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
-                    return (
-                      <div
-                        key={l.profil_id}
-                        className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
-                        style={{ zIndex: m.lecteurs.length - i }}
-                      >
-                        {l.initiales}
-                      </div>
-                    )
-                  })}
+                    {cat.label}
+                  </span>
+                  {m.auteur?.id === profilActuelId && (
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() => {
+                        if (confirm('Supprimer ce message ?')) {
+                          startTransition(() => supprimerMessage(m.id))
+                        }
+                      }}
+                      aria-label="Supprimer le message"
+                      className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
-                {dejaLu ? (
-                  <span className="text-[11px] font-semibold text-muted">Lu</span>
-                ) : (
-                  <button
-                    type="button"
-                    className="text-[11px] font-semibold text-primary disabled:opacity-50"
-                    disabled={isPending}
-                    onClick={() => startTransition(() => marquerLu(m.id))}
-                  >
-                    ✓ Marquer comme lu
-                  </button>
-                )}
+
+                <p className="text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>
+
+                <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5">
+                  <div className="flex">
+                    {m.lecteurs.map((l, i) => {
+                      const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
+                      return (
+                        <div
+                          key={l.profil_id}
+                          className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+                          style={{ zIndex: m.lecteurs.length - i }}
+                        >
+                          {l.initiales}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {dejaLu && <span className="text-[11px] font-semibold text-muted">Lu</span>}
+                </div>
               </div>
-            </div>
+            </Fragment>
           )
         })}
       </div>

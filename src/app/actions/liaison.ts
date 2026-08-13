@@ -61,7 +61,9 @@ export async function supprimerMessage(messageId: string) {
   revalidatePath('/')
 }
 
-export async function marquerLu(messageId: string) {
+export async function marquerPlusieursLus(messageIds: string[]) {
+  if (messageIds.length === 0) return
+
   const profil = await getCurrentProfil()
   if (!profil) throw new Error('Non connecté')
 
@@ -69,7 +71,7 @@ export async function marquerLu(messageId: string) {
   const { error } = await supabase
     .from('messages_lus')
     .upsert(
-      { message_id: messageId, profil_id: profil.id },
+      messageIds.map((messageId) => ({ message_id: messageId, profil_id: profil.id })),
       { onConflict: 'message_id,profil_id' }
     )
 
