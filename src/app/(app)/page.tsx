@@ -11,6 +11,16 @@ import { getEquipe } from '@/lib/data/equipe'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
 import { FabCreationRapide } from '@/components/fab-creation-rapide'
+import {
+  IconLiaison,
+  IconAgenda,
+  IconHuiles,
+  IconFournisseurs,
+  IconChaussures,
+  IconCno,
+  IconRegularisation,
+  IconSuggestions,
+} from '@/components/nav-icons'
 
 const MAX_RDV_APERCU = 4
 const MAX_TACHES_APERCU = 4
@@ -84,9 +94,11 @@ export default async function AccueilPage() {
       <div className="mt-5 grid grid-cols-2 gap-2.5">
         <Link
           href="/liaison"
-          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
         >
-          <div className="h-7 w-7 rounded-lg bg-primary" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary">
+            <IconLiaison className="h-[18px] w-[18px]" />
+          </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Cahier de liaison</div>
             <div className="mt-0.5 text-[11px] text-muted">{nonLus} nouveaux messages</div>
@@ -94,9 +106,11 @@ export default async function AccueilPage() {
         </Link>
         <Link
           href="/agenda"
-          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
         >
-          <div className="h-7 w-7 rounded-lg bg-green" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-green-soft text-green">
+            <IconAgenda className="h-[18px] w-[18px]" />
+          </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Agenda</div>
             <div className="mt-0.5 text-[11px] text-muted">{rendezVous.length} rendez-vous</div>
@@ -104,9 +118,11 @@ export default async function AccueilPage() {
         </Link>
         <Link
           href="/huiles-essentielles"
-          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
         >
-          <div className="h-7 w-7 rounded-lg bg-purple" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-purple-soft text-purple">
+            <IconHuiles className="h-[18px] w-[18px]" />
+          </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Huiles essentielles</div>
             <div className="mt-0.5 text-[11px] text-muted">{huilesACommander} à commander</div>
@@ -114,9 +130,11 @@ export default async function AccueilPage() {
         </Link>
         <Link
           href="/fournisseurs"
-          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
         >
-          <div className="h-7 w-7 rounded-lg bg-accent" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
+            <IconFournisseurs className="h-[18px] w-[18px]" />
+          </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Fournisseurs</div>
             <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
@@ -124,9 +142,11 @@ export default async function AccueilPage() {
         </Link>
         <Link
           href="/chaussures"
-          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
         >
-          <div className="h-7 w-7 rounded-lg bg-brun" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-brun-soft text-brun">
+            <IconChaussures className="h-[18px] w-[18px]" />
+          </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Chaussures orthopédiques</div>
             <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
@@ -134,9 +154,11 @@ export default async function AccueilPage() {
         </Link>
         <Link
           href="/suivi-cno"
-          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
         >
-          <div className="h-7 w-7 rounded-lg bg-green" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-green-soft text-green">
+            <IconCno className="h-[18px] w-[18px]" />
+          </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suivi CNO</div>
             <div className="mt-0.5 text-[11px] text-muted">{patientsCno.length} patients suivis</div>
@@ -144,9 +166,11 @@ export default async function AccueilPage() {
         </Link>
         <Link
           href="/regularisations"
-          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
         >
-          <div className="h-7 w-7 rounded-lg bg-accent" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
+            <IconRegularisation className="h-[18px] w-[18px]" />
+          </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Régularisation ordonnances</div>
             <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
@@ -154,9 +178,11 @@ export default async function AccueilPage() {
         </Link>
         <Link
           href="/suggestions"
-          className="flex flex-col gap-6 rounded-2xl border border-border bg-surface p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
         >
-          <div className="h-7 w-7 rounded-lg bg-primary-light" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary-light">
+            <IconSuggestions className="h-[18px] w-[18px]" />
+          </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suggestions</div>
             <div className="mt-0.5 text-[11px] text-muted">{suggestionsNonTraitees} propositions</div>

@@ -102,3 +102,86 @@ export function IconFournisseurs({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconHuiles({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3s7 7.3 7 12a7 7 0 1 1-14 0c0-4.7 7-12 7-12z" />
+    </svg>
+  )
+}
+
+export function IconChaussures({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 17.5V10a1 1 0 0 1 1-1h3c1.4 0 2.7.5 3.7 1.4l3 2.6c1 .9 2.4 1.5 3.8 1.5H21a1 1 0 0 1 1 1v1.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
+      <path d="M6 9V6" />
+    </svg>
+  )
+}
+
+export function IconCno({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3.5" y="9" width="17" height="6" rx="3" transform="rotate(-25 12 12)" />
+      <line x1="10.3" y1="7.4" x2="13.7" y2="16.6" transform="rotate(-25 12 12)" />
+    </svg>
+  )
+}
+
+export function IconRegularisation({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 3h9l3 3v15H6z" />
+      <path d="M9 13l2 2 4-4" />
+    </svg>
+  )
+}
+
+export function IconSuggestions({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11.2V16h6v-1.8A6 6 0 0 0 12 3z" />
+    </svg>
+  )
+}

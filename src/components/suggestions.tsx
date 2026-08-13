@@ -40,7 +40,7 @@ export function Suggestions({
             setMessage('')
           })
         }}
-        className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+        className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
       >
         <textarea
           name="message"
@@ -71,7 +71,7 @@ export function Suggestions({
           return (
           <div
             key={s.id}
-            className={`rounded-2xl border border-border bg-surface p-4 ${s.fait ? 'opacity-60' : ''}`}
+            className={`rounded-[20px] bg-surface shadow-card p-4 ${s.fait ? 'opacity-60' : ''}`}
           >
             <div className="mb-2 flex items-center gap-2.5">
               <input
@@ -83,7 +83,7 @@ export function Suggestions({
                 className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
               />
               <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
               >
                 {s.auteur?.initiales ?? '?'}
               </div>

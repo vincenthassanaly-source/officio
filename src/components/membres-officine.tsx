@@ -16,9 +16,9 @@ export function MembresOfficine({
       {membres.map((m) => {
         const c = couleurs.get(m.id) ?? COULEUR_PAR_DEFAUT
         return (
-          <div key={m.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5">
+          <div key={m.id} className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5">
             <div
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${c.fond} ${c.texte}`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${c.fond} ${c.texte}`}
             >
               {m.initiales}
             </div>

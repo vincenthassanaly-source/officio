@@ -139,7 +139,7 @@ export function PlanningEquipe({
               setFormOuvert(false)
             })
           }}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+          className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
           <div className="flex gap-2">
             <select

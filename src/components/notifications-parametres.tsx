@@ -62,7 +62,7 @@ export function NotificationsParametres({
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-4">
+    <div className="flex flex-col gap-4 rounded-[20px] bg-surface shadow-card p-4">
       <div>
         <h2 className="font-heading text-lg text-ink">Notifications</h2>
         <p className="mt-0.5 text-[12.5px] text-muted">Reçois des alertes même quand Officio est fermé.</p>

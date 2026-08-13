@@ -15,7 +15,7 @@ export function GestionOfficines({
   const [isPending, startTransition] = useTransition()
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
+    <div className="flex flex-col gap-3 rounded-[20px] bg-surface shadow-card p-4">
       <div>
         <h2 className="font-heading text-lg text-ink">Mes officines</h2>
         <p className="mt-0.5 text-[12.5px] text-muted">

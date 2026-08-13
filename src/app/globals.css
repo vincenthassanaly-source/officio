@@ -18,10 +18,12 @@
   --color-purple: oklch(52% 0.15 300);
   --color-purple-soft: oklch(92% 0.06 300);
   --color-green: oklch(58% 0.14 150);
+  --color-green-soft: oklch(94% 0.05 150);
   --color-brun: oklch(48% 0.09 45);
   --color-brun-soft: oklch(93% 0.03 55);
   --color-neutral-soft: oklch(93% 0.01 265);
   --color-neutral-text: oklch(65% 0.01 265);
+  --shadow-card: 0 1px 2px rgba(30, 20, 80, 0.04), 0 10px 24px -14px rgba(40, 30, 110, 0.16);
 }
 
 @theme inline {
@@ -42,10 +44,12 @@
   --color-purple: var(--color-purple);
   --color-purple-soft: var(--color-purple-soft);
   --color-green: var(--color-green);
+  --color-green-soft: var(--color-green-soft);
   --color-brun: var(--color-brun);
   --color-brun-soft: var(--color-brun-soft);
   --color-neutral-soft: var(--color-neutral-soft);
   --color-neutral-text: var(--color-neutral-text);
+  --shadow-card: var(--shadow-card);
 
   --font-heading: var(--font-space-grotesk);
   --font-sans: var(--font-inter);

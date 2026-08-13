@@ -44,7 +44,7 @@ export function AccueilDashboard({
 
   if (toutEstAJour) {
     return (
-      <div className="mt-4 rounded-2xl border border-border bg-surface p-4 text-center">
+      <div className="mt-4 rounded-[20px] bg-surface shadow-card p-4 text-center">
         <p className="text-[13.5px] font-semibold text-ink">Tout est à jour ✓</p>
         <p className="mt-0.5 text-[11.5px] text-muted">
           Rien de prévu aujourd&rsquo;hui, aucune tâche ni message en attente.
@@ -55,7 +55,7 @@ export function AccueilDashboard({
 
   return (
     <div className="mt-4 flex flex-col gap-3">
-      <div className="rounded-2xl border border-border bg-surface p-3.5">
+      <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Aujourd&rsquo;hui</span>
           {totalRdvDuJour > rdvDuJour.length && (
@@ -83,7 +83,7 @@ export function AccueilDashboard({
         )}
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-3.5">
+      <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Tâches</span>
           {totalTachesAFaire > tachesDuJour.length && (
@@ -118,7 +118,7 @@ export function AccueilDashboard({
         )}
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-3.5">
+      <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Messages non lus</span>
           {totalMessagesNonLus > messagesNonLusApercu.length && (

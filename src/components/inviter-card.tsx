@@ -15,7 +15,7 @@ export function InviterCard({ officineId, code }: { officineId: string; code: st
         rien d&rsquo;autre à faire.
       </p>
 
-      <div className="rounded-2xl border border-border bg-surface p-4">
+      <div className="rounded-[20px] bg-surface shadow-card p-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">Code d&rsquo;invitation</p>
         <p className="mt-1 font-mono text-2xl tracking-widest text-ink">{code}</p>
       </div>

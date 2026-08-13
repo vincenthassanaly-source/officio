@@ -95,7 +95,7 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
               setFormOuvert(false)
             })
           }}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+          className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
           <input
             type="file"
@@ -139,7 +139,7 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
             type="button"
             key={d.id}
             onClick={() => ouvrirDocument(d.chemin_stockage)}
-            className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5 text-left"
+            className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5 text-left"
           >
             <div
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[9px] font-bold text-white ${

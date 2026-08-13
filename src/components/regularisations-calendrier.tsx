@@ -117,7 +117,7 @@ export function RegularisationsCalendrier({
       </div>
 
       {jourSelectionne && (
-        <div className="mt-2 flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3.5">
+        <div className="mt-2 flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3.5">
           <div className="flex items-center justify-between">
             <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(jourSelectionne)}</span>
             <button

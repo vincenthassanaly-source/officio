@@ -59,7 +59,7 @@ function MenuChoix({ onChoisir }: { onChoisir: (vue: 'message' | 'tache') => voi
       <button
         type="button"
         onClick={() => onChoisir('message')}
-        className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left"
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
           <IconLiaison className="h-5 w-5" />
@@ -72,7 +72,7 @@ function MenuChoix({ onChoisir }: { onChoisir: (vue: 'message' | 'tache') => voi
       <button
         type="button"
         onClick={() => onChoisir('tache')}
-        className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 text-left"
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
           <IconTache className="h-5 w-5" />

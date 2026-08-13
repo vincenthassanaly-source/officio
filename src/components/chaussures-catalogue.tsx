@@ -92,7 +92,7 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
   const depassement = calculerDepassement(chaussure.prix)
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface">
+    <div className="flex flex-col overflow-hidden rounded-[20px] bg-surface shadow-card">
       <button type="button" onClick={onOuvrir} className="relative aspect-square w-full bg-neutral-soft">
         {chaussure.photo_url ? (
           <Image

@@ -127,7 +127,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
               setFormOuvert(false)
             })
           }}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+          className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
           <ChampsFormulaire />
           <button
@@ -190,7 +190,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
           }
 
           return (
-            <div key={c.id} className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3.5">
+            <div key={c.id} className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5">
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[13.5px] font-semibold text-ink">{c.nom}</div>
                 <div className="mt-1">

@@ -156,7 +156,7 @@ export function FilDeMessages({
               >
                 <div className="mb-2.5 flex items-center gap-2.5">
                   <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
                   >
                     {m.auteur?.initiales ?? '?'}
                   </div>
@@ -221,7 +221,7 @@ export function FilDeMessages({
             if (textareaRef.current) textareaRef.current.style.height = 'auto'
           })
         }}
-        className="sticky bottom-4 flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3 shadow-sm"
+        className="sticky bottom-4 flex flex-col gap-2 rounded-[20px] bg-surface p-3 shadow-card"
       >
         <div className="flex gap-1.5">
           {CATEGORIES.map((c) => (

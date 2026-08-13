@@ -70,7 +70,7 @@ export function HuilesEssentiellesPosologie() {
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3">
+      <div className="flex flex-col gap-3 rounded-[20px] bg-surface shadow-card p-3">
         <div className="flex flex-col gap-1.5">
           <label className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">
             Gouttes par prise
@@ -146,7 +146,7 @@ export function HuilesEssentiellesPosologie() {
       </div>
 
       {resultat ? (
-        <div className="flex flex-col gap-1.5 rounded-2xl border border-border bg-surface p-3.5">
+        <div className="flex flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3.5">
           <p className="text-[12.5px] text-muted">
             {formatNombre(resultat.gouttes)} goutte{resultat.gouttes > 1 ? 's' : ''} ×{' '}
             {formatNombre(resultat.prises)} prise{resultat.prises > 1 ? 's' : ''}/jour ×{' '}

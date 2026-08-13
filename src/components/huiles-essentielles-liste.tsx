@@ -142,7 +142,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
               setFormOuvert(false)
             })
           }}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+          className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
           <ChampsFormulaire />
           <button
@@ -200,7 +200,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
           return (
             <div
               key={h.id}
-              className={`flex items-center gap-2.5 rounded-2xl border border-border bg-surface p-3 transition-all duration-200 ${
+              className={`flex items-center gap-2.5 rounded-[20px] bg-surface shadow-card p-3 transition-all duration-200 ${
                 enTransition ? 'scale-[0.98] opacity-40' : 'opacity-100'
               }`}
             >

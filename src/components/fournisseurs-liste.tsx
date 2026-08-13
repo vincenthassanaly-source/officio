@@ -163,7 +163,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
               setFormOuvert(false)
             })
           }}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+          className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
           <ChampsFormulaire />
           <button
@@ -226,7 +226,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
           }
 
           return (
-            <div key={f.id} className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3.5">
+            <div key={f.id} className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3.5">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13.5px] font-semibold text-ink">{f.nom}</div>

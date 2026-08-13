@@ -164,7 +164,7 @@ export function SwitchIdentite({
         className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-neutral-soft"
       >
         <span
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${couleurProfilActuel.fond} ${couleurProfilActuel.texte}`}
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurProfilActuel.fond} ${couleurProfilActuel.texte}`}
         >
           {initiales}
         </span>
@@ -189,7 +189,7 @@ export function SwitchIdentite({
                     className="flex flex-1 items-center gap-2.5 px-2 py-2 text-left disabled:opacity-60"
                   >
                     <span
-                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold ${couleurAvatar(c.profilId)} ${texteAvatar(c.profilId)}`}
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-[10px] font-semibold ${couleurAvatar(c.profilId)} ${texteAvatar(c.profilId)}`}
                     >
                       {c.initiales}
                     </span>

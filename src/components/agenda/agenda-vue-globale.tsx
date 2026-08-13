@@ -46,7 +46,7 @@ function ItemLigne({
           <div className="font-mono text-[13px] font-medium text-ink">{r.heure_debut.slice(0, 5)}</div>
           <div className="text-[10px] text-muted">{r.duree_minutes} min</div>
         </div>
-        <div className="flex-1 rounded-2xl border border-border bg-surface p-3.5">
+        <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
           <div className="flex items-start justify-between gap-2">
             <div className="text-sm font-semibold text-ink">{r.titre}</div>
             <div className="flex shrink-0 items-center gap-2">
@@ -76,7 +76,7 @@ function ItemLigne({
         <div className="w-12 shrink-0 pt-1 text-right">
           <div className="text-[10px] text-muted">Journée</div>
         </div>
-        <div className="flex-1 rounded-2xl border border-border bg-surface p-3.5">
+        <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
           <div className="flex items-start justify-between gap-2">
             <div
               className={`text-sm font-semibold ${t.statut === 'fait' ? 'text-muted line-through' : 'text-ink'}`}
@@ -106,7 +106,7 @@ function ItemLigne({
       <div className="w-12 shrink-0 pt-1 text-right">
         <div className="text-[10px] text-muted">Journée</div>
       </div>
-      <div className="flex-1 rounded-2xl border border-border bg-surface p-3.5">
+      <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="text-sm font-semibold text-ink">
             {r.patient_prenom} {r.patient_nom}
@@ -236,7 +236,7 @@ export function AgendaVueGlobale({
               setFormOuvert(false)
             })
           }}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+          className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
           <input
             name="titre"

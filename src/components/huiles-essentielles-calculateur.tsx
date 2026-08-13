@@ -197,7 +197,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
         {detail.map(({ ligne, prix }) => (
           <div
             key={ligne.id}
-            className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-3"
+            className="flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3"
           >
             <SelecteurHuile
               huiles={huiles}
@@ -238,7 +238,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
         + Ajouter une huile
       </button>
 
-      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3">
+      <div className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3">
         <span className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">
           Conditionnement
         </span>
@@ -274,7 +274,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
         </label>
       </div>
 
-      <div className="flex flex-col gap-1.5 rounded-2xl border border-border bg-surface p-3.5">
+      <div className="flex flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3.5">
         {detail.map(({ ligne, huile, prix }) =>
           huile ? (
             <div key={ligne.id} className="flex items-center justify-between text-[12.5px] text-muted">

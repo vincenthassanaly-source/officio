@@ -97,7 +97,7 @@ export function TachesList({
               setPhoto(null)
             })
           }}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-surface p-3"
+          className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
           <input
             name="titre"
@@ -145,7 +145,7 @@ export function TachesList({
           return (
             <div
               key={t.id}
-              className="flex items-center gap-2 rounded-2xl border border-border bg-surface p-3.5"
+              className="flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5"
             >
               {t.photoUrl && (
                 <a href={t.photoUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">

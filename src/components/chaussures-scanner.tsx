@@ -55,7 +55,7 @@ function CandidatCarte({ candidat, onOuvrir }: { candidat: CandidatChaussure; on
     <button
       type="button"
       onClick={onOuvrir}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-2.5 text-left"
+      className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-2.5 text-left"
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-neutral-soft">
         {candidat.photo_url ? (
