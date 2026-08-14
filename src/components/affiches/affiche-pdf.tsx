@@ -1,200 +1,183 @@
-import { Document, Page, View, Text, Svg, Circle, Rect, Path, Font, StyleSheet } from '@react-pdf/renderer'
+import { Document, Page, Svg, Text, Rect, Circle, Line, Path, Font, StyleSheet } from '@react-pdf/renderer'
 
-// Couleurs propres à l'affiche prix, indépendantes de la palette Tailwind
-// de l'app (--color-primary etc., qui reste violette) : constantes locales
-// à ce module uniquement.
-export const VERT_PHARMACIE = '#1a4d3a'
-export const OR_PHARMACIE = '#c9a05c'
-export const CREME_PHARMACIE = '#fdfbf6'
+// Couleurs et coordonnées reprises telles quelles du gabarit SVG fourni par
+// l'utilisateur (210x297, unités = mm) — reproduites à l'identique plutôt
+// que réinterprétées, pour rester fidèles au modèle d'origine. Constantes
+// locales à ce module, indépendantes de la palette Tailwind de l'app.
+export const VERT_PHARMACIE = '#063F32'
+export const OR_PHARMACIE = '#C9A45C'
+export const BLANC_PHARMACIE = '#FFFFFF'
 
-// Polices chargées depuis /public/fonts (fichiers Google Fonts téléchargés
-// une fois pour toutes) plutôt que next/font/google : Font.register de
-// react-pdf a besoin d'une URL de fichier de police directement fetchable
-// (au moment du rendu, côté navigateur), pas d'un style CSS injecté au
-// build comme le fait next/font — les deux mécanismes sont incompatibles.
-// La page de prévisualisation (affiches-formulaire.tsx), elle, utilise bien
-// next/font/google pour l'aperçu HTML à l'écran.
+// Le gabarit d'origine spécifie "Arial, Helvetica, sans-serif". La police
+// Helvetica intégrée à react-pdf (une des 14 polices PDF standard, non
+// embarquée) rend mal certains caractères accentés en majuscules à grande
+// taille (glyphe d'accent mal positionné, ex. "CRÈME") — bug constaté à la
+// vérification, pas une supposition. Arimo (Google Fonts) est un clone
+// métriquement compatible d'Arial/Helvetica avec un rendu de glyphes fiable
+// une fois embarqué en TTF : même style visuel, sans ce défaut. Fichiers
+// auto-hébergés dans public/fonts/ (voir la note équivalente dans le
+// formulaire pour pourquoi Font.register ne peut pas passer par next/font).
 Font.register({
-  family: 'Poppins',
+  family: 'Arimo',
   fonts: [
-    { src: '/fonts/Poppins-SemiBold.ttf', fontWeight: 600 },
-    { src: '/fonts/Poppins-ExtraBold.ttf', fontWeight: 800 },
+    { src: '/fonts/Arimo-Regular.ttf', fontWeight: 400 },
+    { src: '/fonts/Arimo-Bold.ttf', fontWeight: 700 },
   ],
-})
-Font.register({
-  family: 'Playfair Display',
-  fonts: [{ src: '/fonts/PlayfairDisplay-Bold.ttf', fontWeight: 700 }],
 })
 
 export function formatPrixAffiche(prix: number): string {
   return `${prix.toFixed(2).replace('.', ',')} €`
 }
 
-// Taille du nom de produit dégressive selon la longueur, pour rester lisible
-// sur 1 à 2 lignes sans déborder du cadre plutôt que de forcer un calcul de
-// redimensionnement dynamique complexe côté PDF.
-function taillePolicenomProduit(nomProduit: string): number {
-  if (nomProduit.length > 32) return 26
-  if (nomProduit.length > 22) return 32
-  if (nomProduit.length > 13) return 42
-  return 52
+// Répartit le nom du produit sur 1 ou 2 lignes (comme le gabarit d'origine,
+// qui a "NOM DU" / "PRODUIT" en dur) en coupant au mot le plus équilibré,
+// plutôt que de couper au milieu d'un mot.
+function repartirEnLignes(nomProduit: string): string[] {
+  const texte = nomProduit.trim().toUpperCase()
+  const mots = texte.split(/\s+/)
+  if (mots.length <= 1 || texte.length <= 16) return [texte]
+
+  let meilleurIndex = 1
+  let meilleurEcart = Infinity
+  for (let i = 1; i < mots.length; i += 1) {
+    const ecart = Math.abs(mots.slice(0, i).join(' ').length - mots.slice(i).join(' ').length)
+    if (ecart < meilleurEcart) {
+      meilleurEcart = ecart
+      meilleurIndex = i
+    }
+  }
+  return [mots.slice(0, meilleurIndex).join(' '), mots.slice(meilleurIndex).join(' ')]
 }
 
-const styles = StyleSheet.create({
-  page: {
-    backgroundColor: CREME_PHARMACIE,
-  },
-  cadre: {
-    flex: 1,
-    margin: 28,
-    padding: 36,
-    border: `1pt solid ${VERT_PHARMACIE}`,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  entete: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  ligneEnseigne: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-  },
-  filetOr: {
-    width: 36,
-    height: 1,
-    backgroundColor: OR_PHARMACIE,
-    marginHorizontal: 10,
-  },
-  enseigne: {
-    fontFamily: 'Poppins',
-    fontWeight: 600,
-    fontSize: 11,
-    letterSpacing: 3,
-    color: VERT_PHARMACIE,
-  },
-  centre: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    width: '100%',
-  },
-  nomProduit: {
-    fontFamily: 'Poppins',
-    fontWeight: 800,
-    color: VERT_PHARMACIE,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    lineHeight: 1.08,
-  },
-  separateurRow: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '55%',
-    marginTop: 26,
-    marginBottom: 26,
-  },
-  separateurLigne: {
-    flex: 1,
-    height: 1,
-    backgroundColor: OR_PHARMACIE,
-  },
-  separateurPoint: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: OR_PHARMACIE,
-    marginHorizontal: 8,
-  },
-  pastilleprix: {
-    backgroundColor: VERT_PHARMACIE,
-    borderColor: OR_PHARMACIE,
-    borderWidth: 1.5,
-    borderRadius: 44,
-    paddingVertical: 20,
-    paddingHorizontal: 48,
-  },
-  prix: {
-    fontFamily: 'Playfair Display',
-    fontWeight: 700,
-    fontSize: 46,
-    color: '#ffffff',
-    textAlign: 'center',
-  },
-  piedDePage: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  ligneFooter: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 14,
-  },
-  filetVert: {
-    width: 64,
-    height: 1,
-    backgroundColor: VERT_PHARMACIE,
-  },
-  espaceFooter: {
-    width: 36,
-  },
+// Le cadre offre environ 190 unités (mm) de largeur utile pour le texte. Le
+// gabarit d'origine fixe le corps à 27 pour des lignes courtes ("NOM DU",
+// "PRODUIT", 6-7 caractères) : au-delà, on réduit le corps pour que la ligne
+// la plus longue tienne dans cette largeur plutôt que de déborder du cadre
+// (0.62 = largeur moyenne d'une capitale grasse, en fraction du corps —
+// approximation empirique, pas une mesure exacte des glyphes).
+const LARGEUR_UTILE_MM = 190
+const RATIO_CARACTERE_GRAS = 0.62
+const TAILLE_MAX_NOM = 27
+const TAILLE_MIN_NOM = 13
+
+function taillePoliceNom(lignes: string[]): number {
+  const plusLongue = Math.max(...lignes.map((l) => l.length))
+  const tailleAjustee = LARGEUR_UTILE_MM / (plusLongue * RATIO_CARACTERE_GRAS)
+  return Math.min(TAILLE_MAX_NOM, Math.max(TAILLE_MIN_NOM, tailleAjustee))
+}
+
+// Même logique pour le prix : le corps 30 du gabarit suppose un prix à 2
+// chiffres ("XX,XX €", 7 caractères) dans un encart de 162 de large.
+const LARGEUR_UTILE_PRIX_MM = 130
+const TAILLE_MAX_PRIX = 30
+const TAILLE_MIN_PRIX = 18
+
+function taillePolicePrix(texte: string): number {
+  const tailleAjustee = LARGEUR_UTILE_PRIX_MM / (texte.length * RATIO_CARACTERE_GRAS)
+  return Math.min(TAILLE_MAX_PRIX, Math.max(TAILLE_MIN_PRIX, tailleAjustee))
+}
+
+// Le typage de SVGTextProps.style (@react-pdf/types) n'expose que les
+// attributs de présentation SVG (fill, stroke…), pas les propriétés de
+// police — pourtant bien supportées à l'exécution par react-pdf pour un
+// <Text> en contexte <Svg> (cf. leur doc "SVG Text"). Passer par
+// StyleSheet.create (plutôt qu'un littéral inline) contourne l'écart de
+// typage sans recourir à `any`.
+const stylesTexte = StyleSheet.create({
+  enseigne: { fontFamily: 'Arimo', fontWeight: 400, fontSize: 7, letterSpacing: 2 },
+  nomProduit: { fontFamily: 'Arimo', fontWeight: 700, letterSpacing: 0.5 },
+  prix: { fontFamily: 'Arimo', fontWeight: 700 },
 })
 
 export function AffichePDF({ nomProduit, prix }: { nomProduit: string; prix: number }) {
+  const lignesNom = repartirEnLignes(nomProduit)
+  const taillePolice = taillePoliceNom(lignesNom)
+  // Positions verticales du gabarit d'origine (91 et 119) pour 2 lignes ;
+  // centrées sur leur milieu (105) quand le nom tient sur une seule ligne.
+  const positionsY = lignesNom.length === 2 ? [91, 119] : [105]
+
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={styles.cadre}>
-          <View style={styles.entete}>
-            <Svg width={62} height={62} viewBox="0 0 62 62">
-              <Circle cx={31} cy={31} r={29} fill={VERT_PHARMACIE} stroke={OR_PHARMACIE} strokeWidth={1.5} />
-              <Rect x={27} y={16} width={8} height={30} fill={OR_PHARMACIE} />
-              <Rect x={16} y={27} width={30} height={8} fill={OR_PHARMACIE} />
-            </Svg>
-            <View style={styles.ligneEnseigne}>
-              <View style={styles.filetOr} />
-              <Text style={styles.enseigne}>PHARMACIE ROME VILLAGE</Text>
-              <View style={styles.filetOr} />
-            </View>
-          </View>
+      <Page size="A4">
+        <Svg width="100%" height="100%" viewBox="0 0 210 297">
+          <Rect x={0} y={0} width={210} height={297} fill={BLANC_PHARMACIE} />
 
-          <View style={styles.centre}>
-            <Text style={[styles.nomProduit, { fontSize: taillePolicenomProduit(nomProduit) }]}>{nomProduit}</Text>
+          {/* Cadre extérieur */}
+          <Rect x={5} y={5} width={200} height={287} fill="none" stroke={VERT_PHARMACIE} strokeWidth={0.6} />
 
-            <View style={styles.separateurRow}>
-              <View style={styles.separateurLigne} />
-              <View style={styles.separateurPoint} />
-              <View style={styles.separateurLigne} />
-            </View>
+          {/* Logo / symbole pharmacie */}
+          <Circle cx={105} cy={28} r={11} fill={VERT_PHARMACIE} stroke={OR_PHARMACIE} strokeWidth={0.8} />
+          <Rect x={102.5} y={20.5} width={5} height={15} fill={OR_PHARMACIE} />
+          <Rect x={97.5} y={25.5} width={15} height={5} fill={OR_PHARMACIE} />
 
-            <View style={styles.pastilleprix}>
-              <Text style={styles.prix}>{formatPrixAffiche(prix)}</Text>
-            </View>
-          </View>
+          {/* Nom de la pharmacie */}
+          <Line x1={22} y1={46} x2={43} y2={46} stroke={OR_PHARMACIE} strokeWidth={0.7} />
+          <Text x={105} y={48} textAnchor="middle" style={stylesTexte.enseigne} fill={VERT_PHARMACIE}>
+            PHARMACIE ROME VILLAGE
+          </Text>
+          <Line x1={167} y1={46} x2={188} y2={46} stroke={OR_PHARMACIE} strokeWidth={0.7} />
 
-          <View style={styles.piedDePage}>
-            <Svg width={18} height={26} viewBox="0 0 18 26">
-              <Path
-                d="M9 24 C9 24 1.5 18.5 1.5 9.5 C1.5 4 5 1 9 1 C13 1 16.5 4 16.5 9.5 C16.5 18.5 9 24 9 24 Z"
-                fill={OR_PHARMACIE}
-              />
-              <Rect x={8.5} y={5} width={1} height={18} fill={CREME_PHARMACIE} />
-            </Svg>
-            <View style={styles.ligneFooter}>
-              <View style={styles.filetVert} />
-              <View style={styles.espaceFooter} />
-              <View style={styles.filetVert} />
-            </View>
-          </View>
-        </View>
+          {/* Nom du produit */}
+          {lignesNom.map((ligne, index) => (
+            <Text
+              key={ligne + index}
+              x={105}
+              y={positionsY[index]}
+              textAnchor="middle"
+              style={[stylesTexte.nomProduit, { fontSize: taillePolice }]}
+              fill={VERT_PHARMACIE}
+            >
+              {ligne}
+            </Text>
+          ))}
+
+          {/* Séparateur */}
+          <Line x1={68} y1={137} x2={94} y2={137} stroke={OR_PHARMACIE} strokeWidth={0.7} />
+          <Circle cx={105} cy={137} r={1.5} fill={OR_PHARMACIE} />
+          <Line x1={116} y1={137} x2={142} y2={137} stroke={OR_PHARMACIE} strokeWidth={0.7} />
+
+          {/* Bloc prix */}
+          <Rect
+            x={24}
+            y={151}
+            width={162}
+            height={62}
+            rx={12}
+            fill={VERT_PHARMACIE}
+            stroke={OR_PHARMACIE}
+            strokeWidth={1}
+          />
+          <Text
+            x={105}
+            y={190}
+            textAnchor="middle"
+            style={[stylesTexte.prix, { fontSize: taillePolicePrix(formatPrixAffiche(prix)) }]}
+            fill={BLANC_PHARMACIE}
+          >
+            {formatPrixAffiche(prix)}
+          </Text>
+
+          {/* Élément décoratif bas (tige + feuilles) */}
+          <Path d="M105 270 C105 264, 105 258, 105 253" fill="none" stroke={OR_PHARMACIE} strokeWidth={1.2} />
+          <Path
+            d="M105 264 C99 262, 96 257, 96 253 C101 253, 105 257, 105 264Z"
+            fill="none"
+            stroke={OR_PHARMACIE}
+            strokeWidth={1}
+          />
+          <Path
+            d="M105 260 C109 255, 114 252, 116 252 C115 258, 111 262, 105 264Z"
+            fill="none"
+            stroke={OR_PHARMACIE}
+            strokeWidth={1}
+          />
+
+          {/* Cadre : interruptions basses (mêmes coordonnées que le gabarit) */}
+          <Rect x={5} y={285} width={50} height={7} fill={BLANC_PHARMACIE} />
+          <Rect x={155} y={285} width={50} height={7} fill={BLANC_PHARMACIE} />
+          <Line x1={5} y1={292} x2={55} y2={292} stroke={VERT_PHARMACIE} strokeWidth={0.6} />
+          <Line x1={155} y1={292} x2={205} y2={292} stroke={VERT_PHARMACIE} strokeWidth={0.6} />
+        </Svg>
       </Page>
     </Document>
   )

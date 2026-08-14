@@ -1,16 +1,17 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Poppins, Playfair_Display } from 'next/font/google'
+import { Arimo } from 'next/font/google'
 import { pdf } from '@react-pdf/renderer'
-import { AffichePDF, formatPrixAffiche, VERT_PHARMACIE, OR_PHARMACIE, CREME_PHARMACIE } from './affiche-pdf'
+import { AffichePDF, formatPrixAffiche, VERT_PHARMACIE, OR_PHARMACIE, BLANC_PHARMACIE } from './affiche-pdf'
 
-// Polices pour l'aperçu HTML à l'écran uniquement (le PDF, lui, utilise ses
-// propres fichiers de police via Font.register — voir affiche-pdf.tsx).
-// Chargées ici plutôt que dans app/layout.tsx : propres à ce module, pas de
-// raison de les charger sur le reste de l'app.
-const poppins = Poppins({ subsets: ['latin'], weight: ['600', '800'] })
-const playfairDisplay = Playfair_Display({ subsets: ['latin'], weight: ['700'] })
+// Aperçu HTML : même police que le PDF (Arimo — équivalent Arial/Helvetica
+// du gabarit fourni par l'utilisateur, voir affiche-pdf.tsx pour pourquoi
+// Helvetica standard PDF a été écartée). Chargée ici via next/font/google
+// (build-time, adapté à un rendu à l'écran), pas via Font.register de
+// react-pdf (qui a besoin d'un fichier fetchable au rendu — voir la note
+// dans affiche-pdf.tsx) : deux mécanismes distincts pour deux contextes.
+const arimo = Arimo({ subsets: ['latin'], weight: ['400', '700'] })
 
 const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
@@ -98,70 +99,72 @@ export function AffichesFormulaire() {
       </div>
 
       <div className="flex flex-1 items-center justify-center">
+        {/* Aperçu approximatif — proportions et coordonnées reprises du
+            gabarit 210x297 fourni (1 unité ≈ 1% de la largeur/hauteur). */}
         <div
-          className="relative flex aspect-[595/842] w-full max-w-sm flex-col items-center justify-between border p-6"
-          style={{ backgroundColor: CREME_PHARMACIE, borderColor: VERT_PHARMACIE }}
+          className="relative flex aspect-[210/297] w-full max-w-sm flex-col items-center border p-[2.4%]"
+          style={{ backgroundColor: BLANC_PHARMACIE, borderColor: VERT_PHARMACIE }}
         >
-          <div className="flex flex-col items-center">
-            <div
-              className="flex h-11 w-11 items-center justify-center rounded-full border-2"
-              style={{ backgroundColor: VERT_PHARMACIE, borderColor: OR_PHARMACIE }}
-            >
-              <div className="relative h-5 w-5">
-                <div
-                  className="absolute left-1/2 top-0 h-full w-[3px] -translate-x-1/2"
-                  style={{ backgroundColor: OR_PHARMACIE }}
-                />
-                <div
-                  className="absolute left-0 top-1/2 h-[3px] w-full -translate-y-1/2"
-                  style={{ backgroundColor: OR_PHARMACIE }}
-                />
-              </div>
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="h-px w-5" style={{ backgroundColor: OR_PHARMACIE }} />
-              <span
-                className={`${poppins.className} text-[9px] font-semibold tracking-[0.15em]`}
-                style={{ color: VERT_PHARMACIE }}
-              >
-                PHARMACIE ROME VILLAGE
-              </span>
-              <span className="h-px w-5" style={{ backgroundColor: OR_PHARMACIE }} />
+          <div
+            className="mt-[2%] flex h-[9%] w-[9%] items-center justify-center rounded-full border"
+            style={{ backgroundColor: VERT_PHARMACIE, borderColor: OR_PHARMACIE }}
+          >
+            <div className="relative h-1/2 w-1/2">
+              <div
+                className="absolute left-1/2 top-0 h-full w-[22%] -translate-x-1/2"
+                style={{ backgroundColor: OR_PHARMACIE }}
+              />
+              <div
+                className="absolute left-0 top-1/2 h-[22%] w-full -translate-y-1/2"
+                style={{ backgroundColor: OR_PHARMACIE }}
+              />
             </div>
           </div>
 
-          <div className="flex w-full flex-col items-center px-2">
+          <div className="mt-[2%] flex items-center gap-2">
+            <span className="h-px w-6" style={{ backgroundColor: OR_PHARMACIE }} />
+            <span
+              className={`${arimo.className} text-[8px] tracking-[0.2em]`}
+              style={{ color: VERT_PHARMACIE }}
+            >
+              PHARMACIE ROME VILLAGE
+            </span>
+            <span className="h-px w-6" style={{ backgroundColor: OR_PHARMACIE }} />
+          </div>
+
+          <div className="mt-[10%] flex w-full flex-1 flex-col items-center justify-start px-[4%]">
             <p
-              className={`${poppins.className} text-center font-extrabold uppercase leading-tight break-words`}
-              style={{ color: VERT_PHARMACIE, fontSize: nomProduit.length > 22 ? '1.15rem' : '1.75rem' }}
+              className={`${arimo.className} w-full text-center font-bold uppercase leading-tight break-words`}
+              style={{ color: VERT_PHARMACIE, fontSize: nomProduit.length > 16 ? '1.3rem' : '1.7rem' }}
             >
               {nomProduit || 'Nom du produit'}
             </p>
-            <div className="mt-4 mb-4 flex w-3/5 items-center gap-2">
+
+            <div className="mt-[6%] mb-[6%] flex w-2/5 items-center gap-2">
               <span className="h-px flex-1" style={{ backgroundColor: OR_PHARMACIE }} />
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: OR_PHARMACIE }} />
+              <span className="h-1 w-1 shrink-0 rounded-full" style={{ backgroundColor: OR_PHARMACIE }} />
               <span className="h-px flex-1" style={{ backgroundColor: OR_PHARMACIE }} />
             </div>
+
             <div
-              className="rounded-[999px] border px-8 py-3"
+              className="w-[77%] rounded-[16%] border py-[5%] text-center"
               style={{ backgroundColor: VERT_PHARMACIE, borderColor: OR_PHARMACIE }}
             >
-              <span className={`${playfairDisplay.className} text-2xl font-bold text-white`}>
+              <span className={`${arimo.className} text-xl font-bold text-white`}>
                 {formatPrixAffiche(prix ?? 0)}
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col items-center">
-            <svg width="14" height="20" viewBox="0 0 18 26">
-              <path
-                d="M9 24 C9 24 1.5 18.5 1.5 9.5 C1.5 4 5 1 9 1 C13 1 16.5 4 16.5 9.5 C16.5 18.5 9 24 9 24 Z"
-                fill={OR_PHARMACIE}
-              />
+          <div className="mb-[2%] flex flex-col items-center">
+            <svg width="10" height="16" viewBox="0 0 20 20" fill="none" stroke={OR_PHARMACIE} strokeWidth={1.2}>
+              <path d="M10 18 C10 15, 10 12, 10 9" />
+              <path d="M10 14 C7 13, 5.5 10.5, 5.5 8.5 C8 8.5, 10 10.5, 10 14Z" />
+              <path d="M10 12 C12.5 9.5, 15 8, 16 8 C15.5 11, 13.5 13, 10 14Z" />
             </svg>
-            <div className="mt-2 flex items-center gap-6">
-              <span className="h-px w-8" style={{ backgroundColor: VERT_PHARMACIE }} />
-              <span className="h-px w-8" style={{ backgroundColor: VERT_PHARMACIE }} />
+            <div className="mt-[2%] flex items-center gap-8">
+              <span className="h-px w-10" style={{ backgroundColor: VERT_PHARMACIE }} />
+              <span className="h-px w-10" style={{ backgroundColor: VERT_PHARMACIE }} />
             </div>
           </div>
         </div>
