@@ -68,6 +68,23 @@ export async function marquerRetire(id: string) {
   revalidatePath('/peremptions')
 }
 
+// Annule un marquage "retiré" accidentel.
+export async function annulerRetrait(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('peremptions')
+    .update({
+      retire: false,
+      retire_par: null,
+      retire_le: null,
+    })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/peremptions')
+}
+
 export async function supprimerPeremption(id: string) {
   const supabase = await createClient()
   const { error } = await supabase.from('peremptions').delete().eq('id', id)

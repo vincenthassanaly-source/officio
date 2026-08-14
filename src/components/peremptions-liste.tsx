@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import {
   ajouterPeremption,
+  annulerRetrait,
   marquerRetire,
   modifierPeremption,
   supprimerPeremption,
@@ -61,6 +62,7 @@ function CartePeremption({
   onEnregistrer,
   onSupprimer,
   onMarquerRetire,
+  onAnnulerRetrait,
 }: {
   p: Peremption
   perimee: boolean
@@ -71,6 +73,7 @@ function CartePeremption({
   onEnregistrer: (formData: FormData) => void
   onSupprimer: () => void
   onMarquerRetire: () => void
+  onAnnulerRetrait: () => void
 }) {
   if (enEdition) {
     return (
@@ -136,6 +139,16 @@ function CartePeremption({
             className="flex-1 rounded-xl bg-primary py-2 text-[12.5px] font-semibold text-white disabled:opacity-60"
           >
             Marquer retiré
+          </button>
+        )}
+        {p.retire && (
+          <button
+            type="button"
+            onClick={onAnnulerRetrait}
+            disabled={isPending}
+            className="flex-1 rounded-xl border border-border py-2 text-[12.5px] font-semibold text-muted disabled:opacity-60"
+          >
+            Annuler le retrait
           </button>
         )}
         <button
@@ -261,6 +274,7 @@ export function PeremptionsListe({ peremptions }: { peremptions: Peremption[] })
                 }}
                 onSupprimer={() => demanderSuppression(p.id, p.nom_produit)}
                 onMarquerRetire={() => startTransition(() => marquerRetire(p.id))}
+                onAnnulerRetrait={() => startTransition(() => annulerRetrait(p.id))}
               />
             ))}
           </div>
@@ -293,6 +307,7 @@ export function PeremptionsListe({ peremptions }: { peremptions: Peremption[] })
                 }}
                 onSupprimer={() => demanderSuppression(p.id, p.nom_produit)}
                 onMarquerRetire={() => startTransition(() => marquerRetire(p.id))}
+                onAnnulerRetrait={() => startTransition(() => annulerRetrait(p.id))}
               />
             ))}
           </div>
