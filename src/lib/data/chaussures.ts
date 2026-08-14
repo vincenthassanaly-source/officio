@@ -8,6 +8,7 @@ export type ChaussureVariante = {
   id: string
   couleur: string
   photo_url: string
+  photo_hash: string | null
 }
 
 export type ChaussureModele = {
@@ -30,7 +31,7 @@ export async function getChaussures(officineId: string): Promise<ChaussureModele
   const { data, error } = await supabase
     .from('chaussures_orthopediques')
     .select(
-      'id, nom_modele, description, genre, rayon, categorie, reference, pointures, prix, photo_url, variantes:chaussures_variantes(id, couleur, photo_url)'
+      'id, nom_modele, description, genre, rayon, categorie, reference, pointures, prix, photo_url, variantes:chaussures_variantes(id, couleur, photo_url, photo_hash)'
     )
     .eq('officine_id', officineId)
     .order('categorie', { ascending: true })

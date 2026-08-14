@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { modifierPrixChaussure } from '@/app/actions/chaussures'
 import { ChaussuresScanner } from '@/components/chaussures-scanner'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
-import type { ChaussureModele, GenreChaussure, RayonChaussure } from '@/lib/data/chaussures'
+import type { ChaussureModele, ChaussureVariante, GenreChaussure, RayonChaussure } from '@/lib/data/chaussures'
 
 const RAYONS: RayonChaussure[] = ['ÉTÉ', 'HIVER', 'PERMANENT', 'FINS DE SÉRIE']
 
@@ -127,10 +127,36 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
   )
 }
 
+// Certaines fiches fournisseur n'ont pas de photo distincte par couleur (le
+// site anatonic.fr renvoie parfois la même image pour plusieurs coloris) :
+// on regroupe les variantes qui partagent strictement la même photo pour
+// n'afficher qu'une seule vignette par photo réellement différente, plutôt
+// que plusieurs vignettes identiques trompeuses au comptoir.
+function regrouperParPhoto(photos: ChaussureVariante[]) {
+  const groupes: { couleurs: string[]; premierIndex: number }[] = []
+  const indexParHash = new Map<string, number>()
+
+  photos.forEach((variante, index) => {
+    const cle = variante.photo_hash ?? `unique-${variante.id}`
+    const indexGroupe = indexParHash.get(cle)
+    if (indexGroupe === undefined) {
+      indexParHash.set(cle, groupes.length)
+      groupes.push({ couleurs: [variante.couleur], premierIndex: index })
+    } else {
+      groupes[indexGroupe].couleurs.push(variante.couleur)
+    }
+  })
+
+  return groupes
+}
+
 function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; onFermer: () => void }) {
   const photos = chaussure.variantes.length > 0 ? chaussure.variantes : null
   const [couleurIndex, setCouleurIndex] = useState(0)
   const depassement = calculerDepassement(chaussure.prix)
+
+  const groupesCouleurs = photos ? regrouperParPhoto(photos) : []
+  const groupeActif = groupesCouleurs.find((g) => g.couleurs.includes(photos?.[couleurIndex]?.couleur ?? '')) ?? groupesCouleurs[0]
 
   const photoAffichee = photos ? photos[couleurIndex]?.photo_url : chaussure.photo_url
 
@@ -174,28 +200,31 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
           {photos && photos.length > 1 && (
             <div className="flex flex-col gap-1.5">
               <div className="text-[11px] font-bold uppercase tracking-wide text-muted">
-                Couleurs · <span className="text-ink">{photos[couleurIndex]?.couleur}</span>
+                Couleurs · <span className="text-ink">{groupeActif?.couleurs.join(' / ')}</span>
               </div>
               <div className="flex gap-2 overflow-x-auto">
-                {photos.map((variante, index) => (
-                  <button
-                    key={variante.id}
-                    type="button"
-                    onClick={() => setCouleurIndex(index)}
-                    className="flex w-14 shrink-0 flex-col items-center gap-1"
-                  >
-                    <div
-                      className={`relative h-14 w-14 overflow-hidden rounded-xl border-2 ${
-                        index === couleurIndex ? 'border-primary' : 'border-border'
-                      }`}
+                {groupesCouleurs.map((groupe) => {
+                  const variante = photos[groupe.premierIndex]
+                  return (
+                    <button
+                      key={variante.id}
+                      type="button"
+                      onClick={() => setCouleurIndex(groupe.premierIndex)}
+                      className="flex w-14 shrink-0 flex-col items-center gap-1"
                     >
-                      <Image src={variante.photo_url} alt={variante.couleur} fill sizes="56px" className="object-cover" />
-                    </div>
-                    <span className="w-full truncate text-center text-[9.5px] font-medium capitalize text-muted">
-                      {variante.couleur.toLowerCase()}
-                    </span>
-                  </button>
-                ))}
+                      <div
+                        className={`relative h-14 w-14 overflow-hidden rounded-xl border-2 ${
+                          groupe === groupeActif ? 'border-primary' : 'border-border'
+                        }`}
+                      >
+                        <Image src={variante.photo_url} alt={groupe.couleurs.join(' / ')} fill sizes="56px" className="object-cover" />
+                      </div>
+                      <span className="w-full text-center text-[9.5px] font-medium capitalize leading-tight text-muted">
+                        {groupe.couleurs.join(' / ').toLowerCase()}
+                      </span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}
