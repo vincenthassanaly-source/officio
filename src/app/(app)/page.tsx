@@ -6,6 +6,7 @@ import { getTaches } from '@/lib/data/taches'
 import { getRendezVous } from '@/lib/data/rendez-vous'
 import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
 import { getCnoPatients } from '@/lib/data/cno'
+import { getPeremptions } from '@/lib/data/peremptions'
 import { getSuggestions } from '@/lib/data/suggestions'
 import { getEquipe } from '@/lib/data/equipe'
 import { getWeekDates, toISODate } from '@/lib/dates'
@@ -19,6 +20,7 @@ import {
   IconChaussures,
   IconCno,
   IconRegularisation,
+  IconPeremptions,
   IconSuggestions,
 } from '@/components/nav-icons'
 
@@ -34,18 +36,26 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
-  const [messages, taches, rendezVous, huiles, patientsCno, suggestions, equipe] = await Promise.all([
+  const [messages, taches, rendezVous, huiles, patientsCno, peremptions, suggestions, equipe] = await Promise.all([
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
     getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
     getHuilesEssentielles(officine.officine_id),
     getCnoPatients(officine.officine_id),
+    getPeremptions(officine.officine_id),
     getSuggestions(officine.officine_id),
     getEquipe(officine.officine_id),
   ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
   const suggestionsNonTraitees = suggestions.filter((s) => !s.fait).length
+
+  const dansTrenteJours = new Date(aujourdhui)
+  dansTrenteJours.setDate(dansTrenteJours.getDate() + 30)
+  const dansTrenteJoursIso = toISODate(dansTrenteJours)
+  const peremptionsBientot = peremptions.filter(
+    (p) => !p.retire && p.date_peremption >= aujourdhuiIso && p.date_peremption <= dansTrenteJoursIso
+  ).length
 
   const messagesNonLusTous = messages.filter((m) => !m.lecteurs.some((l) => l.profil_id === profil?.id))
   const nonLus = messagesNonLusTous.length
@@ -186,6 +196,18 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suggestions</div>
             <div className="mt-0.5 text-[11px] text-muted">{suggestionsNonTraitees} propositions</div>
+          </div>
+        </Link>
+        <Link
+          href="/peremptions"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
+            <IconPeremptions className="h-[18px] w-[18px]" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Péremptions</div>
+            <div className="mt-0.5 text-[11px] text-muted">{peremptionsBientot} à venir sous 30j</div>
           </div>
         </Link>
       </div>

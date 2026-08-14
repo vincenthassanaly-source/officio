@@ -170,6 +170,23 @@ export function IconRegularisation({ className }: IconProps) {
   )
 }
 
+export function IconPeremptions({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M6 2h12M6 22h12" />
+      <path d="M6 2c0 5 5 6.5 5 10s-5 5-5 10M18 2c0 5-5 6.5-5 10s5 5 5 10" />
+    </svg>
+  )
+}
+
 export function IconSuggestions({ className }: IconProps) {
   return (
     <svg
