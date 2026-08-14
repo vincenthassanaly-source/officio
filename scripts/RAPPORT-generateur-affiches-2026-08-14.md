@@ -56,3 +56,17 @@ Poppins ExtraBold (nom du produit, très géométrique et massif, proche du rend
 5. Tester avec un nom de produit très long (au-delà de 32 caractères) pour confirmer que le texte reste lisible et ne déborde pas du cadre à l'impression.
 6. **Imprimer réellement une affiche** (ou visualiser en aperçu d'impression) pour vérifier que le format A4 et les proportions tiennent sur une feuille physique.
 7. Vérifier sur mobile réel que le formulaire et l'aperçu restent confortables à utiliser (l'aperçu est en `aspect-ratio` A4, à confirmer qu'il ne déborde pas sur petits écrans).
+
+## Mise à jour — `8b2c5cc` : reproduction fidèle du gabarit SVG fourni
+
+Le premier template (ci-dessus) était une réinterprétation visuelle de l'image de référence — trop éloignée du modèle réel une fois comparée par l'utilisateur. Il a ensuite fourni le **code SVG exact** du modèle (210×297mm, couleurs `#063F32`/`#C9A45C`/blanc, police Arial/Helvetica partout, coordonnées précises pour chaque élément). `affiche-pdf.tsx` a été réécrit en traduction 1:1 de ce SVG à l'intérieur d'un unique `<Svg>` react-pdf (`viewBox="0 0 210 297"`, mêmes coordonnées, aucune réinterprétation) plutôt que recomposé avec des primitives de mise en page (`View`/flexbox) comme dans la première version.
+
+**Deux défauts trouvés à la vérification** (pas des suppositions — repérés sur le rendu réel) :
+- La police Helvetica standard de react-pdf (une des 14 polices PDF non embarquées) positionne mal le glyphe d'accent sur certaines majuscules accentées (ex. "CRÈME" affichait un accent flottant, détaché de la lettre). Remplacée par **Arimo** (clone métriquement compatible d'Arial/Helvetica, Google Fonts), embarquée en TTF dans `public/fonts/` — plus de défaut constaté après re-vérification, y compris sur "GÉLULES".
+- La taille de police du nom de produit était fixe (27, calibrée pour les lignes courtes du gabarit — "NOM DU"/"PRODUIT") et débordait du cadre pour des noms plus longs (ex. "CRÈME SOLAIRE SPF50" dépassait des deux côtés de la page). Le calcul est désormais fait pour que la ligne la plus longue tienne dans la largeur utile du cadre (~190mm), avec le même traitement pour le prix (utile au-delà de 3 chiffres, ex. "1234,50 €").
+
+Couleurs et polices mises à jour en miroir dans l'aperçu HTML (`affiches-formulaire.tsx`). Fichiers Poppins/Playfair Display supprimés de `public/fonts/` (plus utilisés par ce design), remplacés par Arimo Regular/Bold.
+
+**Revérifié** : `npx tsc --noEmit`, `npm run lint` (même baseline), `npm run build` (route `/affiches` toujours générée correctement), et rendu Node réel (`renderToBuffer`) sur nom court ("Doliprane"), moyen ("Crème Solaire SPF50"), long/2 lignes ("Complexe Vitaminique B Complex Fort 60 gélules") et prix à 4 chiffres — comparés visuellement au SVG source fourni, plus aucun débordement ni glyphe cassé constaté.
+
+Point de vigilance mineur, cosmétique uniquement : le rendu Node autonome affiche un avertissement console `Node of type SVG can't wrap between pages and it's bigger than available page height` (le `<Svg>` occupe intentionnellement toute la page, sans marge de pagination — c'est voulu, une seule page). N'empêche pas la génération, aucun défaut visuel constaté sur les PDF produits, mais à garder en tête si un futur avertissement similaire apparaît dans la console du navigateur au moment du téléchargement.
