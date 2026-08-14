@@ -1,20 +1,26 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Arimo } from 'next/font/google'
 import { pdf } from '@react-pdf/renderer'
 import { AffichePDF, formatPrixAffiche, VERT_PHARMACIE, OR_PHARMACIE, BLANC_PHARMACIE } from './affiche-pdf'
 
-// Aperçu HTML : même police que le PDF (Arimo — équivalent Arial/Helvetica
-// du gabarit fourni par l'utilisateur, voir affiche-pdf.tsx pour pourquoi
-// Helvetica standard PDF a été écartée). Chargée ici via next/font/google
-// (build-time, adapté à un rendu à l'écran), pas via Font.register de
-// react-pdf (qui a besoin d'un fichier fetchable au rendu — voir la note
-// dans affiche-pdf.tsx) : deux mécanismes distincts pour deux contextes.
-const arimo = Arimo({ subsets: ['latin'], weight: ['400', '700'] })
+// Même police que le PDF — voir affiche-pdf.tsx pour pourquoi Helvetica
+// standard PDF a été écartée au profit d'Arimo. Chargée ici via
+// next/font/google (build-time, adapté à un rendu à l'écran), pas via
+// Font.register de react-pdf (qui a besoin d'un fichier fetchable au
+// rendu) : deux mécanismes distincts pour deux contextes.
+const arimo = Arimo({ subsets: ['latin'], weight: ['400', '600', '700'] })
 
 const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
+
+// Dimensions du gabarit source (Pharmacy Price Tag.dc.html, claude.ai/design).
+// L'aperçu ci-dessous reprend ces valeurs en pixels telles quelles (pas de
+// conversion en %), mis à l'échelle par un facteur calculé pour remplir son
+// conteneur — fidélité exacte au gabarit plutôt qu'une approximation.
+const LARGEUR_GABARIT = 1050
+const HAUTEUR_GABARIT = 1500
 
 function slugifier(texte: string): string {
   const slug = texte
@@ -37,14 +43,37 @@ function parsePrix(saisie: string): number | null {
   return nombre
 }
 
+// Met le contenu du gabarit (taille fixe LARGEUR_GABARIT x HAUTEUR_GABARIT)
+// à l'échelle de la largeur réellement disponible, pour un aperçu fidèle et
+// responsive sans convertir chaque valeur du gabarit en pourcentage.
+function useEchelleGabarit() {
+  const conteneurRef = useRef<HTMLDivElement>(null)
+  const [echelle, setEchelle] = useState(1)
+
+  useEffect(() => {
+    const el = conteneurRef.current
+    if (!el) return
+    const observer = new ResizeObserver((entries) => {
+      const largeur = entries[0]?.contentRect.width
+      if (largeur) setEchelle(largeur / LARGEUR_GABARIT)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return { conteneurRef, echelle }
+}
+
 export function AffichesFormulaire() {
   const [nomProduit, setNomProduit] = useState('')
   const [prixSaisi, setPrixSaisi] = useState('')
   const [genereEnCours, setGenereEnCours] = useState(false)
+  const { conteneurRef, echelle } = useEchelleGabarit()
 
   const prix = useMemo(() => parsePrix(prixSaisi), [prixSaisi])
   const prixInvalide = prixSaisi.trim() !== '' && prix === null
   const peutTelecharger = nomProduit.trim() !== '' && prix !== null && !genereEnCours
+  const nomAffiche = (nomProduit || 'Nom du produit').toUpperCase()
 
   async function telechargerPdf() {
     if (!peutTelecharger || prix === null) return
@@ -98,74 +127,110 @@ export function AffichesFormulaire() {
         </button>
       </div>
 
-      <div className="flex flex-1 items-center justify-center">
-        {/* Aperçu approximatif — proportions et coordonnées reprises du
-            gabarit 210x297 fourni (1 unité ≈ 1% de la largeur/hauteur). */}
+      <div
+        ref={conteneurRef}
+        className="mx-auto w-full max-w-sm overflow-hidden"
+        style={{ aspectRatio: `${LARGEUR_GABARIT}/${HAUTEUR_GABARIT}` }}
+      >
         <div
-          className="relative flex aspect-[210/297] w-full max-w-sm flex-col items-center border p-[2.4%]"
-          style={{ backgroundColor: BLANC_PHARMACIE, borderColor: VERT_PHARMACIE }}
+          className={arimo.className}
+          style={{
+            width: LARGEUR_GABARIT,
+            height: HAUTEUR_GABARIT,
+            transform: `scale(${echelle})`,
+            transformOrigin: 'top left',
+            background: BLANC_PHARMACIE,
+            boxSizing: 'border-box',
+            padding: 32,
+            color: VERT_PHARMACIE,
+          }}
         >
           <div
-            className="mt-[2%] flex h-[9%] w-[9%] items-center justify-center rounded-full border"
-            style={{ backgroundColor: VERT_PHARMACIE, borderColor: OR_PHARMACIE }}
+            style={{
+              width: '100%',
+              height: '100%',
+              border: `2px solid ${VERT_PHARMACIE}`,
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              padding: '60px 60px 50px',
+              position: 'relative',
+            }}
           >
-            <div className="relative h-1/2 w-1/2">
-              <div
-                className="absolute left-1/2 top-0 h-full w-[22%] -translate-x-1/2"
-                style={{ backgroundColor: OR_PHARMACIE }}
-              />
-              <div
-                className="absolute left-0 top-1/2 h-[22%] w-full -translate-y-1/2"
-                style={{ backgroundColor: OR_PHARMACIE }}
-              />
+            <div
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: '50%',
+                border: `3px solid ${OR_PHARMACIE}`,
+                background: VERT_PHARMACIE,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div style={{ position: 'relative', width: 44, height: 44 }}>
+                <div style={{ position: 'absolute', left: 16, top: 0, width: 12, height: 44, background: OR_PHARMACIE }} />
+                <div style={{ position: 'absolute', left: 0, top: 16, width: 44, height: 12, background: OR_PHARMACIE }} />
+              </div>
             </div>
-          </div>
 
-          <div className="mt-[2%] flex items-center gap-2">
-            <span className="h-px w-6" style={{ backgroundColor: OR_PHARMACIE }} />
-            <span
-              className={`${arimo.className} text-[8px] tracking-[0.2em]`}
-              style={{ color: VERT_PHARMACIE }}
-            >
-              PHARMACIE ROME VILLAGE
-            </span>
-            <span className="h-px w-6" style={{ backgroundColor: OR_PHARMACIE }} />
-          </div>
-
-          <div className="mt-[10%] flex w-full flex-1 flex-col items-center justify-start px-[4%]">
-            <p
-              className={`${arimo.className} w-full text-center font-bold uppercase leading-tight break-words`}
-              style={{ color: VERT_PHARMACIE, fontSize: nomProduit.length > 16 ? '1.3rem' : '1.7rem' }}
-            >
-              {nomProduit || 'Nom du produit'}
-            </p>
-
-            <div className="mt-[6%] mb-[6%] flex w-2/5 items-center gap-2">
-              <span className="h-px flex-1" style={{ backgroundColor: OR_PHARMACIE }} />
-              <span className="h-1 w-1 shrink-0 rounded-full" style={{ backgroundColor: OR_PHARMACIE }} />
-              <span className="h-px flex-1" style={{ backgroundColor: OR_PHARMACIE }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginTop: 28 }}>
+              <div style={{ width: 90, height: 1, background: OR_PHARMACIE }} />
+              <div style={{ fontSize: 22, letterSpacing: 6, fontWeight: 600, whiteSpace: 'nowrap' }}>
+                PHARMACIE ROME VILLAGE
+              </div>
+              <div style={{ width: 90, height: 1, background: OR_PHARMACIE }} />
             </div>
 
             <div
-              className="w-[77%] rounded-[16%] border py-[5%] text-center"
-              style={{ backgroundColor: VERT_PHARMACIE, borderColor: OR_PHARMACIE }}
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+              }}
             >
-              <span className={`${arimo.className} text-xl font-bold text-white`}>
-                {formatPrixAffiche(prix ?? 0)}
-              </span>
-            </div>
-          </div>
+              <div style={{ fontSize: 88, fontWeight: 800, lineHeight: 1.05, letterSpacing: 1 }}>{nomAffiche}</div>
 
-          <div className="mb-[2%] flex flex-col items-center">
-            <svg width="10" height="16" viewBox="0 0 20 20" fill="none" stroke={OR_PHARMACIE} strokeWidth={1.2}>
-              <path d="M10 18 C10 15, 10 12, 10 9" />
-              <path d="M10 14 C7 13, 5.5 10.5, 5.5 8.5 C8 8.5, 10 10.5, 10 14Z" />
-              <path d="M10 12 C12.5 9.5, 15 8, 16 8 C15.5 11, 13.5 13, 10 14Z" />
-            </svg>
-            <div className="mt-[2%] flex items-center gap-8">
-              <span className="h-px w-10" style={{ backgroundColor: VERT_PHARMACIE }} />
-              <span className="h-px w-10" style={{ backgroundColor: VERT_PHARMACIE }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 30, marginBottom: 44 }}>
+                <div style={{ width: 130, height: 1, background: OR_PHARMACIE }} />
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: OR_PHARMACIE }} />
+                <div style={{ width: 130, height: 1, background: OR_PHARMACIE }} />
+              </div>
+
+              <div
+                style={{
+                  width: 719,
+                  height: 248,
+                  border: `2px solid ${OR_PHARMACIE}`,
+                  borderRadius: 60,
+                  background: VERT_PHARMACIE,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 60,
+                }}
+              >
+                <div style={{ color: BLANC_PHARMACIE, fontSize: 96, fontWeight: 700, letterSpacing: 2 }}>
+                  {formatPrixAffiche(prix ?? 0)}
+                </div>
+              </div>
             </div>
+
+            <div style={{ position: 'absolute', bottom: 70, left: '50%', marginLeft: -23 }}>
+              <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+                <path d="M23 46 V22" stroke={OR_PHARMACIE} strokeWidth={3} />
+                <path d="M23 22 C23 10 12 6 4 8 C6 18 14 24 23 22 Z" fill={OR_PHARMACIE} />
+                <path d="M23 22 C23 8 34 4 42 8 C40 18 32 24 23 22 Z" fill={OR_PHARMACIE} />
+              </svg>
+            </div>
+
+            <div style={{ position: 'absolute', bottom: 0, left: 0, width: 140, height: 1, background: VERT_PHARMACIE }} />
+            <div style={{ position: 'absolute', bottom: 0, right: 0, width: 140, height: 1, background: VERT_PHARMACIE }} />
           </div>
         </div>
       </div>
