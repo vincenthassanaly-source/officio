@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ViewTransition } from 'react'
 import { redirect } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
 import { SidebarNav } from '@/components/sidebar-nav'
@@ -84,9 +85,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col px-4 py-4 sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8">
-          {children}
-        </div>
+        {/* Transition de page (fondu + léger slide) — uniquement sur cette zone
+            de contenu, ni sur la sidebar, ni sur le header, ni sur la
+            BottomNav, qui restent fixes. Voir globals.css pour les keyframes
+            `page-transition` et la neutralisation du crossfade racine par
+            défaut du navigateur. */}
+        <ViewTransition default="page-transition">
+          <div className="flex flex-1 flex-col px-4 py-4 sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8">
+            {children}
+          </div>
+        </ViewTransition>
 
         <BottomNav />
       </div>

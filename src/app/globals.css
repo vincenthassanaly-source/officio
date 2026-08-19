@@ -93,3 +93,65 @@ button,
     opacity: 0.85;
   }
 }
+
+/* Transition de page (View Transitions, activées via experimental.viewTransition
+   dans next.config.ts). Seule la zone de contenu de (app)/layout.tsx est
+   enrobée dans <ViewTransition default="page-transition">, ce qui lui donne
+   un view-transition-class "page-transition" ciblé ci-dessous.
+
+   Le reste de la page (sidebar, header, BottomNav) n'est volontairement PAS
+   enrobé et est donc capturé dans le groupe racine par défaut du navigateur
+   ("root") : on neutralise entièrement l'animation de ce groupe pour éviter
+   tout crossfade/redimensionnement fantôme (flash, léger saut visuel) sur
+   des éléments qui doivent rester parfaitement fixes pendant la transition. */
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+::view-transition-old(.page-transition),
+::view-transition-new(.page-transition) {
+  animation-duration: 180ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+::view-transition-old(.page-transition) {
+  animation-name: page-transition-out;
+}
+::view-transition-new(.page-transition) {
+  animation-name: page-transition-in;
+}
+
+@keyframes page-transition-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes page-transition-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Recommandation officielle de la doc View Transitions de Next.js : sous
+   prefers-reduced-motion, les échanges de contenu redeviennent instantanés
+   (comportement par défaut du navigateur sans transition). */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

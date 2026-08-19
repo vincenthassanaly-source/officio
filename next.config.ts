@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
       // la photo côté client bien en-dessous de cette limite avant l'envoi.
       bodySizeLimit: '4mb',
     },
+    // Active l'intégration Next.js du <ViewTransition> de React (utilisé dans
+    // src/app/(app)/layout.tsx pour la transition entre pages). Voir
+    // src/react-view-transitions.d.ts pour les types correspondants.
+    viewTransition: true,
   },
 };
 
