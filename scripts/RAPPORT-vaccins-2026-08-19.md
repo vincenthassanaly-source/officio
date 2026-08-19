@@ -9,8 +9,9 @@ recherche depuis une tuile dédiée sur l'accueil.
 
 ## Ce qui a été créé
 
-1. **`scripts/migration-vaccins.sql`** — création de la table `vaccins`, RLS, index, et 4 lignes
-   d'exemple.
+1. **`scripts/migration-vaccins.sql`** — création de la table `vaccins`, RLS, index.
+   **`scripts/migration-vaccins-donnees-2026.sql`** — contenu réel (18 vaccins), voir mise à jour
+   ci-dessous.
 2. **`src/lib/data/vaccins.ts`** — `getVaccins()` (aucun paramètre `officineId`) et le type
    `Vaccin` exporté.
 3. **`src/components/vaccins-liste.tsx`** — composant client `VaccinsListe` : recherche
@@ -94,24 +95,59 @@ where nom_commercial = 'Nom commercial';
 Aucun script de migration supplémentaire n'est nécessaire pour ces opérations courantes — elles
 n'affectent que les données, pas le schéma.
 
-## Données d'exemple insérées (à remplacer par le contenu définitif)
+## Mise à jour du 2026-08-19 (même jour) : remplacement par le contenu réel
 
-4 lignes de test réalistes ont été insérées dans `scripts/migration-vaccins.sql` (Infanrix Hexa,
-M-M-RVAXPRO, Gardasil 9, Efluelda), clairement commentées comme **données d'exemple pour test
-uniquement, pas le contenu définitif** — conformément à la tâche qui indique que le contenu
-complet sera fourni séparément. Ces lignes pourront être complétées, corrigées ou remplacées sans
-toucher au schéma.
+Les 4 lignes d'exemple initiales ont été retirées avant même d'être appliquées — le contenu réel a
+été fourni plus tôt que prévu (recherche via le skill `vaccins-calendrier-fr` pour les schémas
+vaccinaux, puis vérification des taux de remboursement directement sur ameli.fr et la Base de
+données publique des médicaments, à la demande explicite de Vincent). **18 vaccins** ont été
+insérés à la place, couvrant les usages les plus courants en officine :
+
+Infanrix Hexa/Hexyon/Vaxelis, Boostrixtetra/Repevax, M-M-RVaxPro/Priorix, Bexsero,
+Nimenrix/MenQuadfi, Prevenar13/Vaxneuvance, Prevenar20/Capvaxive, Gardasil 9,
+Vaxigrip/Influvac/Flucelvax, Efluelda/Fluad, Comirnaty/Nuvaxovid, Engerix B20µg, Rotarix/RotaTeq,
+Shingrix, Abrysvo/Arexvy/mResvia, Varilrix/Varivax, Avaxim/Havrix/Vaqta, Stamaril.
+
+**Volontairement exclus** (vaccins de niche/spécialisés, peu pertinents en référence de comptoir
+courante) : dengue (Qdenga), rage, leptospirose, variole B/Mpox. **Également exclu** : Beyfortus
+(nirsévimab) — pas un vaccin au sens strict (anticorps monoclonal, immunisation passive du
+nourrisson), bien que faisant partie de la même stratégie de prévention du VRS.
+
+Détail complet des sources, méthode et corrections apportées en cours de vérification dans
+`scripts/migration-vaccins-donnees-2026.sql` (en-tête du fichier). Points à retenir :
+
+- **Schéma vaccinal, statut, cas particuliers** : Calendrier des vaccinations et recommandations
+  vaccinales 2026, Ministère de la Santé (édition avril 2026).
+- **Conditions de prescription par le pharmacien** ("peut prescrire et administrer tous les
+  vaccins du calendrier vaccinal dès 11 ans, sauf vaccins vivants chez l'immunodéprimé") : sourcé
+  via recherche web (décret n° 2023-736 du 8 août 2023), **pas vérifié mot à mot sur Légifrance**
+  — à confirmer si une précision juridique exacte est nécessaire.
+- **Remboursement** : vérifié directement sur ameli.fr et la Base de données publique des
+  médicaments plutôt que sur le seul calendrier vaccinal (qui n'est pas une base de
+  remboursement). Deux corrections notables faites en cours de conversation suite aux questions de
+  Vincent : zona (Shingrix) = **65 %** (pas 30 % comme avancé dans un premier temps, info erronée
+  d'une source secondaire) ; VRS chez les 65 ans et plus = **non remboursé à ce jour** (avis HAS
+  favorable depuis octobre 2024, mais désaccord de prix labos/CEPS toujours en cours — situation
+  à réévaluer périodiquement, contrairement à VRS chez la femme enceinte qui est bien remboursé à
+  100 %).
+- **Stamaril (fièvre jaune, Guyane)** : remboursement non détaillé sur les pages ameli.fr
+  consultées pour ce module — signalé comme tel dans la fiche plutôt que d'avancer un chiffre non
+  vérifié.
 
 ## État d'application de la migration
 
-**La migration n'a pas été exécutée sur la base Supabase du projet** — seul le fichier
-`scripts/migration-vaccins.sql` a été créé, cohérent avec la façon dont les migrations précédentes
-de ce dépôt (`migration-peremptions.sql`, `migration-regularisations-ordonnances.sql`, etc.)
-existent comme scripts versionnés plutôt qu'appliqués automatiquement par un agent. À exécuter
-manuellement (SQL Editor Supabase ou CLI) avant de pouvoir tester `/vaccins` avec de vraies
-données ; sans cela, la page affichera l'état vide (« Aucun vaccin référencé pour le moment »),
-`getVaccins()` gérant déjà proprement l'absence de table/erreur (retourne `[]` avec un
-`console.error`, même pattern que tous les autres `getXxx()` du projet).
+**La migration ET les données réelles ont été appliquées à la base Supabase du projet**
+(`pharmacie-rome-village`, projet `hjerdcehdzfjhzefnnel`), via deux migrations distinctes
+(`vaccins_schema` puis `vaccins_donnees_2026`) appliquées avec le MCP Supabase, à la demande
+explicite de Vincent (« remplis les données dans l'app »). Vérifié après application :
+18 lignes en base (6 `obligatoire`, 12 `recommandé`), aucun nouvel avertissement de sécurité
+introduit (`get_advisors` — les avertissements existants du projet sont tous sans rapport avec la
+table `vaccins`).
+
+Les fichiers `scripts/migration-vaccins.sql` (schéma) et
+`scripts/migration-vaccins-donnees-2026.sql` (données) reflètent exactement ce qui a été appliqué,
+pour permettre de rejouer la migration sur un autre environnement (staging, restauration) si
+besoin.
 
 ## Vérifications techniques effectuées
 
@@ -119,9 +155,11 @@ données ; sans cela, la page affichera l'état vide (« Aucun vaccin référenc
 - `npm run lint` → OK, aucune nouvelle erreur introduite (2 erreurs préexistantes et sans rapport,
   dans `agenda-vue-globale.tsx` et `switch-identite.tsx`, non touchées).
 - `npm run build` → build de production réussi, `/vaccins` apparaît dans les routes générées.
-- Non vérifié dans le navigateur au-delà de la compilation : la table n'existant pas encore côté
-  Supabase (migration non appliquée) et l'app étant protégée par connexion (pas de compte de test
-  dans cet environnement), le rendu réel des cartes n'a pas pu être observé visuellement.
+- Contenu de la table vérifié via requête SQL directe après insertion (18 lignes, répartition
+  6 obligatoire / 12 recommandé conforme à l'attendu).
+- Non vérifié visuellement dans le navigateur : l'app est protégée par connexion et je n'ai pas de
+  compte de test dans cet environnement — le rendu réel des cartes `/vaccins` reste à valider en
+  conditions réelles.
 
 ## Écarts par rapport au prompt
 
