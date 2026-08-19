@@ -1,15 +1,18 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { IconLiaison } from '@/components/nav-icons'
+import { IconLiaison, IconRegularisation } from '@/components/nav-icons'
 import { ChampPhoto } from '@/components/champ-photo'
 import { envoyerMessage } from '@/app/actions/liaison'
 import { creerTache } from '@/app/actions/taches'
+import { ajouterRegularisation } from '@/app/actions/regularisations'
+import { ChampsFormulaire } from '@/components/regularisations-liste'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { toISODate } from '@/lib/dates'
 import type { Categorie } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
 
-type Vue = 'ferme' | 'menu' | 'message' | 'tache'
+type Vue = 'ferme' | 'menu' | 'message' | 'tache' | 'regularisation'
 
 // Mêmes catégories/couleurs que le formulaire de fil-de-messages.tsx.
 const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
@@ -52,7 +55,7 @@ function IconTache({ className }: { className?: string }) {
   )
 }
 
-function MenuChoix({ onChoisir }: { onChoisir: (vue: 'message' | 'tache') => void }) {
+function MenuChoix({ onChoisir }: { onChoisir: (vue: 'message' | 'tache' | 'regularisation') => void }) {
   return (
     <div className="flex flex-col gap-2 p-4">
       <div className="mb-1 text-center font-heading text-lg text-ink">Créer</div>
@@ -80,6 +83,19 @@ function MenuChoix({ onChoisir }: { onChoisir: (vue: 'message' | 'tache') => voi
         <div>
           <div className="text-[14px] font-semibold text-ink">Nouvelle tâche</div>
           <div className="text-[11.5px] text-muted">Assigner un rappel à l&rsquo;équipe</div>
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={() => onChoisir('regularisation')}
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-soft text-purple">
+          <IconRegularisation className="h-5 w-5" />
+        </div>
+        <div>
+          <div className="text-[14px] font-semibold text-ink">Nouvelle régularisation</div>
+          <div className="text-[11.5px] text-muted">Enregistrer une ordonnance à régulariser</div>
         </div>
       </button>
     </div>
@@ -197,6 +213,32 @@ function FormulaireTache({
   )
 }
 
+function FormulaireRegularisation({ onCree }: { onCree: () => void }) {
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <form
+      action={(formData) => {
+        startTransition(async () => {
+          await ajouterRegularisation(formData)
+          onCree()
+        })
+      }}
+      className="flex flex-col gap-3 p-4"
+    >
+      <div className="font-heading text-lg text-ink">Nouvelle régularisation</div>
+      <ChampsFormulaire dateRegularisationParDefaut={toISODate(new Date())} />
+      <button
+        type="submit"
+        disabled={isPending}
+        className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+      >
+        Ajouter la régularisation
+      </button>
+    </form>
+  )
+}
+
 export function FabCreationRapide({
   equipe,
   profilActuelId,
@@ -243,6 +285,7 @@ export function FabCreationRapide({
             {vue === 'tache' && (
               <FormulaireTache equipe={equipe} profilActuelId={profilActuelId} onCree={fermer} />
             )}
+            {vue === 'regularisation' && <FormulaireRegularisation onCree={fermer} />}
           </div>
         </div>
       )}
