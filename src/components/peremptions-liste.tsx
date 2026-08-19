@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import {
   ajouterPeremption,
   annulerRetrait,
@@ -172,14 +172,19 @@ export function PeremptionsListe({ peremptions }: { peremptions: Peremption[] })
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [peremptionsOptimistes, marquerRetireOptimiste] = useOptimistic(
+    peremptions,
+    (etat, { id, retire }: { id: string; retire: boolean }) =>
+      etat.map((p) => (p.id === id ? { ...p, retire } : p))
+  )
 
   const aujourdhui = toISODate(new Date())
 
   const visibles = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
-    if (!rechercheNormalisee) return peremptions
-    return peremptions.filter((p) => p.nom_produit.toLowerCase().includes(rechercheNormalisee))
-  }, [peremptions, recherche])
+    if (!rechercheNormalisee) return peremptionsOptimistes
+    return peremptionsOptimistes.filter((p) => p.nom_produit.toLowerCase().includes(rechercheNormalisee))
+  }, [peremptionsOptimistes, recherche])
 
   const { perimees, reste } = useMemo(() => {
     const perimeesListe: Peremption[] = []
@@ -240,13 +245,13 @@ export function PeremptionsListe({ peremptions }: { peremptions: Peremption[] })
         </form>
       )}
 
-      {peremptions.length === 0 && (
+      {peremptionsOptimistes.length === 0 && (
         <p className="py-10 text-center text-sm text-muted">
           Aucune péremption pour l’instant — ajoute la première avec le bouton +.
         </p>
       )}
 
-      {peremptions.length > 0 && visibles.length === 0 && (
+      {peremptionsOptimistes.length > 0 && visibles.length === 0 && (
         <p className="py-10 text-center text-sm text-muted">Aucun produit ne correspond à la recherche.</p>
       )}
 
@@ -273,8 +278,26 @@ export function PeremptionsListe({ peremptions }: { peremptions: Peremption[] })
                   })
                 }}
                 onSupprimer={() => demanderSuppression(p.id, p.nom_produit)}
-                onMarquerRetire={() => startTransition(() => marquerRetire(p.id))}
-                onAnnulerRetrait={() => startTransition(() => annulerRetrait(p.id))}
+                onMarquerRetire={() => {
+                  startTransition(async () => {
+                    marquerRetireOptimiste({ id: p.id, retire: true })
+                    try {
+                      await marquerRetire(p.id)
+                    } catch (err) {
+                      console.error('[peremptions] Échec du marquage retiré :', err)
+                    }
+                  })
+                }}
+                onAnnulerRetrait={() => {
+                  startTransition(async () => {
+                    marquerRetireOptimiste({ id: p.id, retire: false })
+                    try {
+                      await annulerRetrait(p.id)
+                    } catch (err) {
+                      console.error('[peremptions] Échec de l’annulation du retrait :', err)
+                    }
+                  })
+                }}
               />
             ))}
           </div>
@@ -306,8 +329,26 @@ export function PeremptionsListe({ peremptions }: { peremptions: Peremption[] })
                   })
                 }}
                 onSupprimer={() => demanderSuppression(p.id, p.nom_produit)}
-                onMarquerRetire={() => startTransition(() => marquerRetire(p.id))}
-                onAnnulerRetrait={() => startTransition(() => annulerRetrait(p.id))}
+                onMarquerRetire={() => {
+                  startTransition(async () => {
+                    marquerRetireOptimiste({ id: p.id, retire: true })
+                    try {
+                      await marquerRetire(p.id)
+                    } catch (err) {
+                      console.error('[peremptions] Échec du marquage retiré :', err)
+                    }
+                  })
+                }}
+                onAnnulerRetrait={() => {
+                  startTransition(async () => {
+                    marquerRetireOptimiste({ id: p.id, retire: false })
+                    try {
+                      await annulerRetrait(p.id)
+                    } catch (err) {
+                      console.error('[peremptions] Échec de l’annulation du retrait :', err)
+                    }
+                  })
+                }}
               />
             ))}
           </div>
