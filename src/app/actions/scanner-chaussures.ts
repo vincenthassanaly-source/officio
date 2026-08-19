@@ -99,7 +99,7 @@ export async function identifierChaussure(formData: FormData): Promise<ResultatS
     const { data, error } = await supabase.rpc('rechercher_chaussures_similaires', {
       embedding_recherche: embedding,
       officine_id_cible: officine.officine_id,
-      limite: 3,
+      limite: 10,
     })
 
     if (error) {

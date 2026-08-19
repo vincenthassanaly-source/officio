@@ -307,7 +307,7 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
       {candidats && candidats.length > 0 && !isPending && (
         <div className="flex flex-col gap-2">
           <div className="text-[11px] font-bold uppercase tracking-wide text-muted">
-            Modèles ressemblants — confirmez le bon avant d&apos;ouvrir la fiche
+            Modèles ressemblants, du plus au moins proche — parcourez la liste et confirmez le bon avant d&apos;ouvrir la fiche
           </div>
           {candidats.map((c) => (
             <CandidatCarte key={c.id} candidat={c} onOuvrir={() => onSelectionner(c.id)} />
