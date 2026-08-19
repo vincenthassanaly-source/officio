@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import { envoyerSuggestion, supprimerSuggestion, basculerSuggestionFaite } from '@/app/actions/suggestions'
 import type { SuggestionAvecAuteur } from '@/lib/data/suggestions'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
@@ -30,6 +30,10 @@ export function Suggestions({
 }) {
   const [message, setMessage] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [suggestionsOptimistes, basculerOptimiste] = useOptimistic(
+    suggestions,
+    (etat, id: string) => etat.map((s) => (s.id === id ? { ...s, fait: !s.fait } : s))
+  )
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -60,13 +64,13 @@ export function Suggestions({
       </form>
 
       <div className="flex flex-1 flex-col gap-3">
-        {suggestions.length === 0 && (
+        {suggestionsOptimistes.length === 0 && (
           <p className="py-10 text-center text-sm text-muted">
             Aucune suggestion pour le moment. Propose la première idée ci-dessus.
           </p>
         )}
 
-        {suggestions.map((s) => {
+        {suggestionsOptimistes.map((s) => {
           const couleurAuteur = (s.auteur ? couleurs.get(s.auteur.id) : null) ?? COULEUR_PAR_DEFAUT
           return (
           <div
@@ -78,7 +82,16 @@ export function Suggestions({
                 type="checkbox"
                 checked={s.fait}
                 disabled={isPending}
-                onChange={() => startTransition(() => basculerSuggestionFaite(s.id, !s.fait))}
+                onChange={() => {
+                  startTransition(async () => {
+                    basculerOptimiste(s.id)
+                    try {
+                      await basculerSuggestionFaite(s.id, !s.fait)
+                    } catch (err) {
+                      console.error('[suggestions] Échec du changement de statut « fait » :', err)
+                    }
+                  })
+                }}
                 aria-label={s.fait ? 'Marquer comme non traitée' : 'Marquer comme traitée'}
                 className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
               />
