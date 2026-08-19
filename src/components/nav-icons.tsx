@@ -170,6 +170,26 @@ export function IconRegularisation({ className }: IconProps) {
   )
 }
 
+export function IconVaccin({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M19.5 4.5L4.5 19.5" />
+      <path d="M17 2l5 5" />
+      <path d="M14 7l2 2" />
+      <path d="M10.5 10.5l2 2" />
+      <path d="M2 22l2.5-2.5" />
+    </svg>
+  )
+}
+
 export function IconPeremptions({ className }: IconProps) {
   return (
     <svg
