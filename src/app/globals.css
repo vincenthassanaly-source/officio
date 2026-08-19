@@ -59,3 +59,37 @@ body {
   background: var(--color-bg);
   color: var(--color-ink);
 }
+
+/* Feedback tactile global — sans lui, aucun élément interactif ne réagit au
+   tap (l'app paraît "morte" au toucher). Ciblage large via sélecteurs natifs
+   plutôt qu'une classe utilitaire à poser sur ~60 fichiers de composants.
+   `.no-tap-feedback` reste disponible au cas par cas pour un élément qui
+   rendrait mal avec le scale (aucun cas de ce type identifié à ce jour). */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a,
+button,
+[role='button'] {
+  transition: transform 100ms ease-out, opacity 100ms ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:active:not(:disabled):not([aria-disabled='true']):not(.no-tap-feedback),
+  button:active:not(:disabled):not([aria-disabled='true']):not(.no-tap-feedback),
+  [role='button']:active:not(:disabled):not([aria-disabled='true']):not(.no-tap-feedback) {
+    transform: scale(0.95);
+    opacity: 0.85;
+  }
+}
+
+/* prefers-reduced-motion: reduce — pas de scale, seule l'opacité (déjà
+   couverte par la transition ci-dessus) signale l'appui. */
+@media (prefers-reduced-motion: reduce) {
+  a:active:not(:disabled):not([aria-disabled='true']):not(.no-tap-feedback),
+  button:active:not(:disabled):not([aria-disabled='true']):not(.no-tap-feedback),
+  [role='button']:active:not(:disabled):not([aria-disabled='true']):not(.no-tap-feedback) {
+    opacity: 0.85;
+  }
+}
