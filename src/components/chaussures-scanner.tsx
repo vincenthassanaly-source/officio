@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { identifierChaussure, type CandidatChaussure, type NiveauConfiance } from '@/app/actions/scanner-chaussures'
 
@@ -16,6 +16,11 @@ const MESSAGE_ERREUR_RESEAU =
 const DIMENSION_MAX_PX = 1600
 const QUALITE_JPEG = 0.85
 
+// Utilisé uniquement pour le repli <input capture> : une vraie photo prise par
+// l'appli Appareil photo du téléphone arrive à pleine résolution et doit être
+// redimensionnée après coup. La capture via canvas (flux caméra intégré) est
+// elle directement prise à une résolution bornée, donc n'a pas besoin de ce
+// pipeline — voir capturerPhoto().
 async function compresserPhoto(fichier: File): Promise<File> {
   try {
     const bitmap = await createImageBitmap(fichier)
@@ -77,21 +82,89 @@ function CandidatCarte({ candidat, onOuvrir }: { candidat: CandidatChaussure; on
   )
 }
 
+// - 'chargement' : navigator.mediaDevices.getUserMedia() en cours.
+// - 'active' : flux vidéo en direct, prêt à capturer.
+// - 'indisponible' : refusé, absent, ou contexte non sécurisé — repli sur
+//   l'appareil photo natif via <input capture>.
+type EtatCamera = 'chargement' | 'active' | 'indisponible'
+
 export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+
+  // Calculé une seule fois via l'initialiseur paresseux de useState : évite un
+  // setState synchrone dans l'effet ci-dessous pour ce cas (voir etatCameraEffectif).
+  const [cameraSupportee] = useState(
+    () => typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
+  )
+  const [etatCamera, setEtatCamera] = useState<EtatCamera>('chargement')
   const [photoApercu, setPhotoApercu] = useState<string | null>(null)
   const [candidats, setCandidats] = useState<CandidatChaussure[] | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  function analyser(fichierOriginal: File) {
+  function arreterFlux() {
+    streamRef.current?.getTracks().forEach((track) => track.stop())
+    streamRef.current = null
+  }
+
+  // Le flux caméra n'est utile que tant qu'aucune photo n'a été capturée :
+  // dès que photoApercu est renseigné (capture ou repli <input>), on coupe la
+  // caméra. Se relance automatiquement via "Reprendre une photo".
+  useEffect(() => {
+    if (photoApercu || !cameraSupportee) return
+
+    // L'état 'chargement' est déjà celui posé par défaut (montage) ou par
+    // reprendrePhoto() (relance) avant que cet effet ne s'exécute — inutile
+    // de le refixer ici de façon synchrone.
+    let annule = false
+
+    navigator.mediaDevices
+      .getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: DIMENSION_MAX_PX },
+          height: { ideal: DIMENSION_MAX_PX },
+        },
+        audio: false,
+      })
+      .then((stream) => {
+        if (annule) {
+          stream.getTracks().forEach((track) => track.stop())
+          return
+        }
+        streamRef.current = stream
+        if (videoRef.current) videoRef.current.srcObject = stream
+        setEtatCamera('active')
+      })
+      .catch((err) => {
+        console.error('[chaussures-scanner] Accès à la caméra impossible (refusé, absente, ou contexte non sécurisé) :', err)
+        if (!annule) setEtatCamera('indisponible')
+      })
+
+    return () => {
+      annule = true
+      arreterFlux()
+    }
+  }, [photoApercu, cameraSupportee])
+
+  // Vue effective de l'état caméra : ignore etatCamera (resté à sa valeur par
+  // défaut 'chargement') si le navigateur ne supporte pas getUserMedia.
+  const etatCameraEffectif: EtatCamera = cameraSupportee ? etatCamera : 'indisponible'
+
+  // Coupe systématiquement la caméra si l'utilisateur quitte l'écran Scanner
+  // pendant qu'elle est active (démontage du composant).
+  useEffect(() => arreterFlux, [])
+
+  function analyser(fichierOriginal: File, dejaRedimensionnee: boolean) {
     setErreur(null)
     setCandidats(null)
     setPhotoApercu(URL.createObjectURL(fichierOriginal))
 
     startTransition(async () => {
       try {
-        const fichier = await compresserPhoto(fichierOriginal)
+        const fichier = dejaRedimensionnee ? fichierOriginal : await compresserPhoto(fichierOriginal)
         const formData = new FormData()
         formData.set('photo', fichier)
 
@@ -111,6 +184,45 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
     })
   }
 
+  function capturerPhoto() {
+    const video = videoRef.current
+    if (!video || video.videoWidth === 0 || video.videoHeight === 0) return
+
+    // Résolution de capture directement bornée à DIMENSION_MAX_PX côté long :
+    // pas besoin de repasser par compresserPhoto() après coup.
+    const ratio = Math.min(1, DIMENSION_MAX_PX / Math.max(video.videoWidth, video.videoHeight))
+    const largeur = Math.round(video.videoWidth * ratio)
+    const hauteur = Math.round(video.videoHeight * ratio)
+
+    const canvas = document.createElement('canvas')
+    canvas.width = largeur
+    canvas.height = hauteur
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    ctx.drawImage(video, 0, 0, largeur, hauteur)
+
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return
+        arreterFlux()
+        analyser(new File([blob], 'photo-comptoir.jpg', { type: 'image/jpeg' }), true)
+      },
+      'image/jpeg',
+      QUALITE_JPEG
+    )
+  }
+
+  function reprendrePhoto() {
+    setEtatCamera('chargement')
+    setPhotoApercu(null)
+    setCandidats(null)
+    setErreur(null)
+  }
+
+  const afficherCamera = !photoApercu && etatCameraEffectif !== 'indisponible'
+  const afficherRepli = !photoApercu && etatCameraEffectif === 'indisponible'
+
   return (
     <div className="flex flex-1 flex-col gap-3">
       <input
@@ -121,10 +233,28 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
         className="hidden"
         onChange={(e) => {
           const fichier = e.target.files?.[0]
-          if (fichier) analyser(fichier)
+          if (fichier) analyser(fichier, false)
           e.target.value = ''
         }}
       />
+
+      {afficherCamera && (
+        <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-soft">
+          <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
+          {etatCameraEffectif === 'chargement' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-sm font-medium text-white">
+              Ouverture de la caméra…
+            </div>
+          )}
+        </div>
+      )}
+
+      {afficherRepli && (
+        <p className="rounded-xl bg-rec-soft px-3 py-2 text-sm text-rec">
+          Impossible d&apos;accéder à la caméra (permission refusée ou non disponible). Utilisez l&apos;appareil photo
+          de votre téléphone à la place.
+        </p>
+      )}
 
       {photoApercu && (
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-soft">
@@ -133,14 +263,38 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => inputRef.current?.click()}
-        disabled={isPending}
-        className="rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60"
-      >
-        {photoApercu ? 'Reprendre une photo' : 'Prendre une photo de la chaussure'}
-      </button>
+      {afficherCamera && etatCameraEffectif === 'active' && (
+        <button
+          type="button"
+          onClick={capturerPhoto}
+          disabled={isPending}
+          className="rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60"
+        >
+          Capturer
+        </button>
+      )}
+
+      {afficherRepli && (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={isPending}
+          className="rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60"
+        >
+          Prendre une photo de la chaussure
+        </button>
+      )}
+
+      {photoApercu && (
+        <button
+          type="button"
+          onClick={reprendrePhoto}
+          disabled={isPending}
+          className="rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60"
+        >
+          Reprendre une photo
+        </button>
+      )}
 
       {isPending && <p className="text-center text-sm text-muted">Analyse de la photo…</p>}
 
