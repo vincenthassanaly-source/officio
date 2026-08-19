@@ -327,33 +327,33 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex gap-1.5 overflow-x-auto">
-        {RAYONS.map((r) => (
-          <button
-            type="button"
-            key={r}
-            onClick={() => {
-              setVue('catalogue')
-              setRayon(r)
-              setGenre(GENRE_TOUS)
-            }}
-            className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-              vue === 'catalogue' && rayon === r
-                ? 'border-primary bg-primary text-white'
-                : 'border-border bg-surface text-muted'
-            }`}
-          >
-            {r}
-            <span
-              className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold ${
-                vue === 'catalogue' && rayon === r ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
+      {vue === 'catalogue' && (
+        <div className="flex gap-1.5 overflow-x-auto">
+          {RAYONS.map((r) => (
+            <button
+              type="button"
+              key={r}
+              onClick={() => {
+                setVue('catalogue')
+                setRayon(r)
+                setGenre(GENRE_TOUS)
+              }}
+              className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+                rayon === r ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
               }`}
             >
-              {comptesRayon[r]}
-            </span>
-          </button>
-        ))}
-      </div>
+              {r}
+              <span
+                className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold ${
+                  rayon === r ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
+                }`}
+              >
+                {comptesRayon[r]}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {vue === 'scanner' && (
         <ChaussuresScanner
