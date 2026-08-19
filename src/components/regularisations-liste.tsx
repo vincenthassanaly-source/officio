@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import {
   ajouterRegularisation,
   marquerAFaire,
@@ -8,7 +8,7 @@ import {
   modifierRegularisation,
   supprimerRegularisation,
 } from '@/app/actions/regularisations'
-import type { Regularisation } from '@/lib/data/regularisations'
+import type { Regularisation, StatutRegularisation } from '@/lib/data/regularisations'
 import { formatDateCourte, toISODate } from '@/lib/dates'
 
 export const CHAMP_CLASS =
@@ -191,18 +191,23 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [regularisationsOptimistes, changerStatutOptimiste] = useOptimistic(
+    regularisations,
+    (etat, { id, statut }: { id: string; statut: StatutRegularisation }) =>
+      etat.map((r) => (r.id === id ? { ...r, statut } : r))
+  )
 
   const aujourdhui = toISODate(new Date())
 
   const visibles = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
-    if (!rechercheNormalisee) return regularisations
-    return regularisations.filter(
+    if (!rechercheNormalisee) return regularisationsOptimistes
+    return regularisationsOptimistes.filter(
       (r) =>
         r.patient_nom.toLowerCase().includes(rechercheNormalisee) ||
         r.patient_prenom.toLowerCase().includes(rechercheNormalisee)
     )
-  }, [regularisations, recherche])
+  }, [regularisationsOptimistes, recherche])
 
   const { enRetard, reste } = useMemo(() => {
     const retard: Regularisation[] = []
@@ -263,13 +268,13 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
         </form>
       )}
 
-      {regularisations.length === 0 && (
+      {regularisationsOptimistes.length === 0 && (
         <p className="py-10 text-center text-sm text-muted">
           Aucune régularisation pour l’instant — ajoute la première avec le bouton +.
         </p>
       )}
 
-      {regularisations.length > 0 && visibles.length === 0 && (
+      {regularisationsOptimistes.length > 0 && visibles.length === 0 && (
         <p className="py-10 text-center text-sm text-muted">Aucun patient ne correspond à la recherche.</p>
       )}
 
@@ -296,9 +301,17 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
                   })
                 }}
                 onSupprimer={() => demanderSuppression(r.id, `${r.patient_prenom} ${r.patient_nom}`)}
-                onBasculerFacture={() =>
-                  startTransition(() => (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id)))
-                }
+                onBasculerFacture={() => {
+                  const nouveauStatut: StatutRegularisation = r.statut === 'facture' ? 'a_faire' : 'facture'
+                  startTransition(async () => {
+                    changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
+                    try {
+                      await (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id))
+                    } catch (err) {
+                      console.error('[regularisations] Échec du changement de statut facturé :', err)
+                    }
+                  })
+                }}
               />
             ))}
           </div>
@@ -330,9 +343,17 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
                   })
                 }}
                 onSupprimer={() => demanderSuppression(r.id, `${r.patient_prenom} ${r.patient_nom}`)}
-                onBasculerFacture={() =>
-                  startTransition(() => (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id)))
-                }
+                onBasculerFacture={() => {
+                  const nouveauStatut: StatutRegularisation = r.statut === 'facture' ? 'a_faire' : 'facture'
+                  startTransition(async () => {
+                    changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
+                    try {
+                      await (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id))
+                    } catch (err) {
+                      console.error('[regularisations] Échec du changement de statut facturé :', err)
+                    }
+                  })
+                }}
               />
             ))}
           </div>
