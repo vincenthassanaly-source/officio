@@ -240,3 +240,22 @@ export function IconSuggestions({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconRupturesStock({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z" />
+      <path d="M3 7.5v9L12 21l9-4.5v-9" />
+      <path d="M12 12v3.2" />
+      <path d="M12 18.2h.01" />
+    </svg>
+  )
+}

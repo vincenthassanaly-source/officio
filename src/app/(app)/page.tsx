@@ -8,6 +8,7 @@ import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
 import { getCnoPatients } from '@/lib/data/cno'
 import { getPeremptions } from '@/lib/data/peremptions'
 import { getSuggestions } from '@/lib/data/suggestions'
+import { getRupturesStock } from '@/lib/data/ruptures-stock'
 import { getEquipe } from '@/lib/data/equipe'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
@@ -24,6 +25,7 @@ import {
   IconPeremptions,
   IconAffiches,
   IconSuggestions,
+  IconRupturesStock,
 } from '@/components/nav-icons'
 
 const MAX_RDV_APERCU = 4
@@ -38,16 +40,18 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
-  const [messages, taches, rendezVous, huiles, patientsCno, peremptions, suggestions, equipe] = await Promise.all([
-    getMessages(officine.officine_id),
-    getTaches(officine.officine_id),
-    getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
-    getHuilesEssentielles(officine.officine_id),
-    getCnoPatients(officine.officine_id),
-    getPeremptions(officine.officine_id),
-    getSuggestions(officine.officine_id),
-    getEquipe(officine.officine_id),
-  ])
+  const [messages, taches, rendezVous, huiles, patientsCno, peremptions, suggestions, equipe, rupturesStock] =
+    await Promise.all([
+      getMessages(officine.officine_id),
+      getTaches(officine.officine_id),
+      getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
+      getHuilesEssentielles(officine.officine_id),
+      getCnoPatients(officine.officine_id),
+      getPeremptions(officine.officine_id),
+      getSuggestions(officine.officine_id),
+      getEquipe(officine.officine_id),
+      getRupturesStock(officine.officine_id),
+    ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
   const suggestionsNonTraitees = suggestions.filter((s) => !s.fait).length
@@ -234,6 +238,18 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Vaccins</div>
             <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+          </div>
+        </Link>
+        <Link
+          href="/ruptures-stock"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-rec-soft text-rec">
+            <IconRupturesStock className="h-[18px] w-[18px]" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Ruptures de stock</div>
+            <div className="mt-0.5 text-[11px] text-muted">{rupturesStock.length} en cours</div>
           </div>
         </Link>
       </div>
