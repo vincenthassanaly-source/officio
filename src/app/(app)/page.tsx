@@ -11,6 +11,7 @@ import { getRupturesStock } from '@/lib/data/ruptures-stock'
 import { getEquipe } from '@/lib/data/equipe'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
+import { RechercheGlobale } from '@/components/recherche-globale'
 import { FabCreationRapide } from '@/components/fab-creation-rapide'
 import {
   IconLiaison,
@@ -84,6 +85,10 @@ export default async function AccueilPage() {
       <div>
         <h1 className="font-heading text-2xl text-ink">Bonjour, {prenom}</h1>
         <p className="mt-0.5 text-[12.5px] capitalize text-muted">{dateLabel}</p>
+      </div>
+
+      <div className="mt-4">
+        <RechercheGlobale />
       </div>
 
       <AccueilDashboard
