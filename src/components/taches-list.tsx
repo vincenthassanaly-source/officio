@@ -179,9 +179,9 @@ export function TachesList({
               name="echeance"
               className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
             />
-            {/* Facultative : un rappel "pile à l'heure" ne s'ajoute au
-                rappel quotidien de 7h que si elle est renseignée — voir
-                src/app/api/cron/rappels-taches-heure/route.ts. */}
+            {/* Facultative : si renseignée, le rappel quotidien de 7h
+                mentionne cette heure dans son message — voir
+                src/app/api/cron/rappels-taches/route.ts. */}
             <input
               type="time"
               name="echeance_heure"

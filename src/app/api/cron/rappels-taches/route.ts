@@ -1,11 +1,23 @@
 import { NextResponse } from 'next/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 
+// 'HH:MM:SS' -> 'HHhMM'
+function formatHeure(echeanceHeure: string): string {
+  return echeanceHeure.slice(0, 5).replace(':', 'h')
+}
+
 /**
  * Cron quotidien (voir vercel.json) : rappelle aux personnes assignées les
  * tâches non terminées dont l'échéance est aujourd'hui. Ne concerne que les
  * tâches avec une échéance ET un assigné — pas de rappel pour une tâche non
  * assignée (personne à qui l'envoyer) ni sans échéance (rien à rappeler).
+ *
+ * Couvre aussi les tâches avec une heure de rappel (`echeance_heure`) : il
+ * n'y a plus de cron dédié toutes les 15 minutes pour ça (le plan Vercel
+ * Hobby limite chaque cron à 1 exécution/jour, ce qui rendait cette cadence
+ * invalide et bloquait tout déploiement — voir git log). Le rappel n'arrive
+ * donc plus pile à l'heure choisie mais au moment de ce cron quotidien, avec
+ * un message qui rappelle l'heure prévue.
  *
  * Exécuté par Vercel Cron : GET, protégé par le header Authorization que
  * Vercel ajoute automatiquement dès que la variable d'environnement
@@ -33,7 +45,7 @@ export async function GET(request: Request) {
 
   const { data: taches, error } = await supabase
     .from('taches')
-    .select('id, officine_id, titre, assigne_id')
+    .select('id, officine_id, titre, assigne_id, echeance_heure')
     .eq('statut', 'a_faire')
     .eq('echeance', aujourdhui)
     .not('assigne_id', 'is', null)
@@ -47,7 +59,9 @@ export async function GET(request: Request) {
   let envoyees = 0
 
   for (const tache of taches ?? []) {
-    const titreNotif = "Échéance aujourd'hui"
+    const titreNotif = tache.echeance_heure
+      ? `Tâche à faire — ${formatHeure(tache.echeance_heure)}`
+      : "Échéance aujourd'hui"
     const urlNotif = `/liaison?onglet=taches&tache=${tache.id}`
 
     try {
