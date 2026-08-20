@@ -48,6 +48,7 @@ export async function GET(request: Request) {
 
   for (const tache of taches ?? []) {
     const titreNotif = "Échéance aujourd'hui"
+    const urlNotif = `/liaison?onglet=taches&tache=${tache.id}`
 
     try {
       await fetch(`${supabaseUrl}/functions/v1/send-push`, {
@@ -61,7 +62,7 @@ export async function GET(request: Request) {
           categorie: 'taches_echeance',
           titre: titreNotif,
           corps: tache.titre,
-          url: '/liaison',
+          url: urlNotif,
           profilIds: [tache.assigne_id],
         }),
       })
@@ -81,7 +82,7 @@ export async function GET(request: Request) {
       categorie: 'taches_echeance',
       titre: titreNotif,
       corps: tache.titre,
-      url: '/liaison',
+      url: urlNotif,
     })
     if (erreurNotif) {
       console.error('rappels-taches: notification in-app', tache.id, erreurNotif)
