@@ -1,5 +1,5 @@
-import { PageLoading } from '@/components/page-loading'
+import { VaccinsSquelette } from '@/components/vaccins-liste'
 
 export default function Loading() {
-  return <PageLoading />
+  return <VaccinsSquelette />
 }
