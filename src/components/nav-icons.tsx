@@ -240,3 +240,19 @@ export function IconSuggestions({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconGrossesseAllaitement({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 20.5S2.5 15 2.5 8.8C2.5 5.6 4.9 3.5 7.7 3.5c1.9 0 3.5 1 4.3 2.6.8-1.6 2.4-2.6 4.3-2.6 2.8 0 5.2 2.1 5.2 5.3 0 6.2-9.5 11.7-9.5 11.7Z" />
+    </svg>
+  )
+}
