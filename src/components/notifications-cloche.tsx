@@ -6,6 +6,7 @@ import { marquerNotificationLue, marquerToutesNotificationsLues } from '@/app/ac
 import type { NotificationInApp } from '@/lib/data/notifications'
 import { formatDateRelative } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 
 // Doit rester synchronisée avec la classe `w-[320px]` du panneau plus bas.
 const LARGEUR_PANNEAU = 320
@@ -44,12 +45,28 @@ export function NotificationsCloche({
   const router = useRouter()
   const boutonRef = useRef<HTMLButtonElement>(null)
 
-  useFermerAvecRetour(ouvert, () => setOuvert(false))
+  const signalerNavigation = useFermerAvecRetour(ouvert, () => setOuvert(false))
 
   function ouvrirNotification(n: NotificationInApp) {
     setOuvert(false)
     if (!n.lu) startTransition(() => marquerNotificationLue(n.id))
-    router.push(n.url)
+
+    // Si la cible est déjà la page/onglet affiché, router.push vers une URL
+    // identique ne déclenche aucune navigation (donc aucun remontage côté
+    // FilDeMessages/TachesList) : on émet un évènement custom pour forcer
+    // quand même le scroll + la mise en évidence vers l'élément visé.
+    const cibleActuelle = window.location.pathname + window.location.search
+    if (n.url === cibleActuelle) {
+      window.dispatchEvent(new CustomEvent(EVENEMENT_NOTIFICATION_CIBLE, { detail: { url: n.url } }))
+    } else {
+      // Empêche useFermerAvecRetour de "défaire" cette navigation : voir sa
+      // JSDoc — sans ça, le history.back() qu'il déclenche pour consommer
+      // l'entrée fictive du panneau s'exécute avant que router.push (vers
+      // une route dynamique) n'ait eu la chance de mettre à jour l'historique
+      // lui-même, et l'annule silencieusement.
+      signalerNavigation()
+      router.push(n.url)
+    }
   }
 
   function toggle() {

@@ -1,11 +1,13 @@
 'use client'
 
 import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { envoyerMessage, marquerPlusieursLus, supprimerMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 
 const FILTRE_TOUTES = 'toutes'
 
@@ -31,12 +33,16 @@ export function FilDeMessages({
   profilActuelId: string
   couleurs: Map<string, CouleurAvatar>
 }) {
+  const searchParams = useSearchParams()
   const [categorie, setCategorie] = useState<Categorie>('info')
   const [contenu, setContenu] = useState('')
   const [recherche, setRecherche] = useState('')
   const [filtreCategorie, setFiltreCategorie] = useState<string>(FILTRE_TOUTES)
   const [isPending, startTransition] = useTransition()
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  // Message ciblé par une notification (?message=<id>) : mis en évidence
+  // temporairement le temps que l'utilisateur le repère dans le fil.
+  const [idSurligne, setIdSurligne] = useState<string | null>(() => searchParams.get('message'))
 
   const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
 
@@ -50,6 +56,38 @@ export function FilDeMessages({
       startTransition(() => marquerPlusieursLus(idsNonLus))
     }
   }, [messages, profilActuelId])
+
+  // Cible initiale (arrivée depuis une notification ou un lien direct) :
+  // défile jusqu'au message au montage. Un nouveau montage a lieu à chaque
+  // nouvelle cible grâce à la `key` posée sur CahierDeLiaison (voir
+  // liaison/page.tsx) — pas besoin de resynchroniser sur un changement d'URL.
+  useEffect(() => {
+    if (!idSurligne) return
+    document.getElementById(`message-${idSurligne}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Notification cliquée alors qu'on est déjà sur le bon message/onglet : le
+  // routeur ne se déclenche pas (même URL), notifications-cloche.tsx émet cet
+  // évènement pour forcer quand même le scroll + la mise en évidence.
+  useEffect(() => {
+    function ecouteur(e: Event) {
+      const url = (e as CustomEvent<{ url: string }>).detail?.url
+      const messageId = url && new URL(url, window.location.origin).searchParams.get('message')
+      if (!messageId) return
+      document.getElementById(`message-${messageId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setIdSurligne(messageId)
+    }
+    window.addEventListener(EVENEMENT_NOTIFICATION_CIBLE, ecouteur)
+    return () => window.removeEventListener(EVENEMENT_NOTIFICATION_CIBLE, ecouteur)
+  }, [])
+
+  // Disparition en fondu de la mise en évidence après ~2s.
+  useEffect(() => {
+    if (!idSurligne) return
+    const minuteur = setTimeout(() => setIdSurligne(null), 2000)
+    return () => clearTimeout(minuteur)
+  }, [idSurligne])
 
   function reinitialiserFiltres() {
     setRecherche('')
@@ -150,9 +188,10 @@ export function FilDeMessages({
                 </div>
               )}
               <div
-                className={`rounded-2xl border p-4 ${
+                id={`message-${m.id}`}
+                className={`rounded-2xl border p-4 transition-shadow duration-700 ${
                   urgent ? 'border-rec bg-rec-soft' : 'border-border bg-surface'
-                }`}
+                } ${idSurligne === m.id ? 'ring-2 ring-primary' : ''}`}
               >
                 <div className="mb-2.5 flex items-center gap-2.5">
                   <div

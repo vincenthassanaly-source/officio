@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { FilDeMessages } from './fil-de-messages'
 import { TachesList } from './taches-list'
 import type { MessageAvecDetails } from '@/lib/data/messages'
@@ -21,7 +22,13 @@ export function CahierDeLiaison({
   profilActuelId: string
   couleurs: Map<string, CouleurAvatar>
 }) {
-  const [onglet, setOnglet] = useState<'fil' | 'taches'>('fil')
+  const searchParams = useSearchParams()
+  // Remonté avec une `key` dérivée des paramètres d'URL (voir liaison/page.tsx)
+  // à chaque nouvelle cible : lire le paramètre une seule fois au montage
+  // suffit, pas besoin de le resynchroniser plus tard.
+  const [onglet, setOnglet] = useState<'fil' | 'taches'>(() =>
+    searchParams.get('onglet') === 'taches' ? 'taches' : 'fil'
+  )
   const tachesEnAttente = taches.filter((t) => t.statut === 'a_faire').length
 
   return (

@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { creerTache, toggleTache, supprimerTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 
 // Exportée pour être réutilisée par agenda-vue-globale.tsx (même code
 // couleur/urgence que dans cette liste). Type relâché à Pick<...> plutôt que
@@ -45,12 +47,48 @@ export function TachesList({
   profilActuelId: string
   couleurs: Map<string, CouleurAvatar>
 }) {
+  const searchParams = useSearchParams()
   const [filtre, setFiltre] = useState('tous')
   const [formOuvert, setFormOuvert] = useState(false)
   const [photo, setPhoto] = useState<File | null>(null)
   const [isPending, startTransition] = useTransition()
+  // Tâche ciblée par une notification (?tache=<id>) : mise en évidence
+  // temporairement le temps que l'utilisateur la repère dans la liste.
+  const [idSurligne, setIdSurligne] = useState<string | null>(() => searchParams.get('tache'))
 
   const visibles = filtre === 'tous' ? taches : taches.filter((t) => t.assigne?.id === filtre)
+
+  // Cible initiale (arrivée depuis une notification ou un lien direct) :
+  // défile jusqu'à la tâche au montage. Un nouveau montage a lieu à chaque
+  // nouvelle cible grâce à la `key` posée sur CahierDeLiaison (voir
+  // liaison/page.tsx) — pas besoin de resynchroniser sur un changement d'URL.
+  useEffect(() => {
+    if (!idSurligne) return
+    document.getElementById(`tache-${idSurligne}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Notification cliquée alors qu'on est déjà sur la bonne tâche/onglet : le
+  // routeur ne se déclenche pas (même URL), notifications-cloche.tsx émet cet
+  // évènement pour forcer quand même le scroll + la mise en évidence.
+  useEffect(() => {
+    function ecouteur(e: Event) {
+      const url = (e as CustomEvent<{ url: string }>).detail?.url
+      const tacheId = url && new URL(url, window.location.origin).searchParams.get('tache')
+      if (!tacheId) return
+      document.getElementById(`tache-${tacheId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setIdSurligne(tacheId)
+    }
+    window.addEventListener(EVENEMENT_NOTIFICATION_CIBLE, ecouteur)
+    return () => window.removeEventListener(EVENEMENT_NOTIFICATION_CIBLE, ecouteur)
+  }, [])
+
+  // Disparition en fondu de la mise en évidence après ~2s.
+  useEffect(() => {
+    if (!idSurligne) return
+    const minuteur = setTimeout(() => setIdSurligne(null), 2000)
+    return () => clearTimeout(minuteur)
+  }, [idSurligne])
 
   return (
     <div className="flex flex-1 flex-col gap-3">
@@ -145,7 +183,10 @@ export function TachesList({
           return (
             <div
               key={t.id}
-              className="flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5"
+              id={`tache-${t.id}`}
+              className={`flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5 transition-shadow duration-700 ${
+                idSurligne === t.id ? 'ring-2 ring-primary' : ''
+              }`}
             >
               {t.photoUrl && (
                 <a href={t.photoUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
