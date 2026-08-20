@@ -10,11 +10,21 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 
+// Même format que formatHeure() dans rappels-agenda/route.ts ('HH:MM:SS' ou
+// 'HH:MM' -> 'HHhMM'). Exportée pour être réutilisée par
+// agenda-vue-globale.tsx (badge "Tâche").
+export function formatHeureCourte(heure: string): string {
+  return heure.slice(0, 5).replace(':', 'h')
+}
+
 // Exportée pour être réutilisée par agenda-vue-globale.tsx (même code
 // couleur/urgence que dans cette liste). Type relâché à Pick<...> plutôt que
 // Tache entière : la vue globale de l'agenda ne récupère que id/titre/
-// statut/echeance (getTachesEcheancePeriode), pas assigne/photoUrl.
-export function dueInfo(tache: Pick<Tache, 'statut' | 'echeance'>): { label: string; className: string } {
+// statut/echeance/echeance_heure (getTachesEcheancePeriode), pas
+// assigne/photoUrl.
+export function dueInfo(
+  tache: Pick<Tache, 'statut' | 'echeance' | 'echeance_heure'>
+): { label: string; className: string } {
   if (tache.statut === 'fait') {
     return { label: 'Fait', className: 'bg-neutral-soft text-muted' }
   }
@@ -22,16 +32,21 @@ export function dueInfo(tache: Pick<Tache, 'statut' | 'echeance'>): { label: str
     return { label: 'À définir', className: 'bg-primary-soft text-primary' }
   }
 
+  // Heure facultative : accolée au label existant plutôt que dans un badge
+  // séparé, pour rester lisible sur une seule ligne (ex. "Aujourd'hui ·
+  // 14h30").
+  const suffixeHeure = tache.echeance_heure ? ` · ${formatHeureCourte(tache.echeance_heure)}` : ''
+
   const aujourdhui = new Date()
   aujourdhui.setHours(0, 0, 0, 0)
   const echeance = new Date(`${tache.echeance}T00:00:00`)
   const diffJours = Math.round((echeance.getTime() - aujourdhui.getTime()) / 86_400_000)
 
-  if (diffJours < 0) return { label: 'En retard', className: 'bg-rec-soft text-rec' }
-  if (diffJours === 0) return { label: "Aujourd'hui", className: 'bg-accent-soft text-accent' }
-  if (diffJours === 1) return { label: 'Demain', className: 'bg-accent-soft text-accent' }
+  if (diffJours < 0) return { label: `En retard${suffixeHeure}`, className: 'bg-rec-soft text-rec' }
+  if (diffJours === 0) return { label: `Aujourd'hui${suffixeHeure}`, className: 'bg-accent-soft text-accent' }
+  if (diffJours === 1) return { label: `Demain${suffixeHeure}`, className: 'bg-accent-soft text-accent' }
   return {
-    label: echeance.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+    label: `${echeance.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}${suffixeHeure}`,
     className: 'bg-primary-soft text-primary',
   }
 }
@@ -143,23 +158,31 @@ export function TachesList({
             placeholder="Titre de la tâche"
             className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
           />
+          <select
+            name="assigne_id"
+            defaultValue=""
+            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+          >
+            <option value="">Non assignée (toute l&rsquo;équipe)</option>
+            {equipe.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.id === profilActuelId ? 'Moi' : m.nom_complet}
+              </option>
+            ))}
+          </select>
           <div className="flex gap-2">
-            <select
-              name="assigne_id"
-              defaultValue=""
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
-            >
-              <option value="">Non assignée (toute l&rsquo;équipe)</option>
-              {equipe.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.id === profilActuelId ? 'Moi' : m.nom_complet}
-                </option>
-              ))}
-            </select>
             <input
               type="date"
               name="echeance"
-              className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+            />
+            {/* Facultative : un rappel "pile à l'heure" ne s'ajoute au
+                rappel quotidien de 7h que si elle est renseignée — voir
+                src/app/api/cron/rappels-taches-heure/route.ts. */}
+            <input
+              type="time"
+              name="echeance_heure"
+              className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
             />
           </div>
           <ChampPhoto onChange={setPhoto} />

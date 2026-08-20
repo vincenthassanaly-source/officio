@@ -10,6 +10,7 @@ export async function creerTache(formData: FormData) {
   const titre = String(formData.get('titre') ?? '').trim()
   const assigneId = String(formData.get('assigne_id') ?? '') || null
   const echeance = String(formData.get('echeance') ?? '') || null
+  const echeanceHeure = String(formData.get('echeance_heure') ?? '') || null
   const photo = formData.get('photo')
 
   if (!titre) return
@@ -42,6 +43,7 @@ export async function creerTache(formData: FormData) {
     titre,
     assigne_id: assigneId,
     echeance,
+    echeance_heure: echeanceHeure,
     created_by: profil.id,
     photo_chemin_stockage: photoCheminStockage,
   })

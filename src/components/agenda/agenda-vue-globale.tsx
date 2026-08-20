@@ -6,7 +6,7 @@ import { creerRendezVous, supprimerRendezVous } from '@/app/actions/agenda'
 import type { CategorieRdv, RendezVous } from '@/lib/data/rendez-vous'
 import type { TacheEcheance } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
-import { dueInfo } from '@/components/taches-list'
+import { dueInfo, formatHeureCourte } from '@/components/taches-list'
 import { estEnRetard } from '@/components/regularisations-liste'
 import { formatJourCourt, toISODate } from '@/lib/dates'
 
@@ -84,7 +84,7 @@ function ItemLigne({
               {t.titre}
             </div>
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
-              Tâche
+              {t.echeance_heure ? `Tâche · ${formatHeureCourte(t.echeance_heure)}` : 'Tâche'}
             </span>
           </div>
         </div>

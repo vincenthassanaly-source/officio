@@ -7,6 +7,7 @@ export type Tache = {
   titre: string
   statut: StatutTache
   echeance: string | null
+  echeance_heure: string | null
   assigne: { id: string; nom_complet: string; initiales: string } | null
   photoUrl: string | null
 }
@@ -23,7 +24,7 @@ export async function getTaches(officineId: string): Promise<Tache[]> {
   const { data, error } = await supabase
     .from('taches')
     .select(
-      `id, titre, statut, echeance, photo_chemin_stockage,
+      `id, titre, statut, echeance, echeance_heure, photo_chemin_stockage,
        assigne:profils!taches_assigne_id_fkey ( id, nom_complet, initiales )`
     )
     .eq('officine_id', officineId)
@@ -49,6 +50,7 @@ export async function getTaches(officineId: string): Promise<Tache[]> {
         titre: t.titre,
         statut: t.statut as StatutTache,
         echeance: t.echeance,
+        echeance_heure: t.echeance_heure,
         assigne: Array.isArray(t.assigne) ? t.assigne[0] ?? null : t.assigne,
         photoUrl,
       }
@@ -61,6 +63,7 @@ export type TacheEcheance = {
   titre: string
   statut: StatutTache
   echeance: string
+  echeance_heure: string | null
 }
 
 // Pour la vue globale de l'agenda (src/components/agenda/agenda-vue-globale.tsx) :
@@ -77,7 +80,7 @@ export async function getTachesEcheancePeriode(
 
   const { data, error } = await supabase
     .from('taches')
-    .select('id, titre, statut, echeance')
+    .select('id, titre, statut, echeance, echeance_heure')
     .eq('officine_id', officineId)
     .gte('echeance', dateDebut)
     .lte('echeance', dateFin)
