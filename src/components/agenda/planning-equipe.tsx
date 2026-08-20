@@ -23,6 +23,11 @@ function heureEnDecimal(heure: string): number {
   return h + m / 60
 }
 
+function formatDureeHeures(heures: number): string {
+  const arrondi = Math.round(heures * 10) / 10
+  return Number.isInteger(arrondi) ? `${arrondi}h` : `${arrondi.toFixed(1).replace('.', ',')}h`
+}
+
 function confirmerSuppression(message: string): boolean {
   return confirm(message)
 }
@@ -100,6 +105,17 @@ export function PlanningEquipe({
     return { heureMin: min, heureMax: max }
   }, [creneaux])
 
+  const heuresParMembre = useMemo(() => {
+    const totaux = new Map<string, number>()
+    creneaux.forEach((c) => {
+      if (c.type === 'travail' && c.heure_debut && c.heure_fin) {
+        const duree = heureEnDecimal(c.heure_fin) - heureEnDecimal(c.heure_debut)
+        totaux.set(c.profil_id, (totaux.get(c.profil_id) ?? 0) + duree)
+      }
+    })
+    return totaux
+  }, [creneaux])
+
   const hauteurGrille = (heureMax - heureMin) * PX_PAR_HEURE
 
   const graduations = useMemo(() => {
@@ -115,6 +131,7 @@ export function PlanningEquipe({
           <span key={m.id} className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
+            <span className="text-[10px] font-normal text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
           </span>
         ))}
       </div>
