@@ -7,7 +7,6 @@ import { PlanningEquipe } from './planning-equipe'
 import type { RendezVous } from '@/lib/data/rendez-vous'
 import type { TacheEcheance } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
-import type { Peremption } from '@/lib/data/peremptions'
 import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
@@ -17,7 +16,6 @@ export function Agenda({
   rendezVous,
   taches,
   regularisations,
-  peremptions,
   creneaux,
   equipe,
   weekDates,
@@ -26,7 +24,6 @@ export function Agenda({
   rendezVous: RendezVous[]
   taches: TacheEcheance[]
   regularisations: Regularisation[]
-  peremptions: Peremption[]
   creneaux: Creneau[]
   equipe: MembreEquipe[]
   weekDates: Date[]
@@ -108,7 +105,6 @@ export function Agenda({
           rendezVous={rendezVous}
           taches={taches}
           regularisations={regularisations}
-          peremptions={peremptions}
           weekDates={weekDates}
         />
       ) : (

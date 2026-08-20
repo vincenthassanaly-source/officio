@@ -26,8 +26,8 @@ export async function ajouterRuptureStock(formData: FormData) {
 }
 
 // Cocher un produit = il n'est plus en rupture -> suppression définitive de
-// la ligne (pas de soft-delete/champ "résolu", contrairement à
-// peremptions.retire) : cette liste ne garde que ce qui reste à traiter.
+// la ligne (pas de soft-delete/champ "résolu") : cette liste ne garde que
+// ce qui reste à traiter.
 export async function supprimerRuptureStock(id: string) {
   const profil = await getCurrentProfil()
   if (!profil) throw new Error('Non connecté')

@@ -6,10 +6,8 @@ import { creerRendezVous, supprimerRendezVous } from '@/app/actions/agenda'
 import type { CategorieRdv, RendezVous } from '@/lib/data/rendez-vous'
 import type { TacheEcheance } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
-import type { Peremption } from '@/lib/data/peremptions'
 import { dueInfo } from '@/components/taches-list'
 import { estEnRetard } from '@/components/regularisations-liste'
-import { estPerimee } from '@/components/peremptions-liste'
 import { formatJourCourt, toISODate } from '@/lib/dates'
 
 const CATEGORIES: { value: CategorieRdv; label: string; className: string }[] = [
@@ -19,16 +17,14 @@ const CATEGORIES: { value: CategorieRdv; label: string; className: string }[] = 
   { value: 'autre', label: 'Autre', className: 'bg-neutral-soft text-muted' },
 ]
 
-// Rendez-vous, tâches à échéance, régularisations d'ordonnances et
-// péremptions combinés sur la même semaine. Rangés RDV d'abord (par heure),
-// puis tâches, puis régularisations, puis péremptions — un ordre "ce qui a
-// une heure fixe d'abord" plutôt qu'alphabétique ou chronologique toutes
-// catégories confondues.
+// Rendez-vous, tâches à échéance et régularisations d'ordonnances combinés
+// sur la même semaine. Rangés RDV d'abord (par heure), puis tâches, puis
+// régularisations — un ordre "ce qui a une heure fixe d'abord" plutôt
+// qu'alphabétique ou chronologique toutes catégories confondues.
 type ItemAgenda =
   | { type: 'rdv'; rdv: RendezVous }
   | { type: 'tache'; tache: TacheEcheance }
   | { type: 'regularisation'; regularisation: Regularisation }
-  | { type: 'peremption'; peremption: Peremption }
 
 function ItemLigne({
   item,
@@ -96,53 +92,27 @@ function ItemLigne({
     )
   }
 
-  if (item.type === 'regularisation') {
-    const r = item.regularisation
-    const facture = r.statut === 'facture'
-    const enRetard = estEnRetard(r, aujourdhuiIso)
-    const badgeClass = facture
-      ? 'bg-neutral-soft text-muted'
-      : enRetard
-        ? 'bg-rec-soft text-rec'
-        : 'bg-primary-soft text-primary'
-
-    return (
-      <Link href="/regularisations" className="flex gap-3">
-        <div className="w-12 shrink-0 pt-1 text-right">
-          <div className="text-[10px] text-muted">Journée</div>
-        </div>
-        <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="text-sm font-semibold text-ink">
-              {r.patient_prenom} {r.patient_nom}
-            </div>
-            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${badgeClass}`}>
-              Régularisation
-            </span>
-          </div>
-        </div>
-      </Link>
-    )
-  }
-
-  const p = item.peremption
-  const perimee = estPerimee(p, aujourdhuiIso)
-  const badgeClassPeremption = p.retire
+  const r = item.regularisation
+  const facture = r.statut === 'facture'
+  const enRetard = estEnRetard(r, aujourdhuiIso)
+  const badgeClass = facture
     ? 'bg-neutral-soft text-muted'
-    : perimee
+    : enRetard
       ? 'bg-rec-soft text-rec'
       : 'bg-primary-soft text-primary'
 
   return (
-    <Link href="/peremptions" className="flex gap-3">
+    <Link href="/regularisations" className="flex gap-3">
       <div className="w-12 shrink-0 pt-1 text-right">
         <div className="text-[10px] text-muted">Journée</div>
       </div>
       <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="flex items-start justify-between gap-2">
-          <div className="text-sm font-semibold text-ink">{p.nom_produit}</div>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${badgeClassPeremption}`}>
-            Péremption
+          <div className="text-sm font-semibold text-ink">
+            {r.patient_prenom} {r.patient_nom}
+          </div>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${badgeClass}`}>
+            Régularisation
           </span>
         </div>
       </div>
@@ -154,13 +124,11 @@ export function AgendaVueGlobale({
   rendezVous,
   taches,
   regularisations,
-  peremptions,
   weekDates,
 }: {
   rendezVous: RendezVous[]
   taches: TacheEcheance[]
   regularisations: Regularisation[]
-  peremptions: Peremption[]
   weekDates: Date[]
 }) {
   const [dateSelectionnee, setDateSelectionnee] = useState(() => {
@@ -190,10 +158,8 @@ export function AgendaVueGlobale({
     for (const r of rendezVous) ajouter(r.date, { type: 'rdv', rdv: r })
     for (const t of taches) ajouter(t.echeance, { type: 'tache', tache: t })
     for (const r of regularisations) ajouter(r.date_regularisation, { type: 'regularisation', regularisation: r })
-    for (const p of peremptions) ajouter(p.date_peremption, { type: 'peremption', peremption: p })
 
-    const rang = (item: ItemAgenda) =>
-      item.type === 'rdv' ? 0 : item.type === 'tache' ? 1 : item.type === 'regularisation' ? 2 : 3
+    const rang = (item: ItemAgenda) => (item.type === 'rdv' ? 0 : item.type === 'tache' ? 1 : 2)
     for (const liste of map.values()) {
       liste.sort((a, b) => {
         if (rang(a) !== rang(b)) return rang(a) - rang(b)
@@ -204,24 +170,20 @@ export function AgendaVueGlobale({
             `${b.regularisation.patient_nom} ${b.regularisation.patient_prenom}`
           )
         }
-        if (a.type === 'peremption' && b.type === 'peremption') {
-          return a.peremption.nom_produit.localeCompare(b.peremption.nom_produit)
-        }
         return 0
       })
     }
 
     return map
-  }, [rendezVous, taches, regularisations, peremptions])
+  }, [rendezVous, taches, regularisations])
 
   const joursCharges = useMemo(() => {
     const set = new Set<string>()
     for (const r of rendezVous) set.add(r.date)
     for (const t of taches) set.add(t.echeance)
     for (const r of regularisations) set.add(r.date_regularisation)
-    for (const p of peremptions) set.add(p.date_peremption)
     return set
-  }, [rendezVous, taches, regularisations, peremptions])
+  }, [rendezVous, taches, regularisations])
 
   function selectionnerJour(iso: string) {
     setDateSelectionnee(iso)
@@ -369,9 +331,7 @@ export function AgendaVueGlobale({
                         ? `rdv-${item.rdv.id}`
                         : item.type === 'tache'
                           ? `tache-${item.tache.id}`
-                          : item.type === 'regularisation'
-                            ? `regularisation-${item.regularisation.id}`
-                            : `peremption-${item.peremption.id}`
+                          : `regularisation-${item.regularisation.id}`
                     return (
                       <ItemLigne
                         key={cle}
