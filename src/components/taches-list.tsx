@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { creerTache, toggleTache, supprimerTache } from '@/app/actions/taches'
+import { creerTache, toggleTache, supprimerTache, modifierTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -70,6 +70,9 @@ export function TachesList({
   // Tâche ciblée par une notification (?tache=<id>) : mise en évidence
   // temporairement le temps que l'utilisateur la repère dans la liste.
   const [idSurligne, setIdSurligne] = useState<string | null>(() => searchParams.get('tache'))
+  // Tâche ouverte dans la modale d'édition (clic sur le corps de la carte,
+  // hors case à cocher et bouton de suppression).
+  const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
 
   const visibles = filtre === 'tous' ? taches : taches.filter((t) => t.assigne?.id === filtre)
 
@@ -221,7 +224,8 @@ export function TachesList({
                 type="button"
                 onClick={() => startTransition(() => toggleTache(t.id, t.statut))}
                 disabled={isPending}
-                className="flex flex-1 items-center gap-3 text-left disabled:opacity-70"
+                aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
+                className="flex h-8 w-8 shrink-0 items-center justify-center disabled:opacity-70"
               >
                 <div
                   className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
@@ -230,6 +234,13 @@ export function TachesList({
                 >
                   {t.statut === 'fait' && <span className="text-xs font-bold text-white">✓</span>}
                 </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTacheEnEdition(t)}
+                disabled={isPending}
+                className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-70"
+              >
                 <div className="min-w-0 flex-1">
                   <div
                     className={`text-sm font-semibold ${
@@ -270,6 +281,109 @@ export function TachesList({
           )
         })}
       </div>
+
+      {tacheEnEdition && (
+        <ModaleEditionTache
+          key={tacheEnEdition.id}
+          tache={tacheEnEdition}
+          equipe={equipe}
+          profilActuelId={profilActuelId}
+          onFerme={() => setTacheEnEdition(null)}
+        />
+      )}
+    </div>
+  )
+}
+
+function ModaleEditionTache({
+  tache,
+  equipe,
+  profilActuelId,
+  onFerme,
+}: {
+  tache: Tache
+  equipe: MembreEquipe[]
+  profilActuelId: string
+  onFerme: () => void
+}) {
+  const [photo, setPhoto] = useState<File | null>(null)
+  // Distinct de `photo === null` au repos (aucun changement) : mis à true
+  // uniquement si l'utilisateur retire explicitement la photo actuelle sans
+  // en choisir une nouvelle. Voir le commentaire sur ChampPhoto.
+  const [photoSupprimee, setPhotoSupprimee] = useState(false)
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      onClick={onFerme}
+    >
+      <form
+        onClick={(e) => e.stopPropagation()}
+        action={(formData) => {
+          if (photo) formData.set('photo', photo)
+          if (photoSupprimee) formData.set('photo_supprimee', 'true')
+          startTransition(async () => {
+            await modifierTache(tache.id, formData)
+            onFerme()
+          })
+        }}
+        className="flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+      >
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-ink">Modifier la tâche</h2>
+          <button type="button" onClick={onFerme} aria-label="Fermer sans enregistrer" className="text-muted">
+            ×
+          </button>
+        </div>
+        <input
+          name="titre"
+          required
+          defaultValue={tache.titre}
+          placeholder="Titre de la tâche"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+        />
+        <select
+          name="assigne_id"
+          defaultValue={tache.assigne?.id ?? ''}
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+        >
+          <option value="">Non assignée (toute l&rsquo;équipe)</option>
+          {equipe.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.id === profilActuelId ? 'Moi' : m.nom_complet}
+            </option>
+          ))}
+        </select>
+        <div className="flex gap-2">
+          <input
+            type="date"
+            name="echeance"
+            defaultValue={tache.echeance ?? ''}
+            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+          />
+          <input
+            type="time"
+            name="echeance_heure"
+            defaultValue={tache.echeance_heure?.slice(0, 5) ?? ''}
+            className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+          />
+        </div>
+        <ChampPhoto
+          photoInitiale={tache.photoUrl}
+          onChange={(fichier) => {
+            setPhoto(fichier)
+            setPhotoSupprimee(fichier === null)
+          }}
+        />
+        <button
+          type="submit"
+          disabled={isPending}
+          className="mt-1 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+        >
+          Enregistrer
+        </button>
+      </form>
     </div>
   )
 }

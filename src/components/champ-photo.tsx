@@ -4,23 +4,39 @@ import { useRef, useState } from 'react'
 import { comprimerImage } from '@/lib/image'
 
 // Sélecteur de photo réutilisé par les formulaires de création de tâche
-// (taches-list.tsx, fab-creation-rapide.tsx) : compression client-side avant
-// de remonter le fichier via onChange, aperçu en vignette avec bouton de
-// retrait. Le <input file> n'a pas de `name` — il ne doit jamais être
-// sérialisé tel quel dans un FormData, seul le fichier compressé doit l'être
-// (voir l'appelant, qui fait `formData.set('photo', fichier)`).
-export function ChampPhoto({ onChange }: { onChange: (fichier: File | null) => void }) {
-  const [apercu, setApercu] = useState<string | null>(null)
+// (taches-list.tsx, fab-creation-rapide.tsx) et par la modale d'édition de
+// tâche (taches-list.tsx) : compression client-side avant de remonter le
+// fichier via onChange, aperçu en vignette avec bouton de retrait. Le
+// <input file> n'a pas de `name` — il ne doit jamais être sérialisé tel quel
+// dans un FormData, seul le fichier compressé doit l'être (voir l'appelant,
+// qui fait `formData.set('photo', fichier)`).
+//
+// `photoInitiale` (URL signée) affiche une photo déjà existante en aperçu au
+// montage, pour l'édition d'une tâche qui en a déjà une. `onChange` n'est
+// appelé que sur une action réelle de l'utilisateur (choix ou retrait),
+// jamais au montage : ça permet à l'appelant de distinguer "aucun
+// changement" (onChange jamais appelé) de "suppression demandée"
+// (onChange(null) appelé après un retrait) — modifierTache a besoin de
+// cette distinction pour savoir s'il doit toucher au storage.
+export function ChampPhoto({
+  onChange,
+  photoInitiale = null,
+}: {
+  onChange: (fichier: File | null) => void
+  photoInitiale?: string | null
+}) {
+  const [apercu, setApercu] = useState<string | null>(photoInitiale)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function choisir(fichier: File) {
     const compressee = await comprimerImage(fichier)
+    if (apercu?.startsWith('blob:')) URL.revokeObjectURL(apercu)
     setApercu(URL.createObjectURL(compressee))
     onChange(compressee)
   }
 
   function retirer() {
-    if (apercu) URL.revokeObjectURL(apercu)
+    if (apercu?.startsWith('blob:')) URL.revokeObjectURL(apercu)
     setApercu(null)
     onChange(null)
   }

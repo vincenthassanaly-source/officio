@@ -58,6 +58,87 @@ export async function creerTache(formData: FormData) {
   revalidatePath('/')
 }
 
+export async function modifierTache(id: string, formData: FormData) {
+  const titre = String(formData.get('titre') ?? '').trim()
+  const assigneId = String(formData.get('assigne_id') ?? '') || null
+  const echeance = String(formData.get('echeance') ?? '') || null
+  const echeanceHeure = String(formData.get('echeance_heure') ?? '') || null
+  const photo = formData.get('photo')
+  // Distinct de "aucune nouvelle photo" (formulaire non touché) : signale un
+  // retrait explicite de la photo actuelle sans remplacement. Voir le
+  // commentaire sur ChampPhoto (champ-photo.tsx) pour l'origine du flag.
+  const photoSupprimee = formData.get('photo_supprimee') === 'true'
+
+  if (!titre) return
+
+  const supabase = await createClient()
+
+  const { data: tacheActuelle, error: erreurLecture } = await supabase
+    .from('taches')
+    .select('photo_chemin_stockage')
+    .eq('id', id)
+    .single()
+
+  if (erreurLecture) throw new Error(erreurLecture.message)
+
+  let photoCheminStockage = tacheActuelle.photo_chemin_stockage
+  // À supprimer du storage après le succès de l'update (ancienne photo
+  // remplacée ou retirée). Séparé de `nouveauChemin` ci-dessous pour ne
+  // jamais supprimer l'ancienne photo tant que le nouvel état n'est pas
+  // confirmé en base — même logique de rollback que creerTache.
+  let ancienChemin: string | null = null
+  let nouveauChemin: string | null = null
+
+  // La compression client (ChampPhoto → comprimerImage) ne garantit rien côté
+  // serveur : on ne fait confiance qu'au type réellement reçu.
+  if (photo instanceof File && photo.size > 0) {
+    if (photo.type !== 'image/jpeg') {
+      throw new Error('Format de photo non accepté.')
+    }
+
+    const officine = await getOfficineActive()
+    if (!officine) throw new Error('Non connecté')
+
+    const chemin = `${officine.officine_id}/${crypto.randomUUID()}.jpg`
+    const { error: erreurUpload } = await supabase.storage
+      .from('taches-photos')
+      .upload(chemin, photo, { contentType: photo.type })
+
+    if (erreurUpload) throw new Error(erreurUpload.message)
+
+    nouveauChemin = chemin
+    ancienChemin = tacheActuelle.photo_chemin_stockage
+    photoCheminStockage = chemin
+  } else if (photoSupprimee && tacheActuelle.photo_chemin_stockage) {
+    ancienChemin = tacheActuelle.photo_chemin_stockage
+    photoCheminStockage = null
+  }
+
+  const { error } = await supabase
+    .from('taches')
+    .update({
+      titre,
+      assigne_id: assigneId,
+      echeance,
+      echeance_heure: echeanceHeure,
+      photo_chemin_stockage: photoCheminStockage,
+    })
+    .eq('id', id)
+
+  if (error) {
+    if (nouveauChemin) {
+      await supabase.storage.from('taches-photos').remove([nouveauChemin])
+    }
+    throw new Error(error.message)
+  }
+
+  if (ancienChemin) {
+    await supabase.storage.from('taches-photos').remove([ancienChemin])
+  }
+
+  revalidatePath('/')
+}
+
 export async function supprimerTache(id: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
