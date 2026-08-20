@@ -13,7 +13,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: donnees.corps || '',
     icon: '/icon-192',
-    badge: '/icon-192',
+    badge: '/icon-badge',
     data: { url: donnees.url || '/' },
   }
 
