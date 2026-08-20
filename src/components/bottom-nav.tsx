@@ -17,7 +17,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="sticky bottom-0 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 py-2 lg:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-20 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden">
       {NAV_ITEMS.map((item) => {
         const actif = estLienActif(item.href, pathname)
         const Icone = ICONES[item.href]
