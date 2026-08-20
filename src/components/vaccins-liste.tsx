@@ -20,6 +20,13 @@ const FILTRES: { value: FiltreStatut; label: string }[] = [
   { value: 'recommandé', label: 'Recommandé' },
 ]
 
+function normaliser(texte: string): string {
+  return texte
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+}
+
 function IconCalendrier({ className }: { className?: string }) {
   return (
     <svg
@@ -173,14 +180,14 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
   }, [vaccins])
 
   const visibles = useMemo(() => {
-    const rechercheNormalisee = recherche.trim().toLowerCase()
+    const rechercheNormalisee = normaliser(recherche.trim())
     return vaccins
       .filter((v) => filtreStatut === 'tous' || v.statut === filtreStatut)
       .filter(
         (v) =>
           !rechercheNormalisee ||
-          v.nom_commercial.toLowerCase().includes(rechercheNormalisee) ||
-          v.valences.some((valence) => valence.toLowerCase().includes(rechercheNormalisee))
+          normaliser(v.nom_commercial).includes(rechercheNormalisee) ||
+          v.valences.some((valence) => normaliser(valence).includes(rechercheNormalisee))
       )
   }, [vaccins, recherche, filtreStatut])
 
@@ -213,7 +220,7 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
       <input
         value={recherche}
         onChange={(e) => setRecherche(e.target.value)}
-        placeholder="Rechercher par nom commercial ou valence…"
+        placeholder="Rechercher par nom commercial ou indication (ex. hépatite B)…"
         className={CHAMP_CLASS}
       />
 
