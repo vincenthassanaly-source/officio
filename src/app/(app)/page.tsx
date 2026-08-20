@@ -23,7 +23,6 @@ import {
   IconRegularisation,
   IconVaccin,
   IconPeremptions,
-  IconAffiches,
   IconSuggestions,
   IconRupturesStock,
 } from '@/components/nav-icons'
@@ -214,18 +213,6 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Péremptions</div>
             <div className="mt-0.5 text-[11px] text-muted">{peremptionsBientot} à venir sous 30j</div>
-          </div>
-        </Link>
-        <Link
-          href="/affiches"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-purple-soft text-purple">
-            <IconAffiches className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Affiches prix</div>
-            <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
           </div>
         </Link>
         <Link

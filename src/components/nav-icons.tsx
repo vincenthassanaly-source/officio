@@ -207,24 +207,6 @@ export function IconPeremptions({ className }: IconProps) {
   )
 }
 
-export function IconAffiches({ className }: IconProps) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12.5 3.5 21 12l-8.5 8.5a2 2 0 0 1-2.83 0l-6.17-6.17a2 2 0 0 1 0-2.83L12.5 3.5Z" />
-      <path d="M3 3h6.5L3 9.5V3Z" />
-      <circle cx="15.5" cy="8.5" r="1.5" />
-    </svg>
-  )
-}
-
 export function IconSuggestions({ className }: IconProps) {
   return (
     <svg
