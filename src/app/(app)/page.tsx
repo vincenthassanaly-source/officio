@@ -8,6 +8,7 @@ import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
 import { getCnoPatients } from '@/lib/data/cno'
 import { getSuggestions } from '@/lib/data/suggestions'
 import { getRupturesStock } from '@/lib/data/ruptures-stock'
+import { getProduitsARecommander } from '@/lib/data/produits-a-recommander'
 import { getEquipe } from '@/lib/data/equipe'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
@@ -38,16 +39,18 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
-  const [messages, taches, rendezVous, huiles, patientsCno, suggestions, equipe, rupturesStock] = await Promise.all([
-    getMessages(officine.officine_id),
-    getTaches(officine.officine_id),
-    getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
-    getHuilesEssentielles(officine.officine_id),
-    getCnoPatients(officine.officine_id),
-    getSuggestions(officine.officine_id),
-    getEquipe(officine.officine_id),
-    getRupturesStock(officine.officine_id),
-  ])
+  const [messages, taches, rendezVous, huiles, patientsCno, suggestions, equipe, rupturesStock, produitsARecommander] =
+    await Promise.all([
+      getMessages(officine.officine_id),
+      getTaches(officine.officine_id),
+      getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
+      getHuilesEssentielles(officine.officine_id),
+      getCnoPatients(officine.officine_id),
+      getSuggestions(officine.officine_id),
+      getEquipe(officine.officine_id),
+      getRupturesStock(officine.officine_id),
+      getProduitsARecommander(officine.officine_id),
+    ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
   const suggestionsNonTraitees = suggestions.filter((s) => !s.fait).length
@@ -218,7 +221,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Ruptures de stock</div>
-            <div className="mt-0.5 text-[11px] text-muted">{rupturesStock.length} en cours</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {rupturesStock.length + produitsARecommander.length} en cours
+            </div>
           </div>
         </Link>
       </div>
