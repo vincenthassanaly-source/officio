@@ -192,3 +192,45 @@ button,
     animation-delay: 0s !important;
   }
 }
+
+/* Slide directionnel au changement de semaine dans l'agenda (voir
+   components/agenda/agenda.tsx) — appliqué au conteneur remonté (key sur
+   le lundi de la semaine affichée), donc rejoué automatiquement à chaque
+   changement, quel que soit le déclencheur (flèches, "Aujourd'hui", swipe).
+   transform + opacity uniquement (aucun width/height animé) : pas de
+   reflow, fluide sur mobile, aucun `pointer-events` touché donc aucune
+   interaction bloquée pendant les ~220ms de l'animation. */
+@keyframes agenda-glisse-depuis-droite {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes agenda-glisse-depuis-gauche {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.agenda-glisse-suivant {
+  animation: agenda-glisse-depuis-droite 220ms ease-out both;
+}
+.agenda-glisse-precedent {
+  animation: agenda-glisse-depuis-gauche 220ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agenda-glisse-suivant,
+  .agenda-glisse-precedent {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+  }
+}

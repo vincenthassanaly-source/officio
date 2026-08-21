@@ -39,6 +39,11 @@ export function Agenda({
 }) {
   const router = useRouter()
   const [onglet, setOnglet] = useState<'globale' | 'planning'>('globale')
+  // Sens du dernier changement de semaine (1 = vers la suivante, -1 = vers
+  // la précédente), pilote le sens de la transition CSS ci-dessous. Mis à
+  // jour par allerVersSemaine (flèches ET swipe, qui l'appellent tous les
+  // deux avec un offsetJours de ±7) et par le bouton "Aujourd'hui".
+  const [direction, setDirection] = useState<1 | -1>(1)
   // Point de départ du geste en cours (null si aucun geste, ou si le geste a
   // démarré sur une zone exclue via data-swipe-ignore, ex: le strip de jours
   // déjà scrollable au doigt dans AgendaVueGlobale).
@@ -49,13 +54,17 @@ export function Agenda({
   const swipeAnnulePourGesteRef = useRef(false)
 
   const lundiAffiche = toISODate(weekDates[0])
-  const estSemaineActuelle = lundiAffiche === toISODate(getWeekDates(new Date())[0])
+  const lundiAujourdhui = toISODate(getWeekDates(new Date())[0])
+  const estSemaineActuelle = lundiAffiche === lundiAujourdhui
 
   // replace plutôt que push : changer de semaine ne doit pas empiler une
   // étape d'historique par clic — sinon revenir en arrière depuis l'Agenda
   // demande un retour par semaine traversée au lieu d'un retour direct vers
-  // la page précédente.
+  // la page précédente. offsetJours vaut toujours ±7 chez les appelants
+  // actuels (flèches, swipe) : son signe donne directement le sens de la
+  // transition.
   function allerVersSemaine(offsetJours: number) {
+    setDirection(offsetJours > 0 ? 1 : -1)
     const cible = new Date(weekDates[0])
     cible.setDate(cible.getDate() + offsetJours)
     router.replace(`/agenda?semaine=${toISODate(cible)}`)
@@ -113,7 +122,10 @@ export function Agenda({
           {!estSemaineActuelle && (
             <button
               type="button"
-              onClick={() => router.replace('/agenda')}
+              onClick={() => {
+                setDirection(lundiAffiche < lundiAujourdhui ? 1 : -1)
+                router.replace('/agenda')
+              }}
               className="text-[11px] font-semibold text-primary"
             >
               Aujourd&rsquo;hui
@@ -157,23 +169,34 @@ export function Agenda({
         onTouchMove={gererToucheMove}
         onTouchEnd={gererToucheFin}
       >
-        {onglet === 'globale' ? (
-          <AgendaVueGlobale
-            key={lundiAffiche}
-            rendezVous={rendezVous}
-            taches={taches}
-            regularisations={regularisations}
-            weekDates={weekDates}
-          />
-        ) : (
-          <PlanningEquipe
-            key={lundiAffiche}
-            creneaux={creneaux}
-            equipe={equipe}
-            weekDates={weekDates}
-            couleurs={couleurs}
-          />
-        )}
+        {/* Remonté à chaque changement de semaine (clé sur lundiAffiche,
+            indépendante de l'onglet actif) : le navigateur rejoue
+            automatiquement l'animation `agenda-glisse-*` définie dans
+            globals.css dès l'insertion de ce nouveau nœud dans le DOM. */}
+        <div
+          key={lundiAffiche}
+          className={`flex flex-1 flex-col ${
+            direction === 1 ? 'agenda-glisse-suivant' : 'agenda-glisse-precedent'
+          }`}
+        >
+          {onglet === 'globale' ? (
+            <AgendaVueGlobale
+              key={lundiAffiche}
+              rendezVous={rendezVous}
+              taches={taches}
+              regularisations={regularisations}
+              weekDates={weekDates}
+            />
+          ) : (
+            <PlanningEquipe
+              key={lundiAffiche}
+              creneaux={creneaux}
+              equipe={equipe}
+              weekDates={weekDates}
+              couleurs={couleurs}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
