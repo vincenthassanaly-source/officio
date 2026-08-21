@@ -6,6 +6,7 @@ import type { SuggestionAvecAuteur } from '@/lib/data/suggestions'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -32,6 +33,7 @@ export function Suggestions({
   const [message, setMessage] = useState('')
   const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
   const [suggestionsOptimistes, basculerOptimiste] = useOptimistic(
     suggestions,
     (etat, id: string) => etat.map((s) => (s.id === id ? { ...s, fait: !s.fait } : s))
@@ -42,8 +44,16 @@ export function Suggestions({
       <form
         action={(formData) => {
           startTransition(async () => {
-            await envoyerSuggestion(formData)
-            setMessage('')
+            try {
+              await envoyerSuggestion(formData)
+              setMessage('')
+              toast({ type: 'succes', message: 'Suggestion envoyée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : "Échec de l'envoi de la suggestion.",
+              })
+            }
           })
         }}
         className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
@@ -90,7 +100,10 @@ export function Suggestions({
                     try {
                       await basculerSuggestionFaite(s.id, !s.fait)
                     } catch (err) {
-                      console.error('[suggestions] Échec du changement de statut « fait » :', err)
+                      toast({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : 'Échec du changement de statut de la suggestion.',
+                      })
                     }
                   })
                 }}
@@ -138,7 +151,17 @@ export function Suggestions({
         texteConfirmer="Retirer"
         onConfirmer={() => {
           if (!idASupprimer) return
-          startTransition(() => supprimerSuggestion(idASupprimer))
+          startTransition(async () => {
+            try {
+              await supprimerSuggestion(idASupprimer)
+              toast({ type: 'succes', message: 'Suggestion retirée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la suppression de la suggestion.',
+              })
+            }
+          })
           setIdASupprimer(null)
         }}
         onAnnuler={() => setIdASupprimer(null)}
