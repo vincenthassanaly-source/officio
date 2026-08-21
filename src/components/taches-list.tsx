@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, type TransitionStartFunction } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { creerTache, toggleTache, supprimerTache, modifierTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
@@ -51,6 +51,26 @@ export function dueInfo(
   }
 }
 
+// Même pattern que vaccins-liste.tsx (non exportée là-bas) : icône propre à
+// l'accordéon, dupliquée plutôt que partagée pour rester cohérent avec le
+// reste du fichier (IconCloche/IconRecherche sont aussi définies par
+// composant plutôt que dans nav-icons.tsx).
+function IconChevron({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
+}
+
 export function TachesList({
   taches,
   equipe,
@@ -71,10 +91,35 @@ export function TachesList({
   // temporairement le temps que l'utilisateur la repère dans la liste.
   const [idSurligne, setIdSurligne] = useState<string | null>(() => searchParams.get('tache'))
   // Tâche ouverte dans la modale d'édition (clic sur le corps de la carte,
-  // hors case à cocher et bouton de suppression).
+  // hors case à cocher et bouton de suppression). Fonctionne aussi bien pour
+  // une tâche active qu'une tâche archivée.
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
+  // Accordéon "Tâches archivées". Fermé par défaut, sauf si la tâche visée
+  // par ?tache=<id> au chargement est elle-même archivée (calculé ici plutôt
+  // que dans un effect : évite un rendu en cascade pour un état qu'on connaît
+  // déjà à l'initialisation, cf. la même logique que idSurligne ci-dessus).
+  const [archiveOuverte, setArchiveOuverte] = useState(() => {
+    const idParam = searchParams.get('tache')
+    return !!idParam && taches.find((t) => t.id === idParam)?.statut === 'fait'
+  })
 
   const visibles = filtre === 'tous' ? taches : taches.filter((t) => t.assigne?.id === filtre)
+  const actives = visibles.filter((t) => t.statut === 'a_faire')
+  const archivees = visibles.filter((t) => t.statut === 'fait')
+
+  // Défile jusqu'à la tâche ciblée par une notification, avec un délai plus
+  // long si elle est archivée : le temps que l'accordéon "Tâches archivées"
+  // (ouvert séparément par l'appelant) ait fini sa transition (200ms, cf.
+  // `duration-200` plus bas) avant de calculer la position de scroll — tant
+  // qu'il est refermé (grid-rows-[0fr]) la carte n'a pas de position de
+  // défilement significative, même si son contenu n'est jamais démonté.
+  function defilerVersTache(id: string) {
+    const estArchivee = taches.find((t) => t.id === id)?.statut === 'fait'
+    setTimeout(
+      () => document.getElementById(`tache-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+      estArchivee ? 220 : 0
+    )
+  }
 
   // Cible initiale (arrivée depuis une notification ou un lien direct) :
   // défile jusqu'à la tâche au montage. Un nouveau montage a lieu à chaque
@@ -82,23 +127,28 @@ export function TachesList({
   // liaison/page.tsx) — pas besoin de resynchroniser sur un changement d'URL.
   useEffect(() => {
     if (!idSurligne) return
-    document.getElementById(`tache-${idSurligne}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    defilerVersTache(idSurligne)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Notification cliquée alors qu'on est déjà sur la bonne tâche/onglet : le
   // routeur ne se déclenche pas (même URL), notifications-cloche.tsx émet cet
-  // évènement pour forcer quand même le scroll + la mise en évidence.
+  // évènement pour forcer quand même le scroll + la mise en évidence. Ouvre
+  // aussi l'accordéon si la cible est archivée (même logique que ci-dessus,
+  // mais ici déclenchée par la souscription à l'évènement plutôt qu'au
+  // montage, donc sans le rendu en cascade que l'initialisation évite).
   useEffect(() => {
     function ecouteur(e: Event) {
       const url = (e as CustomEvent<{ url: string }>).detail?.url
       const tacheId = url && new URL(url, window.location.origin).searchParams.get('tache')
       if (!tacheId) return
-      document.getElementById(`tache-${tacheId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      if (taches.find((t) => t.id === tacheId)?.statut === 'fait') setArchiveOuverte(true)
+      defilerVersTache(tacheId)
       setIdSurligne(tacheId)
     }
     window.addEventListener(EVENEMENT_NOTIFICATION_CIBLE, ecouteur)
     return () => window.removeEventListener(EVENEMENT_NOTIFICATION_CIBLE, ecouteur)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Disparition en fondu de la mise en évidence après ~2s.
@@ -200,87 +250,60 @@ export function TachesList({
       )}
 
       <div className="flex flex-1 flex-col gap-2.5">
-        {visibles.length === 0 && (
+        {actives.length === 0 && archivees.length === 0 && (
           <p className="py-10 text-center text-sm text-muted">Aucune tâche pour l&rsquo;instant.</p>
         )}
-        {visibles.map((t) => {
-          const due = dueInfo(t)
-          const couleurAssigne = (t.assigne ? couleurs.get(t.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
-          return (
-            <div
-              key={t.id}
-              id={`tache-${t.id}`}
-              className={`flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5 transition-shadow duration-700 ${
-                idSurligne === t.id ? 'ring-2 ring-primary' : ''
-              }`}
-            >
-              {t.photoUrl && (
-                <a href={t.photoUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage, pas une image du projet */}
-                  <img src={t.photoUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
-                </a>
-              )}
-              <button
-                type="button"
-                onClick={() => startTransition(() => toggleTache(t.id, t.statut))}
-                disabled={isPending}
-                aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-                className="flex h-8 w-8 shrink-0 items-center justify-center disabled:opacity-70"
-              >
-                <div
-                  className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
-                    t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
-                  }`}
-                >
-                  {t.statut === 'fait' && <span className="text-xs font-bold text-white">✓</span>}
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTacheEnEdition(t)}
-                disabled={isPending}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-70"
-              >
-                <div className="min-w-0 flex-1">
-                  <div
-                    className={`text-sm font-semibold ${
-                      t.statut === 'fait' ? 'text-muted line-through' : 'text-ink'
-                    }`}
-                  >
-                    {t.titre}
-                  </div>
-                  {t.assigne && (
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted">
-                      <span
-                        className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
-                      >
-                        {t.assigne.initiales}
-                      </span>
-                      {t.assigne.nom_complet}
-                    </div>
-                  )}
-                </div>
-                <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
-                  {due.label}
-                </span>
-              </button>
-              <button
-                type="button"
-                disabled={isPending}
-                onClick={() => {
-                  if (confirm(`Supprimer la tâche « ${t.titre} » ?`)) {
-                    startTransition(() => supprimerTache(t.id))
-                  }
-                }}
-                aria-label="Supprimer la tâche"
-                className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
-              >
-                ×
-              </button>
-            </div>
-          )
-        })}
+        {actives.map((t) => (
+          <CarteTache
+            key={t.id}
+            tache={t}
+            couleurs={couleurs}
+            idSurligne={idSurligne}
+            isPending={isPending}
+            startTransition={startTransition}
+            onEditer={setTacheEnEdition}
+          />
+        ))}
       </div>
+
+      {archivees.length > 0 && (
+        <div className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
+          <button
+            type="button"
+            onClick={() => setArchiveOuverte((o) => !o)}
+            aria-expanded={archiveOuverte}
+            className="flex items-center justify-between gap-2 text-left"
+          >
+            <span className="text-[13.5px] font-semibold text-ink">Tâches archivées ({archivees.length})</span>
+            <IconChevron
+              className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
+                archiveOuverte ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          <div
+            className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+              archiveOuverte ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="flex flex-col gap-2.5 pt-2.5">
+                {archivees.map((t) => (
+                  <CarteTache
+                    key={t.id}
+                    tache={t}
+                    couleurs={couleurs}
+                    idSurligne={idSurligne}
+                    isPending={isPending}
+                    startTransition={startTransition}
+                    onEditer={setTacheEnEdition}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {tacheEnEdition && (
         <ModaleEditionTache
@@ -291,6 +314,97 @@ export function TachesList({
           onFerme={() => setTacheEnEdition(null)}
         />
       )}
+    </div>
+  )
+}
+
+// Carte individuelle, réutilisée par la liste active et l'accordéon
+// "Tâches archivées" (voir TachesList ci-dessus) : mêmes checkbox/clic pour
+// éditer/suppression/photo/badge d'échéance qu'avant l'extraction.
+function CarteTache({
+  tache,
+  couleurs,
+  idSurligne,
+  isPending,
+  startTransition,
+  onEditer,
+}: {
+  tache: Tache
+  couleurs: Map<string, CouleurAvatar>
+  idSurligne: string | null
+  isPending: boolean
+  startTransition: TransitionStartFunction
+  onEditer: (tache: Tache) => void
+}) {
+  const due = dueInfo(tache)
+  const couleurAssigne = (tache.assigne ? couleurs.get(tache.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
+
+  return (
+    <div
+      id={`tache-${tache.id}`}
+      className={`flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5 transition-shadow duration-700 ${
+        idSurligne === tache.id ? 'ring-2 ring-primary' : ''
+      }`}
+    >
+      {tache.photoUrl && (
+        <a href={tache.photoUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage, pas une image du projet */}
+          <img src={tache.photoUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
+        </a>
+      )}
+      <button
+        type="button"
+        onClick={() => startTransition(() => toggleTache(tache.id, tache.statut))}
+        disabled={isPending}
+        aria-label={tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
+        className="flex h-8 w-8 shrink-0 items-center justify-center disabled:opacity-70"
+      >
+        <div
+          className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
+            tache.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
+          }`}
+        >
+          {tache.statut === 'fait' && <span className="text-xs font-bold text-white">✓</span>}
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={() => onEditer(tache)}
+        disabled={isPending}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-70"
+      >
+        <div className="min-w-0 flex-1">
+          <div className={`text-sm font-semibold ${tache.statut === 'fait' ? 'text-muted line-through' : 'text-ink'}`}>
+            {tache.titre}
+          </div>
+          {tache.assigne && (
+            <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted">
+              <span
+                className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+              >
+                {tache.assigne.initiales}
+              </span>
+              {tache.assigne.nom_complet}
+            </div>
+          )}
+        </div>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
+          {due.label}
+        </span>
+      </button>
+      <button
+        type="button"
+        disabled={isPending}
+        onClick={() => {
+          if (confirm(`Supprimer la tâche « ${tache.titre} » ?`)) {
+            startTransition(() => supprimerTache(tache.id))
+          }
+        }}
+        aria-label="Supprimer la tâche"
+        className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+      >
+        ×
+      </button>
     </div>
   )
 }
