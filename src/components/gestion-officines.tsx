@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { quitterOfficineAction } from '@/app/actions/officine'
 import type { Adhesion } from '@/lib/data/adhesions'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 export function GestionOfficines({
   adhesions,
@@ -13,6 +14,7 @@ export function GestionOfficines({
   officineActiveId: string
 }) {
   const [isPending, startTransition] = useTransition()
+  const [officineAQuitter, setOfficineAQuitter] = useState<{ id: string; nom: string } | null>(null)
 
   return (
     <div className="flex flex-col gap-3 rounded-[20px] bg-surface shadow-card p-4">
@@ -43,15 +45,7 @@ export function GestionOfficines({
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={() => {
-                    if (
-                      confirm(
-                        `Quitter « ${a.officine_nom} » ? Il te faudra un nouveau code d’invitation pour la rejoindre à nouveau.`
-                      )
-                    ) {
-                      startTransition(() => quitterOfficineAction(a.officine_id))
-                    }
-                  }}
+                  onClick={() => setOfficineAQuitter({ id: a.officine_id, nom: a.officine_nom })}
                   className="shrink-0 text-[12px] font-semibold text-rec disabled:opacity-60"
                 >
                   Quitter cette officine
@@ -65,6 +59,19 @@ export function GestionOfficines({
       <Link href="/bienvenue" className="self-start text-[13px] font-semibold text-primary">
         + Ajouter une officine
       </Link>
+
+      <ModaleConfirmation
+        ouvert={officineAQuitter !== null}
+        titre={`Quitter « ${officineAQuitter?.nom} » ?`}
+        description="Il te faudra un nouveau code d’invitation pour la rejoindre à nouveau."
+        texteConfirmer="Quitter"
+        onConfirmer={() => {
+          if (!officineAQuitter) return
+          startTransition(() => quitterOfficineAction(officineAQuitter.id))
+          setOfficineAQuitter(null)
+        }}
+        onAnnuler={() => setOfficineAQuitter(null)}
+      />
     </div>
   )
 }
