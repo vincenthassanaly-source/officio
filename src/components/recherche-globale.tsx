@@ -126,7 +126,11 @@ export function RechercheGlobale() {
 
   return (
     <div className="relative">
-      <div className="relative z-50 flex items-center gap-2.5 rounded-[20px] bg-surface px-4 py-3 shadow-card">
+      <div
+        className={`relative flex items-center gap-2.5 rounded-[20px] bg-surface px-4 py-3 shadow-card ${
+          ouvert ? 'z-50' : ''
+        }`}
+      >
         <IconRecherche className="h-[18px] w-[18px] shrink-0 text-muted" />
         <input
           ref={inputRef}
