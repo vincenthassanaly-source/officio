@@ -5,6 +5,7 @@ import { envoyerSuggestion, supprimerSuggestion, basculerSuggestionFaite } from 
 import type { SuggestionAvecAuteur } from '@/lib/data/suggestions'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -29,6 +30,7 @@ export function Suggestions({
   couleurs: Map<string, CouleurAvatar>
 }) {
   const [message, setMessage] = useState('')
+  const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [suggestionsOptimistes, basculerOptimiste] = useOptimistic(
     suggestions,
@@ -110,11 +112,7 @@ export function Suggestions({
                 <button
                   type="button"
                   disabled={isPending}
-                  onClick={() => {
-                    if (confirm('Retirer cette suggestion ?')) {
-                      startTransition(() => supprimerSuggestion(s.id))
-                    }
-                  }}
+                  onClick={() => setIdASupprimer(s.id)}
                   aria-label="Supprimer la suggestion"
                   className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
                 >
@@ -133,6 +131,18 @@ export function Suggestions({
           )
         })}
       </div>
+
+      <ModaleConfirmation
+        ouvert={idASupprimer !== null}
+        titre="Retirer cette suggestion ?"
+        texteConfirmer="Retirer"
+        onConfirmer={() => {
+          if (!idASupprimer) return
+          startTransition(() => supprimerSuggestion(idASupprimer))
+          setIdASupprimer(null)
+        }}
+        onAnnuler={() => setIdASupprimer(null)}
+      />
     </div>
   )
 }
