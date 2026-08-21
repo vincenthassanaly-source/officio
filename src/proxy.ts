@@ -42,7 +42,16 @@ export async function proxy(request: NextRequest) {
 
   const {
     data: { user },
+    error: erreurAuth,
   } = await supabase.auth.getUser()
+
+  // Diagnostic des échecs de rafraîchissement de session (ex: refresh token
+  // Supabase déjà consommé par une requête concurrente au réveil de l'app) —
+  // sans ce log, ces échecs sont invisibles en dehors des logs internes
+  // Supabase et impossibles à corréler avec les faux "déconnexion" côté app.
+  if (erreurAuth) {
+    console.error('proxy: supabase.auth.getUser()', erreurAuth)
+  }
 
   const pathname = request.nextUrl.pathname
   const isPublicRoute = estRoutePublique(pathname)

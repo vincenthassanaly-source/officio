@@ -25,6 +25,7 @@ export function BottomNav() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             className={`flex shrink-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-3 py-1.5 text-xs font-semibold sm:px-4 ${
               actif ? 'bg-primary-soft text-primary' : 'text-muted'
             }`}
