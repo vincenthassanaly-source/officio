@@ -8,6 +8,7 @@ import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 const FILTRE_TOUTES = 'toutes'
 
@@ -43,6 +44,9 @@ export function FilDeMessages({
   // Message ciblé par une notification (?message=<id>) : mis en évidence
   // temporairement le temps que l'utilisateur le repère dans le fil.
   const [idSurligne, setIdSurligne] = useState<string | null>(() => searchParams.get('message'))
+  // Message dont la suppression est en confirmation (id seul : le contenu
+  // n'apparaît pas dans le message de confirmation).
+  const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
 
   const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
 
@@ -214,11 +218,7 @@ export function FilDeMessages({
                     <button
                       type="button"
                       disabled={isPending}
-                      onClick={() => {
-                        if (confirm('Supprimer ce message ?')) {
-                          startTransition(() => supprimerMessage(m.id))
-                        }
-                      }}
+                      onClick={() => setIdASupprimer(m.id)}
                       aria-label="Supprimer le message"
                       className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
                     >
@@ -300,6 +300,17 @@ export function FilDeMessages({
           </button>
         </div>
       </form>
+
+      <ModaleConfirmation
+        ouvert={idASupprimer !== null}
+        titre="Supprimer ce message ?"
+        onConfirmer={() => {
+          if (!idASupprimer) return
+          startTransition(() => supprimerMessage(idASupprimer))
+          setIdASupprimer(null)
+        }}
+        onAnnuler={() => setIdASupprimer(null)}
+      />
     </div>
   )
 }
