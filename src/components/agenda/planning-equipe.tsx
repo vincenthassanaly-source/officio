@@ -7,6 +7,7 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import { formatDateLongue, formatHeure, formatJourCourt, toISODate } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 const LIBELLE_TYPE: Record<TypeCreneau, string> = {
   travail: 'Travail',
@@ -26,22 +27,6 @@ function heureEnDecimal(heure: string): number {
 function formatDureeHeures(heures: number): string {
   const arrondi = Math.round(heures * 10) / 10
   return Number.isInteger(arrondi) ? `${arrondi}h` : `${arrondi.toFixed(1).replace('.', ',')}h`
-}
-
-function confirmerSuppression(message: string): boolean {
-  return confirm(message)
-}
-
-// Un créneau récurrent est composé de plusieurs lignes reliées par serie_id
-// (voir creerCreneau). On demande explicitement la portée seulement dans ce
-// cas — un créneau ponctuel garde son comportement de suppression simple.
-function demanderPorteeSuppression(serieId: string | null): 'occurrence' | 'serie' {
-  if (!serieId) return 'occurrence'
-  return confirm(
-    'Ce créneau fait partie d’une série récurrente.\n\nOK : supprimer toute la série\nAnnuler : supprimer seulement ce jour'
-  )
-    ? 'serie'
-    : 'occurrence'
 }
 
 export function PlanningEquipe({
@@ -77,20 +62,45 @@ export function PlanningEquipe({
     setEdition(true)
   }
 
-  function demanderSuppression(c: Creneau) {
+  // Étape 1 : confirmation simple. Étape 2 (creneauPortee), seulement pour un
+  // créneau récurrent : un créneau récurrent est composé de plusieurs lignes
+  // reliées par serie_id (voir creerCreneau), on demande explicitement la
+  // portée de la suppression seulement dans ce cas — un créneau ponctuel
+  // garde son comportement de suppression simple, sans deuxième étape.
+  const [creneauASupprimer, setCreneauASupprimer] = useState<Creneau | null>(null)
+  const [creneauPortee, setCreneauPortee] = useState<Creneau | null>(null)
+
+  function libelleSuppression(c: Creneau): string {
     const membre = equipe.find((m) => m.id === c.profil_id)
-    const horaire = c.type === 'travail' && c.heure_debut && c.heure_fin
-      ? ` (${formatHeure(c.heure_debut)}-${formatHeure(c.heure_fin)})`
-      : ''
-    if (
-      confirmerSuppression(
-        `Supprimer « ${LIBELLE_TYPE[c.type]} » pour ${membre?.nom_complet ?? 'cette personne'}${horaire} ?`
-      )
-    ) {
-      const portee = demanderPorteeSuppression(c.serie_id)
-      startTransition(() => supprimerCreneau(c.id, c.serie_id, portee))
+    const horaire =
+      c.type === 'travail' && c.heure_debut && c.heure_fin
+        ? ` (${formatHeure(c.heure_debut)}-${formatHeure(c.heure_fin)})`
+        : ''
+    return `Supprimer « ${LIBELLE_TYPE[c.type]} » pour ${membre?.nom_complet ?? 'cette personne'}${horaire} ?`
+  }
+
+  function demanderSuppression(c: Creneau) {
+    setCreneauASupprimer(c)
+  }
+
+  function confirmerEtapeUn() {
+    const c = creneauASupprimer
+    setCreneauASupprimer(null)
+    if (!c) return
+    if (c.serie_id) {
+      setCreneauPortee(c)
+    } else {
+      startTransition(() => supprimerCreneau(c.id, c.serie_id, 'occurrence'))
       fermerDetail()
     }
+  }
+
+  function confirmerPortee(valeurChoix?: string) {
+    const c = creneauPortee
+    setCreneauPortee(null)
+    if (!c) return
+    startTransition(() => supprimerCreneau(c.id, c.serie_id, valeurChoix === 'serie' ? 'serie' : 'occurrence'))
+    fermerDetail()
   }
 
   const { heureMin, heureMax } = useMemo(() => {
@@ -466,6 +476,25 @@ export function PlanningEquipe({
           </div>
         </div>
       )}
+
+      <ModaleConfirmation
+        ouvert={creneauASupprimer !== null}
+        titre={creneauASupprimer ? libelleSuppression(creneauASupprimer) : ''}
+        onConfirmer={confirmerEtapeUn}
+        onAnnuler={() => setCreneauASupprimer(null)}
+      />
+
+      <ModaleConfirmation
+        ouvert={creneauPortee !== null}
+        titre="Ce créneau fait partie d’une série récurrente"
+        description="Choisis ce qui doit être supprimé."
+        choix={[
+          { label: 'Toute la série', valeur: 'serie' },
+          { label: 'Seulement ce jour', valeur: 'occurrence' },
+        ]}
+        onConfirmer={confirmerPortee}
+        onAnnuler={() => setCreneauPortee(null)}
+      />
     </div>
   )
 }
