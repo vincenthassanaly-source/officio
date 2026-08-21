@@ -3,10 +3,12 @@
 import { useOptimistic, useState, useTransition } from 'react'
 import { ajouterRuptureStock, supprimerRuptureStock } from '@/app/actions/ruptures-stock'
 import type { RuptureStock } from '@/lib/data/ruptures-stock'
+import { useToast } from '@/components/ui/toast-provider'
 
 export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
   const [nomProduit, setNomProduit] = useState('')
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
   const [rupturesOptimistes, retirerOptimiste] = useOptimistic(ruptures, (etat, id: string) =>
     etat.filter((r) => r.id !== id)
   )
@@ -16,8 +18,16 @@ export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
       <form
         action={(formData) => {
           startTransition(async () => {
-            await ajouterRuptureStock(formData)
-            setNomProduit('')
+            try {
+              await ajouterRuptureStock(formData)
+              setNomProduit('')
+              toast({ type: 'succes', message: 'Rupture de stock signalée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : "Échec de l'ajout de la rupture de stock.",
+              })
+            }
           })
         }}
         className="flex items-center gap-2"
@@ -55,7 +65,10 @@ export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
                     try {
                       await supprimerRuptureStock(r.id)
                     } catch (err) {
-                      console.error('[ruptures-stock] Échec de la suppression :', err)
+                      toast({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : 'Échec de la mise à jour de la rupture de stock.',
+                      })
                     }
                   })
                 }}

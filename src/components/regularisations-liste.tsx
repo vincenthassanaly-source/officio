@@ -11,6 +11,7 @@ import {
 import type { Regularisation, StatutRegularisation } from '@/lib/data/regularisations'
 import { formatDateCourte, toISODate } from '@/lib/dates'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
 
 export const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
@@ -193,6 +194,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [aSupprimer, setASupprimer] = useState<{ id: string; nomComplet: string } | null>(null)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
   const [regularisationsOptimistes, changerStatutOptimiste] = useOptimistic(
     regularisations,
     (etat, { id, statut }: { id: string; statut: StatutRegularisation }) =>
@@ -250,8 +252,16 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
         <form
           action={(formData) => {
             startTransition(async () => {
-              await ajouterRegularisation(formData)
-              setFormOuvert(false)
+              try {
+                await ajouterRegularisation(formData)
+                setFormOuvert(false)
+                toast({ type: 'succes', message: 'Régularisation ajoutée.' })
+              } catch (err) {
+                toast({
+                  type: 'erreur',
+                  message: err instanceof Error ? err.message : "Échec de l'ajout de la régularisation.",
+                })
+              }
             })
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3.5"
@@ -295,8 +305,16 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
                 onAnnulerEdition={() => setEnEdition(null)}
                 onEnregistrer={(formData) => {
                   startTransition(async () => {
-                    await modifierRegularisation(r.id, formData)
-                    setEnEdition(null)
+                    try {
+                      await modifierRegularisation(r.id, formData)
+                      setEnEdition(null)
+                      toast({ type: 'succes', message: 'Régularisation modifiée.' })
+                    } catch (err) {
+                      toast({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : 'Échec de la modification de la régularisation.',
+                      })
+                    }
                   })
                 }}
                 onSupprimer={() => demanderSuppression(r.id, `${r.patient_prenom} ${r.patient_nom}`)}
@@ -307,7 +325,10 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
                     try {
                       await (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id))
                     } catch (err) {
-                      console.error('[regularisations] Échec du changement de statut facturé :', err)
+                      toast({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : 'Échec du changement de statut de la régularisation.',
+                      })
                     }
                   })
                 }}
@@ -337,8 +358,16 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
                 onAnnulerEdition={() => setEnEdition(null)}
                 onEnregistrer={(formData) => {
                   startTransition(async () => {
-                    await modifierRegularisation(r.id, formData)
-                    setEnEdition(null)
+                    try {
+                      await modifierRegularisation(r.id, formData)
+                      setEnEdition(null)
+                      toast({ type: 'succes', message: 'Régularisation modifiée.' })
+                    } catch (err) {
+                      toast({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : 'Échec de la modification de la régularisation.',
+                      })
+                    }
                   })
                 }}
                 onSupprimer={() => demanderSuppression(r.id, `${r.patient_prenom} ${r.patient_nom}`)}
@@ -349,7 +378,10 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
                     try {
                       await (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id))
                     } catch (err) {
-                      console.error('[regularisations] Échec du changement de statut facturé :', err)
+                      toast({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : 'Échec du changement de statut de la régularisation.',
+                      })
                     }
                   })
                 }}
@@ -364,7 +396,17 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
         titre={`Supprimer la régularisation de « ${aSupprimer?.nomComplet} » ?`}
         onConfirmer={() => {
           if (!aSupprimer) return
-          startTransition(() => supprimerRegularisation(aSupprimer.id))
+          startTransition(async () => {
+            try {
+              await supprimerRegularisation(aSupprimer.id)
+              toast({ type: 'succes', message: 'Régularisation supprimée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la suppression de la régularisation.',
+              })
+            }
+          })
           setEnEdition(null)
           setASupprimer(null)
         }}

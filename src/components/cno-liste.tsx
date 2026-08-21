@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { ajouterPatientCno, modifierQuantiteCno, supprimerPatientCno } from '@/app/actions/cno'
 import type { PatientCno } from '@/lib/data/cno'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
 
 const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
@@ -20,6 +21,7 @@ function QuantiteEditable({ patient }: { patient: PatientCno }) {
   const [enEdition, setEnEdition] = useState(false)
   const [valeur, setValeur] = useState(String(patient.quantite_restante))
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   function enregistrer() {
     const nombre = Math.round(Number(valeur.replace(',', '.')))
@@ -30,7 +32,15 @@ function QuantiteEditable({ patient }: { patient: PatientCno }) {
     }
     setEnEdition(false)
     if (nombre === patient.quantite_restante) return
-    startTransition(() => modifierQuantiteCno(patient.id, nombre))
+    startTransition(async () => {
+      try {
+        await modifierQuantiteCno(patient.id, nombre)
+        toast({ type: 'succes', message: 'Quantité mise à jour.' })
+      } catch (err) {
+        setValeur(String(patient.quantite_restante))
+        toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de la mise à jour de la quantité.' })
+      }
+    })
   }
 
   if (enEdition) {
@@ -91,6 +101,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
   const [formOuvert, setFormOuvert] = useState(false)
   const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   const visibles = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
@@ -124,8 +135,13 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
         <form
           action={(formData) => {
             startTransition(async () => {
-              await ajouterPatientCno(formData)
-              setFormOuvert(false)
+              try {
+                await ajouterPatientCno(formData)
+                setFormOuvert(false)
+                toast({ type: 'succes', message: 'Fiche CNO créée.' })
+              } catch (err) {
+                toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de la création de la fiche.' })
+              }
             })
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
@@ -180,7 +196,14 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
         titre={`Supprimer la fiche de « ${aSupprimer?.nom} » ?`}
         onConfirmer={() => {
           if (!aSupprimer) return
-          startTransition(() => supprimerPatientCno(aSupprimer.id))
+          startTransition(async () => {
+            try {
+              await supprimerPatientCno(aSupprimer.id)
+              toast({ type: 'succes', message: 'Fiche CNO supprimée.' })
+            } catch (err) {
+              toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de la suppression de la fiche.' })
+            }
+          })
           setASupprimer(null)
         }}
         onAnnuler={() => setASupprimer(null)}
