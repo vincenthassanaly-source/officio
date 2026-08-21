@@ -10,6 +10,7 @@ import {
 } from '@/app/actions/regularisations'
 import type { Regularisation, StatutRegularisation } from '@/lib/data/regularisations'
 import { formatDateCourte, toISODate } from '@/lib/dates'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 export const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
@@ -190,6 +191,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
   const [recherche, setRecherche] = useState('')
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
+  const [aSupprimer, setASupprimer] = useState<{ id: string; nomComplet: string } | null>(null)
   const [isPending, startTransition] = useTransition()
   const [regularisationsOptimistes, changerStatutOptimiste] = useOptimistic(
     regularisations,
@@ -220,10 +222,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
   }, [visibles, aujourdhui])
 
   function demanderSuppression(id: string, nomComplet: string) {
-    if (confirm(`Supprimer la régularisation de « ${nomComplet} » ?`)) {
-      startTransition(() => supprimerRegularisation(id))
-      setEnEdition(null)
-    }
+    setASupprimer({ id, nomComplet })
   }
 
   return (
@@ -359,6 +358,18 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
           </div>
         </div>
       )}
+
+      <ModaleConfirmation
+        ouvert={aSupprimer !== null}
+        titre={`Supprimer la régularisation de « ${aSupprimer?.nomComplet} » ?`}
+        onConfirmer={() => {
+          if (!aSupprimer) return
+          startTransition(() => supprimerRegularisation(aSupprimer.id))
+          setEnEdition(null)
+          setASupprimer(null)
+        }}
+        onAnnuler={() => setASupprimer(null)}
+      />
     </div>
   )
 }
