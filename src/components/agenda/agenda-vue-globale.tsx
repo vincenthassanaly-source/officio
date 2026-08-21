@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { creerRendezVous, supprimerRendezVous } from '@/app/actions/agenda'
+import { supprimerRendezVous } from '@/app/actions/agenda'
 import type { CategorieRdv, RendezVous } from '@/lib/data/rendez-vous'
 import type { TacheEcheance } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
@@ -136,15 +136,9 @@ export function AgendaVueGlobale({
     const semaineContientAujourdhui = weekDates.some((d) => toISODate(d) === aujourdhui)
     return semaineContientAujourdhui ? aujourdhui : toISODate(weekDates[0])
   })
-  const [dateFormulaire, setDateFormulaire] = useState(dateSelectionnee)
-  const [formOuvert, setFormOuvert] = useState(false)
   const [isPending, startTransition] = useTransition()
   const sectionsRef = useRef<Record<string, HTMLDivElement | null>>({})
   const aujourdhuiIso = toISODate(new Date())
-
-  useEffect(() => {
-    setDateFormulaire(dateSelectionnee)
-  }, [dateSelectionnee])
 
   const itemsParJour = useMemo(() => {
     const map = new Map<string, ItemAgenda[]>()
@@ -219,83 +213,6 @@ export function AgendaVueGlobale({
           )
         })}
       </div>
-
-      <button
-        type="button"
-        onClick={() => setFormOuvert((v) => !v)}
-        className="self-start text-xs font-semibold text-primary"
-      >
-        {formOuvert ? '× Annuler' : '+ Ajouter un rendez-vous'}
-      </button>
-
-      {formOuvert && (
-        <form
-          action={(formData) => {
-            startTransition(async () => {
-              await creerRendezVous(formData)
-              setFormOuvert(false)
-            })
-          }}
-          className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
-        >
-          <input
-            name="titre"
-            required
-            placeholder="Titre (ex: Livraison grossiste)"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-          />
-          <div className="flex gap-2">
-            <select
-              name="categorie"
-              defaultValue="rdv"
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-            <input
-              type="number"
-              name="duree_minutes"
-              defaultValue={30}
-              min={5}
-              step={5}
-              className="w-24 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-            />
-          </div>
-          <div className="flex gap-2">
-            <input
-              type="date"
-              name="date"
-              value={dateFormulaire}
-              onChange={(e) => setDateFormulaire(e.target.value)}
-              required
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-            />
-            <input
-              type="time"
-              name="heure_debut"
-              required
-              className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-            />
-          </div>
-          <textarea
-            name="note"
-            rows={2}
-            placeholder="Note (évite d'y noter des infos de santé patient)"
-            className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-          />
-          <button
-            type="submit"
-            disabled={isPending}
-            className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
-          >
-            Ajouter
-          </button>
-        </form>
-      )}
 
       <div className="flex flex-1 flex-col gap-4">
         {weekDates.map((d) => {
