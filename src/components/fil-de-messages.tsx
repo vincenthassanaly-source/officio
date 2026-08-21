@@ -118,7 +118,7 @@ export function FilDeMessages({
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
               placeholder="Rechercher dans les messages…"
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
             />
             {filtresActifs && (
               <button
@@ -296,7 +296,7 @@ export function FilDeMessages({
             }}
             rows={1}
             placeholder="Écrire une consigne à l'équipe…"
-            className="max-h-40 flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-bg px-4 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+            className="max-h-40 flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-bg px-4 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
           <button
             type="submit"

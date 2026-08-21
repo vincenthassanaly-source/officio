@@ -144,7 +144,7 @@ export function RechercheGlobale() {
             }
           }}
           placeholder="Rechercher dans Officio…"
-          className="min-w-0 flex-1 bg-transparent text-[13.5px] text-ink outline-none placeholder:text-muted"
+          className="min-w-0 flex-1 bg-transparent text-[16px] text-ink outline-none placeholder:text-muted"
         />
         {chargement && <Spinner className="h-4 w-4 shrink-0 text-muted" />}
 

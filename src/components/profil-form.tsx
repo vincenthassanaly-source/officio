@@ -32,7 +32,7 @@ export function ProfilForm({
           name="nom_complet"
           defaultValue={nomComplet}
           required
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus:border-primary"
         />
       </div>
 
@@ -46,7 +46,7 @@ export function ProfilForm({
           defaultValue={initiales}
           maxLength={3}
           placeholder="Recalculées automatiquement si laissé vide"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] uppercase text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] uppercase text-ink outline-none focus:border-primary"
         />
       </div>
 

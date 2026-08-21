@@ -4,7 +4,7 @@ import { useId, useMemo, useState } from 'react'
 import type { HuileEssentielle } from '@/lib/data/huiles-essentielles'
 
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
 
 const PRIX_FLACON = 2
 const PRIX_GELULES = 4
@@ -212,7 +212,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
               placeholder="mL"
               value={ligne.volumeMl}
               onChange={(e) => modifierLigne(ligne.id, { volumeMl: e.target.value })}
-              className={`w-16 shrink-0 ${CHAMP_CLASS}`}
+              className={`w-20 shrink-0 ${CHAMP_CLASS}`}
             />
             <span className="w-16 shrink-0 text-right text-[12.5px] font-semibold text-ink">
               {formatEuro(prix)}

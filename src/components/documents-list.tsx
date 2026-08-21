@@ -107,12 +107,12 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
           <input
             name="nom"
             placeholder="Nom du document (optionnel)"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
           <select
             name="categorie"
             defaultValue="autre"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           >
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>

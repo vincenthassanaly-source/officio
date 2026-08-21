@@ -64,7 +64,7 @@ export function Suggestions({
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Une idée pour améliorer l'application ?"
           rows={3}
-          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
         <button
           type="submit"

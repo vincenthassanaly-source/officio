@@ -7,7 +7,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
 
 function formatDate(dateIso: string) {
   return new Date(dateIso).toLocaleDateString('fr-FR', {
@@ -62,7 +62,7 @@ function QuantiteEditable({ patient }: { patient: PatientCno }) {
             setEnEdition(false)
           }
         }}
-        className="w-16 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[15px] font-bold text-ink outline-none disabled:opacity-60"
+        className="w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold text-ink outline-none disabled:opacity-60"
       />
     )
   }

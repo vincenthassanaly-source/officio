@@ -217,12 +217,12 @@ export function TachesList({
             name="titre"
             required
             placeholder="Titre de la tâche"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
           <select
             name="assigne_id"
             defaultValue=""
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           >
             <option value="">Non assignée (toute l&rsquo;équipe)</option>
             {equipe.map((m) => (
@@ -235,7 +235,7 @@ export function TachesList({
             <input
               type="date"
               name="echeance"
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
             />
             {/* Facultative : si renseignée, le rappel quotidien de 7h
                 mentionne cette heure dans son message — voir
@@ -243,7 +243,7 @@ export function TachesList({
             <input
               type="time"
               name="echeance_heure"
-              className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+              className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
             />
           </div>
           <ChampPhoto onChange={setPhoto} />
@@ -506,12 +506,12 @@ function ModaleEditionTache({
           required
           defaultValue={tache.titre}
           placeholder="Titre de la tâche"
-          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
         <select
           name="assigne_id"
           defaultValue={tache.assigne?.id ?? ''}
-          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         >
           <option value="">Non assignée (toute l&rsquo;équipe)</option>
           {equipe.map((m) => (
@@ -525,13 +525,13 @@ function ModaleEditionTache({
             type="date"
             name="echeance"
             defaultValue={tache.echeance ?? ''}
-            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
           <input
             type="time"
             name="echeance_heure"
             defaultValue={tache.echeance_heure?.slice(0, 5) ?? ''}
-            className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+            className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
         </div>
         <ChampPhoto

@@ -139,7 +139,7 @@ function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
         value={contenu}
         onChange={(e) => setContenu(e.target.value)}
         placeholder="Écrire une consigne à l'équipe…"
-        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
       />
       <button
         type="submit"
@@ -180,13 +180,13 @@ function FormulaireTache({
         name="titre"
         required
         placeholder="Titre de la tâche"
-        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
       />
       <div className="flex gap-2">
         <select
           name="assigne_id"
           defaultValue=""
-          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         >
           <option value="">Non assignée (toute l&rsquo;équipe)</option>
           {equipe.map((m) => (
@@ -198,7 +198,7 @@ function FormulaireTache({
         <input
           type="date"
           name="echeance"
-          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
         {/* Facultative : si renseignée, le rappel quotidien de 7h mentionne
             cette heure dans son message — voir
@@ -206,7 +206,7 @@ function FormulaireTache({
         <input
           type="time"
           name="echeance_heure"
-          className="w-24 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13px] text-ink outline-none focus:border-primary"
+          className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
       </div>
       <ChampPhoto onChange={setPhoto} />

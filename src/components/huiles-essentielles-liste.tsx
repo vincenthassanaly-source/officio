@@ -15,7 +15,7 @@ const STATUTS: { value: StatutHuile; label: string }[] = [
 ]
 
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
 
 function formatPrix(prix: number, volume: number) {
   const prixFormate = prix.toLocaleString('fr-FR', {
@@ -218,7 +218,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
                     const nouveauStatut = e.target.value as StatutHuile
                     marquerTransition(h.id, () => changerStatutHuile(h.id, nouveauStatut))
                   }}
-                  className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[11px] font-semibold text-ink outline-none focus:border-primary disabled:opacity-60"
+                  className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[16px] font-semibold text-ink outline-none focus:border-primary disabled:opacity-60"
                 >
                   {STATUTS.map((s) => (
                     <option key={s.value} value={s.value}>

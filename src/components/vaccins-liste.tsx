@@ -360,7 +360,7 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher par nom commercial ou indication (ex. hépatite B)…"
-          className="w-full rounded-xl border border-border bg-bg py-2.5 pl-9 pr-9 text-[13.5px] text-ink outline-none focus:border-primary"
+          className="w-full rounded-xl border border-border bg-bg py-2.5 pl-9 pr-9 text-[16px] text-ink outline-none focus:border-primary"
         />
         {recherche.length > 0 && (
           <button

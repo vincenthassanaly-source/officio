@@ -68,7 +68,7 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
             setEnEdition(false)
           }
         }}
-        className="w-full rounded-lg border border-primary bg-bg px-2 py-1 text-[13px] font-semibold text-ink outline-none disabled:opacity-60"
+        className="w-full rounded-lg border border-primary bg-bg px-2 py-1 text-[16px] font-semibold text-ink outline-none disabled:opacity-60"
       />
     )
   }
@@ -395,7 +395,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
               placeholder="Rechercher un modèle ou une catégorie…"
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
             />
             <button
               type="button"

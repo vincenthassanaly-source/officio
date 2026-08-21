@@ -37,7 +37,7 @@ export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
           value={nomProduit}
           onChange={(e) => setNomProduit(e.target.value)}
           placeholder="Nom du produit en rupture…"
-          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
         <button
           type="submit"

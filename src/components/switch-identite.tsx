@@ -56,7 +56,7 @@ function ReconnexionCompte({
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
-        className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[12.5px] text-ink outline-none focus:border-primary"
+        className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[16px] text-ink outline-none focus:border-primary"
       />
       <input
         type="password"
@@ -65,7 +65,7 @@ function ReconnexionCompte({
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Mot de passe"
-        className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[12.5px] text-ink outline-none focus:border-primary"
+        className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[16px] text-ink outline-none focus:border-primary"
       />
       {erreur && <p className="text-[11px] font-medium text-rec">{erreur}</p>}
       <div className="flex items-center gap-3">

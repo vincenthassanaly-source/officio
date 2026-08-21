@@ -44,7 +44,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
               name="nom_officine"
               required
               placeholder="Pharmacie du Centre"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+              className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus:border-primary"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -55,7 +55,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
               name="nom_complet"
               required
               placeholder="Prénom Nom"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+              className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus:border-primary"
             />
           </div>
           <p className="text-[12px] text-muted">Tu seras responsable de cette officine.</p>
@@ -81,7 +81,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
               required
               defaultValue={inviteInitial}
               placeholder="ABC123EF"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] uppercase text-ink outline-none focus:border-primary"
+              className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] uppercase text-ink outline-none focus:border-primary"
             />
           </div>
           <div className="flex flex-col gap-1.5">
@@ -92,7 +92,7 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
               name="nom_complet"
               required
               placeholder="Prénom Nom"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+              className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus:border-primary"
             />
           </div>
           {etatRejoindre?.error && (
