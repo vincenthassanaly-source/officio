@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AgendaVueGlobale } from './agenda-vue-globale'
 import { PlanningEquipe } from './planning-equipe'
@@ -11,6 +11,14 @@ import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { formatPeriodeSemaine, getWeekDates, toISODate } from '@/lib/dates'
+
+// Distance horizontale minimum pour qu'un geste soit considéré comme un
+// swipe intentionnel (plutôt qu'un tap ou un léger tremblement du doigt).
+const SEUIL_SWIPE_HORIZONTAL_PX = 50
+// Tolérance verticale : au-delà, le geste est un scroll de page, pas un
+// swipe de semaine — on n'interfère pas (pas de preventDefault) et on
+// annule la détection pour ce geste.
+const TOLERANCE_SWIPE_VERTICAL_PX = 60
 
 export function Agenda({
   rendezVous,
@@ -31,6 +39,14 @@ export function Agenda({
 }) {
   const router = useRouter()
   const [onglet, setOnglet] = useState<'globale' | 'planning'>('globale')
+  // Point de départ du geste en cours (null si aucun geste, ou si le geste a
+  // démarré sur une zone exclue via data-swipe-ignore, ex: le strip de jours
+  // déjà scrollable au doigt dans AgendaVueGlobale).
+  const toucheDebutRef = useRef<{ x: number; y: number } | null>(null)
+  // true dès que le geste en cours s'est révélé vertical (scroll de page) :
+  // on ne déclenche alors plus de changement de semaine à la fin, sans avoir
+  // bloqué le scroll natif (aucun preventDefault n'est appelé ici).
+  const swipeAnnulePourGesteRef = useRef(false)
 
   const lundiAffiche = toISODate(weekDates[0])
   const estSemaineActuelle = lundiAffiche === toISODate(getWeekDates(new Date())[0])
@@ -43,6 +59,42 @@ export function Agenda({
     const cible = new Date(weekDates[0])
     cible.setDate(cible.getDate() + offsetJours)
     router.replace(`/agenda?semaine=${toISODate(cible)}`)
+  }
+
+  function gererToucheDebut(e: React.TouchEvent<HTMLDivElement>) {
+    const cible = e.target as HTMLElement
+    if (cible.closest('[data-swipe-ignore]')) {
+      toucheDebutRef.current = null
+      return
+    }
+    const touche = e.touches[0]
+    toucheDebutRef.current = { x: touche.clientX, y: touche.clientY }
+    swipeAnnulePourGesteRef.current = false
+  }
+
+  function gererToucheMove(e: React.TouchEvent<HTMLDivElement>) {
+    const debut = toucheDebutRef.current
+    if (!debut || swipeAnnulePourGesteRef.current) return
+    const touche = e.touches[0]
+    if (Math.abs(touche.clientY - debut.y) > TOLERANCE_SWIPE_VERTICAL_PX) {
+      swipeAnnulePourGesteRef.current = true
+    }
+  }
+
+  function gererToucheFin(e: React.TouchEvent<HTMLDivElement>) {
+    const debut = toucheDebutRef.current
+    const annule = swipeAnnulePourGesteRef.current
+    toucheDebutRef.current = null
+    swipeAnnulePourGesteRef.current = false
+    if (!debut || annule) return
+
+    const touche = e.changedTouches[0]
+    const deltaX = touche.clientX - debut.x
+    const deltaY = touche.clientY - debut.y
+    if (Math.abs(deltaX) < SEUIL_SWIPE_HORIZONTAL_PX || Math.abs(deltaY) > TOLERANCE_SWIPE_VERTICAL_PX) return
+
+    if (deltaX < 0) allerVersSemaine(7)
+    else allerVersSemaine(-7)
   }
 
   return (
@@ -99,23 +151,30 @@ export function Agenda({
         </button>
       </div>
 
-      {onglet === 'globale' ? (
-        <AgendaVueGlobale
-          key={lundiAffiche}
-          rendezVous={rendezVous}
-          taches={taches}
-          regularisations={regularisations}
-          weekDates={weekDates}
-        />
-      ) : (
-        <PlanningEquipe
-          key={lundiAffiche}
-          creneaux={creneaux}
-          equipe={equipe}
-          weekDates={weekDates}
-          couleurs={couleurs}
-        />
-      )}
+      <div
+        className="flex flex-1 flex-col"
+        onTouchStart={gererToucheDebut}
+        onTouchMove={gererToucheMove}
+        onTouchEnd={gererToucheFin}
+      >
+        {onglet === 'globale' ? (
+          <AgendaVueGlobale
+            key={lundiAffiche}
+            rendezVous={rendezVous}
+            taches={taches}
+            regularisations={regularisations}
+            weekDates={weekDates}
+          />
+        ) : (
+          <PlanningEquipe
+            key={lundiAffiche}
+            creneaux={creneaux}
+            equipe={equipe}
+            weekDates={weekDates}
+            couleurs={couleurs}
+          />
+        )}
+      </div>
     </div>
   )
 }

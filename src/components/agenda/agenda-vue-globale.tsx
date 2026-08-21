@@ -186,7 +186,10 @@ export function AgendaVueGlobale({
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      {/* data-swipe-ignore : exclut ce strip du swipe de semaine détecté par
+          Agenda (agenda.tsx) — déjà scrollable au doigt horizontalement,
+          un swipe démarré ici ne doit pas changer de semaine. */}
+      <div className="flex gap-2 overflow-x-auto pb-1" data-swipe-ignore>
         {weekDates.map((d) => {
           const iso = toISODate(d)
           const actif = iso === dateSelectionnee
