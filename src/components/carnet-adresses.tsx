@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import { ajouterContact, modifierContact, supprimerContact } from '@/app/actions/contacts'
 import type { CategorieContact, Contact } from '@/lib/data/contacts'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 const CATEGORIES: { value: CategorieContact; label: string; className: string }[] = [
   { value: 'medecin', label: 'Médecins', className: 'bg-primary-soft text-primary' },
@@ -67,6 +68,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
   const [filtre, setFiltre] = useState<'tous' | CategorieContact>('tous')
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
+  const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const visibles = useMemo(
@@ -75,10 +77,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
   )
 
   function demanderSuppression(id: string, nom: string) {
-    if (confirm(`Supprimer le contact « ${nom} » ?`)) {
-      startTransition(() => supprimerContact(id))
-      setEnEdition(null)
-    }
+    setASupprimer({ id, nom })
   }
 
   return (
@@ -246,6 +245,18 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
           )
         })}
       </div>
+
+      <ModaleConfirmation
+        ouvert={aSupprimer !== null}
+        titre={`Supprimer le contact « ${aSupprimer?.nom} » ?`}
+        onConfirmer={() => {
+          if (!aSupprimer) return
+          startTransition(() => supprimerContact(aSupprimer.id))
+          setEnEdition(null)
+          setASupprimer(null)
+        }}
+        onAnnuler={() => setASupprimer(null)}
+      />
     </div>
   )
 }
