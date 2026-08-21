@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
 import { modifierProfil } from '@/app/actions/profil'
+import { useToast } from '@/components/ui/toast-provider'
 
 export function ProfilForm({
   nomComplet,
@@ -13,6 +14,12 @@ export function ProfilForm({
   email: string
 }) {
   const [state, action, pending] = useActionState(modifierProfil, undefined)
+  const toast = useToast()
+
+  useEffect(() => {
+    if (state?.success) toast({ type: 'succes', message: 'Profil mis à jour.' })
+    if (state?.error) toast({ type: 'erreur', message: state.error })
+  }, [state, toast])
 
   return (
     <form action={action} className="flex flex-col gap-4">

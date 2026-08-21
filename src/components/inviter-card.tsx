@@ -2,10 +2,12 @@
 
 import { useState, useTransition } from 'react'
 import { regenererCodeAction } from '@/app/actions/officine'
+import { useToast } from '@/components/ui/toast-provider'
 
 export function InviterCard({ officineId, code }: { officineId: string; code: string }) {
   const [copie, setCopie] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
   const lien = typeof window !== 'undefined' ? `${window.location.origin}/rejoindre/${code}` : ''
 
   return (
@@ -25,6 +27,7 @@ export function InviterCard({ officineId, code }: { officineId: string; code: st
         onClick={() => {
           navigator.clipboard.writeText(lien)
           setCopie(true)
+          toast({ type: 'succes', message: "Lien d'invitation copié." })
           setTimeout(() => setCopie(false), 2000)
         }}
         className="rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98]"
@@ -35,7 +38,19 @@ export function InviterCard({ officineId, code }: { officineId: string; code: st
       <button
         type="button"
         disabled={isPending}
-        onClick={() => startTransition(() => regenererCodeAction(officineId))}
+        onClick={() =>
+          startTransition(async () => {
+            try {
+              await regenererCodeAction(officineId)
+              toast({ type: 'succes', message: "Code d'invitation régénéré." })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la régénération du code.',
+              })
+            }
+          })
+        }
         className="text-xs font-semibold text-muted hover:text-rec disabled:opacity-60"
       >
         Régénérer le code (l&rsquo;ancien lien cessera de fonctionner)
