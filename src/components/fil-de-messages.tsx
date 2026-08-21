@@ -9,6 +9,7 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
 
 const FILTRE_TOUTES = 'toutes'
 
@@ -47,6 +48,7 @@ export function FilDeMessages({
   // Message dont la suppression est en confirmation (id seul : le contenu
   // n'apparaît pas dans le message de confirmation).
   const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
+  const toast = useToast()
 
   const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
 
@@ -255,9 +257,14 @@ export function FilDeMessages({
       <form
         action={(formData) => {
           startTransition(async () => {
-            await envoyerMessage(formData)
-            setContenu('')
-            if (textareaRef.current) textareaRef.current.style.height = 'auto'
+            try {
+              await envoyerMessage(formData)
+              setContenu('')
+              if (textareaRef.current) textareaRef.current.style.height = 'auto'
+              toast({ type: 'succes', message: 'Message envoyé.' })
+            } catch (err) {
+              toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de l'envoi du message." })
+            }
           })
         }}
         className="sticky bottom-4 flex flex-col gap-2 rounded-[20px] bg-surface p-3 shadow-card"
@@ -306,7 +313,17 @@ export function FilDeMessages({
         titre="Supprimer ce message ?"
         onConfirmer={() => {
           if (!idASupprimer) return
-          startTransition(() => supprimerMessage(idASupprimer))
+          startTransition(async () => {
+            try {
+              await supprimerMessage(idASupprimer)
+              toast({ type: 'succes', message: 'Message supprimé.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la suppression du message.',
+              })
+            }
+          })
           setIdASupprimer(null)
         }}
         onAnnuler={() => setIdASupprimer(null)}

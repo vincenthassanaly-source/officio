@@ -10,6 +10,7 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
 
 // Même format que formatHeure() dans rappels-agenda/route.ts ('HH:MM:SS' ou
 // 'HH:MM' -> 'HHhMM'). Exportée pour être réutilisée par
@@ -95,6 +96,7 @@ export function TachesList({
   // hors case à cocher et bouton de suppression). Fonctionne aussi bien pour
   // une tâche active qu'une tâche archivée.
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
+  const toast = useToast()
   // Accordéon "Tâches archivées". Fermé par défaut, sauf si la tâche visée
   // par ?tache=<id> au chargement est elle-même archivée (calculé ici plutôt
   // que dans un effect : évite un rendu en cascade pour un état qu'on connaît
@@ -199,9 +201,14 @@ export function TachesList({
           action={(formData) => {
             if (photo) formData.set('photo', photo)
             startTransition(async () => {
-              await creerTache(formData)
-              setFormOuvert(false)
-              setPhoto(null)
+              try {
+                await creerTache(formData)
+                setFormOuvert(false)
+                setPhoto(null)
+                toast({ type: 'succes', message: 'Tâche ajoutée.' })
+              } catch (err) {
+                toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de l'ajout de la tâche." })
+              }
             })
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
@@ -343,6 +350,7 @@ function CarteTache({
   // porte déjà sa propre tâche, une seule peut être en confirmation de
   // suppression à la fois (pas besoin d'un id à retenir côté parent).
   const [confirmationOuverte, setConfirmationOuverte] = useState(false)
+  const toast = useToast()
 
   return (
     <>
@@ -360,7 +368,18 @@ function CarteTache({
       )}
       <button
         type="button"
-        onClick={() => startTransition(() => toggleTache(tache.id, tache.statut))}
+        onClick={() =>
+          startTransition(async () => {
+            try {
+              await toggleTache(tache.id, tache.statut)
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
+              })
+            }
+          })
+        }
         disabled={isPending}
         aria-label={tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
         className="flex h-8 w-8 shrink-0 items-center justify-center disabled:opacity-70"
@@ -413,7 +432,17 @@ function CarteTache({
         ouvert={confirmationOuverte}
         titre={`Supprimer la tâche « ${tache.titre} » ?`}
         onConfirmer={() => {
-          startTransition(() => supprimerTache(tache.id))
+          startTransition(async () => {
+            try {
+              await supprimerTache(tache.id)
+              toast({ type: 'succes', message: 'Tâche supprimée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la suppression de la tâche.',
+              })
+            }
+          })
           setConfirmationOuverte(false)
         }}
         onAnnuler={() => setConfirmationOuverte(false)}
@@ -439,6 +468,7 @@ function ModaleEditionTache({
   // en choisir une nouvelle. Voir le commentaire sur ChampPhoto.
   const [photoSupprimee, setPhotoSupprimee] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   return (
     <div
@@ -451,8 +481,16 @@ function ModaleEditionTache({
           if (photo) formData.set('photo', photo)
           if (photoSupprimee) formData.set('photo_supprimee', 'true')
           startTransition(async () => {
-            await modifierTache(tache.id, formData)
-            onFerme()
+            try {
+              await modifierTache(tache.id, formData)
+              onFerme()
+              toast({ type: 'succes', message: 'Tâche modifiée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la modification de la tâche.',
+              })
+            }
           })
         }}
         className="flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
