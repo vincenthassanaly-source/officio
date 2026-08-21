@@ -15,6 +15,13 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { signOut } from '../actions/auth'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  // getMesAdhesions() lève désormais une erreur en cas d'échec technique
+  // (ex: refresh token Supabase concurrent expiré) plutôt que de retourner
+  // un tableau vide indiscernable d'une absence réelle d'adhésion. Cette
+  // erreur n'est pas rattrapée ici : elle remonte jusqu'à src/app/error.tsx
+  // (le layout de (app) n'est pas couvert par (app)/error.tsx, seuls ses
+  // enfants le sont), qui affiche déjà un écran "Réessayer" dans le style
+  // de l'app — sans jamais atteindre le redirect ci-dessous.
   const adhesions = await getMesAdhesions()
   if (adhesions.length === 0) redirect('/bienvenue')
 

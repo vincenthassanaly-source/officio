@@ -23,7 +23,15 @@ export const getMesAdhesions = cache(async (): Promise<Adhesion[]> => {
 
   if (error) {
     console.error('getMesAdhesions', error)
-    return []
+    // Une erreur Supabase (ex: refresh token concurrent expiré au réveil de
+    // l'app) ne doit jamais être confondue avec une absence réelle
+    // d'adhésion : un `return []` ici ferait passer (app)/layout.tsx pour
+    // un utilisateur sans officine et le redirigerait à tort vers
+    // /bienvenue. On lève donc l'erreur : elle remonte jusqu'à
+    // src/app/error.tsx (aucun error.tsx dans le segment (app) n'intercepte
+    // les erreurs de son propre layout.tsx), qui affiche déjà un écran
+    // "Réessayer" dans le style de l'app.
+    throw new Error('Impossible de récupérer les adhésions', { cause: error })
   }
 
   return (data ?? []).map((a) => {
