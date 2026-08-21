@@ -17,12 +17,16 @@ tard (formulaire complet, sauvegarde, historique par patient…).
 - Server component simple : `LienRetour` (page non présente dans la nav du
   bas, accessible uniquement via la tuile d'accueil), `<h1>` "Entretiens
   pharmaceutiques".
-- Un `<select>` natif stylé (classes reprises de `taches-list.tsx`),
-  enveloppé dans une carte `rounded-[20px] bg-surface shadow-card p-4` pour
-  cohérence visuelle avec le reste de l'app.
 - Liste des 8 types d'entretiens en constante `TYPES_ENTRETIEN`, dans
-  l'ordre demandé, avec une première `<option>` placeholder désactivée
-  ("Sélectionner un type d'entretien").
+  l'ordre demandé — **une carte par type** (`rounded-[20px] bg-surface
+  shadow-card p-4`), chacune avec son propre `<select>` natif stylé
+  (classes reprises de `taches-list.tsx`) : le nom du type sert de label
+  au-dessus de son menu déroulant, pas un unique sélecteur listant les 8
+  types comme options (première itération corrigée après retour de
+  l'utilisateur).
+- Chaque `<select>` ne contient qu'une seule `<option>` placeholder
+  désactivée ("Aucun entretien pour l'instant") : le menu existe déjà pour
+  chaque type mais reste vide tant qu'il n'y a pas de persistance derrière.
 - Pas de `<form>`, pas de bouton, pas de `'use client'` : rien n'est
   soumis à ce stade, un composant serveur statique suffit.
 
