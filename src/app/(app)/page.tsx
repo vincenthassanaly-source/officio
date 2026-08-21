@@ -27,7 +27,6 @@ import {
   IconRupturesStock,
 } from '@/components/nav-icons'
 
-const MAX_RDV_APERCU = 4
 const MAX_TACHES_APERCU = 4
 const MAX_MESSAGES_APERCU = 3
 
@@ -58,9 +57,6 @@ export default async function AccueilPage() {
   const messagesNonLusTous = messages.filter((m) => !m.lecteurs.some((l) => l.profil_id === profil?.id))
   const nonLus = messagesNonLusTous.length
   const messagesNonLusApercu = messagesNonLusTous.slice(0, MAX_MESSAGES_APERCU)
-
-  const rdvDuJourTous = rendezVous.filter((r) => r.date === aujourdhuiIso)
-  const rdvDuJour = rdvDuJourTous.slice(0, MAX_RDV_APERCU)
 
   // Priorité aux tâches en retard ou dues aujourd'hui, puis échéances futures,
   // puis sans échéance — pour que la vue "Aujourd'hui" mette en avant ce qui
@@ -95,8 +91,6 @@ export default async function AccueilPage() {
       </div>
 
       <AccueilDashboard
-        rdvDuJour={rdvDuJour}
-        totalRdvDuJour={rdvDuJourTous.length}
         tachesDuJour={tachesDuJour}
         totalTachesAFaire={tachesAFaireTous.length}
         messagesNonLusApercu={messagesNonLusApercu}
