@@ -9,6 +9,7 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 // Même format que formatHeure() dans rappels-agenda/route.ts ('HH:MM:SS' ou
 // 'HH:MM' -> 'HHhMM'). Exportée pour être réutilisée par
@@ -338,14 +339,19 @@ function CarteTache({
 }) {
   const due = dueInfo(tache)
   const couleurAssigne = (tache.assigne ? couleurs.get(tache.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
+  // État local à la carte plutôt que remonté à TachesList : chaque carte
+  // porte déjà sa propre tâche, une seule peut être en confirmation de
+  // suppression à la fois (pas besoin d'un id à retenir côté parent).
+  const [confirmationOuverte, setConfirmationOuverte] = useState(false)
 
   return (
-    <div
-      id={`tache-${tache.id}`}
-      className={`flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5 transition-shadow duration-700 ${
-        idSurligne === tache.id ? 'ring-2 ring-primary' : ''
-      }`}
-    >
+    <>
+      <div
+        id={`tache-${tache.id}`}
+        className={`flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5 transition-shadow duration-700 ${
+          idSurligne === tache.id ? 'ring-2 ring-primary' : ''
+        }`}
+      >
       {tache.photoUrl && (
         <a href={tache.photoUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage, pas une image du projet */}
@@ -395,17 +401,24 @@ function CarteTache({
       <button
         type="button"
         disabled={isPending}
-        onClick={() => {
-          if (confirm(`Supprimer la tâche « ${tache.titre} » ?`)) {
-            startTransition(() => supprimerTache(tache.id))
-          }
-        }}
+        onClick={() => setConfirmationOuverte(true)}
         aria-label="Supprimer la tâche"
         className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
       >
         ×
       </button>
-    </div>
+      </div>
+
+      <ModaleConfirmation
+        ouvert={confirmationOuverte}
+        titre={`Supprimer la tâche « ${tache.titre} » ?`}
+        onConfirmer={() => {
+          startTransition(() => supprimerTache(tache.id))
+          setConfirmationOuverte(false)
+        }}
+        onAnnuler={() => setConfirmationOuverte(false)}
+      />
+    </>
   )
 }
 
