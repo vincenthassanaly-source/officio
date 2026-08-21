@@ -11,7 +11,16 @@ function badgeEcheance(echeance: string | null, aujourdhuiIso: string): { label:
   if (!echeance) return null
   if (echeance < aujourdhuiIso) return { label: 'En retard', className: 'text-rec' }
   if (echeance === aujourdhuiIso) return { label: "Aujourd'hui", className: 'text-accent' }
-  return null
+
+  const aujourdhui = new Date(`${aujourdhuiIso}T00:00:00`)
+  const dateEcheance = new Date(`${echeance}T00:00:00`)
+  const diffJours = Math.round((dateEcheance.getTime() - aujourdhui.getTime()) / 86_400_000)
+
+  if (diffJours === 1) return { label: 'Demain', className: 'text-accent' }
+  return {
+    label: dateEcheance.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+    className: 'text-muted',
+  }
 }
 
 export function AccueilDashboard({
