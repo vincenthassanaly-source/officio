@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from 'react'
 import { ajouterPatientCno, modifierQuantiteCno, supprimerPatientCno } from '@/app/actions/cno'
 import type { PatientCno } from '@/lib/data/cno'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary'
@@ -88,6 +89,7 @@ function ChampsFormulaire() {
 export function CnoListe({ patients }: { patients: PatientCno[] }) {
   const [recherche, setRecherche] = useState('')
   const [formOuvert, setFormOuvert] = useState(false)
+  const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const visibles = useMemo(() => {
@@ -97,9 +99,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
   }, [patients, recherche])
 
   function demanderSuppression(id: string, nom: string) {
-    if (confirm(`Supprimer la fiche de « ${nom} » ?`)) {
-      startTransition(() => supprimerPatientCno(id))
-    }
+    setASupprimer({ id, nom })
   }
 
   return (
@@ -174,6 +174,17 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
           </div>
         ))}
       </div>
+
+      <ModaleConfirmation
+        ouvert={aSupprimer !== null}
+        titre={`Supprimer la fiche de « ${aSupprimer?.nom} » ?`}
+        onConfirmer={() => {
+          if (!aSupprimer) return
+          startTransition(() => supprimerPatientCno(aSupprimer.id))
+          setASupprimer(null)
+        }}
+        onAnnuler={() => setASupprimer(null)}
+      />
     </div>
   )
 }
