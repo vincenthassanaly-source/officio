@@ -8,6 +8,7 @@ import {
 } from '@/app/actions/fournisseurs'
 import type { Fournisseur, TypeFournisseur } from '@/lib/data/fournisseurs'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
 
 const TYPES: { value: TypeFournisseur; label: string; className: string }[] = [
   { value: 'grossiste', label: 'Grossiste', className: 'bg-primary-soft text-primary' },
@@ -100,6 +101,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   const visibles = useMemo(
     () => (filtre === 'tous' ? fournisseurs : fournisseurs.filter((f) => f.type === filtre)),
@@ -158,8 +160,16 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
         <form
           action={(formData) => {
             startTransition(async () => {
-              await ajouterFournisseur(formData)
-              setFormOuvert(false)
+              try {
+                await ajouterFournisseur(formData)
+                setFormOuvert(false)
+                toast({ type: 'succes', message: 'Fournisseur ajouté.' })
+              } catch (err) {
+                toast({
+                  type: 'erreur',
+                  message: err instanceof Error ? err.message : "Échec de l'ajout du fournisseur.",
+                })
+              }
             })
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
@@ -190,8 +200,16 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
                 key={f.id}
                 action={(formData) => {
                   startTransition(async () => {
-                    await modifierFournisseur(f.id, formData)
-                    setEnEdition(null)
+                    try {
+                      await modifierFournisseur(f.id, formData)
+                      setEnEdition(null)
+                      toast({ type: 'succes', message: 'Fournisseur modifié.' })
+                    } catch (err) {
+                      toast({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : 'Échec de la modification du fournisseur.',
+                      })
+                    }
                   })
                 }}
                 className="flex flex-col gap-2 rounded-2xl border border-primary bg-surface p-3 lg:col-span-2"
@@ -306,7 +324,17 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
         titre={`Supprimer le fournisseur « ${aSupprimer?.nom} » ?`}
         onConfirmer={() => {
           if (!aSupprimer) return
-          startTransition(() => supprimerFournisseur(aSupprimer.id))
+          startTransition(async () => {
+            try {
+              await supprimerFournisseur(aSupprimer.id)
+              toast({ type: 'succes', message: 'Fournisseur supprimé.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la suppression du fournisseur.',
+              })
+            }
+          })
           setEnEdition(null)
           setASupprimer(null)
         }}

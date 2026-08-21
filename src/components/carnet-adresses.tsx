@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { ajouterContact, modifierContact, supprimerContact } from '@/app/actions/contacts'
 import type { CategorieContact, Contact } from '@/lib/data/contacts'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
 
 const CATEGORIES: { value: CategorieContact; label: string; className: string }[] = [
   { value: 'medecin', label: 'Médecins', className: 'bg-primary-soft text-primary' },
@@ -70,6 +71,7 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   const visibles = useMemo(
     () => (filtre === 'tous' ? contacts : contacts.filter((c) => c.categorie === filtre)),
@@ -122,8 +124,13 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
         <form
           action={(formData) => {
             startTransition(async () => {
-              await ajouterContact(formData)
-              setFormOuvert(false)
+              try {
+                await ajouterContact(formData)
+                setFormOuvert(false)
+                toast({ type: 'succes', message: 'Contact ajouté.' })
+              } catch (err) {
+                toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de l'ajout du contact." })
+              }
             })
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
@@ -154,8 +161,16 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
                 key={c.id}
                 action={(formData) => {
                   startTransition(async () => {
-                    await modifierContact(c.id, formData)
-                    setEnEdition(null)
+                    try {
+                      await modifierContact(c.id, formData)
+                      setEnEdition(null)
+                      toast({ type: 'succes', message: 'Contact modifié.' })
+                    } catch (err) {
+                      toast({
+                        type: 'erreur',
+                        message: err instanceof Error ? err.message : 'Échec de la modification du contact.',
+                      })
+                    }
                   })
                 }}
                 className="flex flex-col gap-2 rounded-2xl border border-primary bg-surface p-3 lg:col-span-2"
@@ -251,7 +266,17 @@ export function CarnetAdresses({ contacts }: { contacts: Contact[] }) {
         titre={`Supprimer le contact « ${aSupprimer?.nom} » ?`}
         onConfirmer={() => {
           if (!aSupprimer) return
-          startTransition(() => supprimerContact(aSupprimer.id))
+          startTransition(async () => {
+            try {
+              await supprimerContact(aSupprimer.id)
+              toast({ type: 'succes', message: 'Contact supprimé.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la suppression du contact.',
+              })
+            }
+          })
           setEnEdition(null)
           setASupprimer(null)
         }}
