@@ -7,6 +7,7 @@ import {
   supprimerFournisseur,
 } from '@/app/actions/fournisseurs'
 import type { Fournisseur, TypeFournisseur } from '@/lib/data/fournisseurs'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 const TYPES: { value: TypeFournisseur; label: string; className: string }[] = [
   { value: 'grossiste', label: 'Grossiste', className: 'bg-primary-soft text-primary' },
@@ -97,6 +98,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
   const [filtre, setFiltre] = useState<'tous' | TypeFournisseur>('tous')
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
+  const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const visibles = useMemo(
@@ -105,10 +107,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
   )
 
   function demanderSuppression(id: string, nom: string) {
-    if (confirm(`Supprimer le fournisseur « ${nom} » ?`)) {
-      startTransition(() => supprimerFournisseur(id))
-      setEnEdition(null)
-    }
+    setASupprimer({ id, nom })
   }
 
   return (
@@ -301,6 +300,18 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
           )
         })}
       </div>
+
+      <ModaleConfirmation
+        ouvert={aSupprimer !== null}
+        titre={`Supprimer le fournisseur « ${aSupprimer?.nom} » ?`}
+        onConfirmer={() => {
+          if (!aSupprimer) return
+          startTransition(() => supprimerFournisseur(aSupprimer.id))
+          setEnEdition(null)
+          setASupprimer(null)
+        }}
+        onAnnuler={() => setASupprimer(null)}
+      />
     </div>
   )
 }
