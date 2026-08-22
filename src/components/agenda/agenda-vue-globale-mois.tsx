@@ -82,11 +82,7 @@ export function AgendaVueGlobaleMois({
             <button
               type="button"
               key={iso}
-              onClick={() => {
-                // DEBUG TEMPORAIRE — à retirer après diagnostic
-                toast({ type: 'info', message: 'Clic reçu sur ' + iso })
-                setJourSelectionne(iso)
-              }}
+              onClick={() => setJourSelectionne(iso)}
               className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] ${
                 !dansMoisAffiche ? 'text-muted/40' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
