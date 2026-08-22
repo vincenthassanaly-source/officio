@@ -9,6 +9,7 @@ import { getCnoPatients } from '@/lib/data/cno'
 import { getSuggestions } from '@/lib/data/suggestions'
 import { getRupturesStock } from '@/lib/data/ruptures-stock'
 import { getProduitsARecommander } from '@/lib/data/produits-a-recommander'
+import { getPleinsRayon } from '@/lib/data/pleins-rayon'
 import { getEquipe } from '@/lib/data/equipe'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
@@ -25,6 +26,7 @@ import {
   IconVaccin,
   IconSuggestions,
   IconRupturesStock,
+  IconPleinsRayon,
 } from '@/components/nav-icons'
 
 const MAX_TACHES_APERCU = 4
@@ -38,18 +40,29 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
-  const [messages, taches, rendezVous, huiles, patientsCno, suggestions, equipe, rupturesStock, produitsARecommander] =
-    await Promise.all([
-      getMessages(officine.officine_id),
-      getTaches(officine.officine_id),
-      getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
-      getHuilesEssentielles(officine.officine_id),
-      getCnoPatients(officine.officine_id),
-      getSuggestions(officine.officine_id),
-      getEquipe(officine.officine_id),
-      getRupturesStock(officine.officine_id),
-      getProduitsARecommander(officine.officine_id),
-    ])
+  const [
+    messages,
+    taches,
+    rendezVous,
+    huiles,
+    patientsCno,
+    suggestions,
+    equipe,
+    rupturesStock,
+    produitsARecommander,
+    pleinsRayon,
+  ] = await Promise.all([
+    getMessages(officine.officine_id),
+    getTaches(officine.officine_id),
+    getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
+    getHuilesEssentielles(officine.officine_id),
+    getCnoPatients(officine.officine_id),
+    getSuggestions(officine.officine_id),
+    getEquipe(officine.officine_id),
+    getRupturesStock(officine.officine_id),
+    getProduitsARecommander(officine.officine_id),
+    getPleinsRayon(officine.officine_id),
+  ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
   const suggestionsNonTraitees = suggestions.filter((s) => !s.fait).length
@@ -220,6 +233,18 @@ export default async function AccueilPage() {
             <div className="mt-0.5 text-[11px] text-muted">
               {rupturesStock.length + produitsARecommander.length} en cours
             </div>
+          </div>
+        </Link>
+        <Link
+          href="/pleins-rayon"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-brun-soft text-brun">
+            <IconPleinsRayon className="h-[18px] w-[18px]" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Pleins de rayon</div>
+            <div className="mt-0.5 text-[11px] text-muted">{pleinsRayon.length} en cours</div>
           </div>
         </Link>
       </div>
