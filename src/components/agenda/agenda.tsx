@@ -36,6 +36,11 @@ export function Agenda({
   creneaux: Creneau[]
   equipe: MembreEquipe[]
   weekDates: Date[]
+  // vue et moisAffiche : reçus dès cette étape depuis page.tsx (fetch serveur
+  // adapté à la granularité), pas encore consommés ici — le toggle et le
+  // rendu conditionnel semaine/mois arrivent avec les composants *Mois.
+  vue: 'semaine' | 'mois'
+  moisAffiche: Date
   couleurs: Map<string, CouleurAvatar>
   profilActuelId: string
 }) {
