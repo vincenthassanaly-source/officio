@@ -26,6 +26,25 @@ const nextConfig: NextConfig = {
     // src/react-view-transitions.d.ts pour les types correspondants.
     viewTransition: true,
   },
+  async headers() {
+    return [
+      {
+        // Empêche le cache HTTP disque du navigateur/de l'OS de resservir un
+        // instantané obsolète des pages après fermeture complète puis
+        // réouverture de la PWA (notamment WebAPK Android) : la fraîcheur
+        // des données (ex. messages non lus du Cahier de liaison) doit
+        // toujours venir d'une requête réseau. Les assets statiques Next
+        // (hashés, immuables) ne sont pas concernés par cette exclusion.
+        source: '/((?!_next/static|_next/image).*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+    ]
+  },
 };
 
 export default nextConfig;

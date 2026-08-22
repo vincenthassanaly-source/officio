@@ -29,6 +29,18 @@ import {
   IconPleinsRayon,
 } from '@/components/nav-icons'
 
+// Sur mobile (PWA installée), fermer complètement l'app (swipe dans les
+// apps récentes) puis la rouvrir peut afficher un instantané mis en cache
+// par le navigateur/l'OS Android (cache disque ou restauration de
+// processus WebAPK) plutôt que le résultat d'une requête fraîche : le
+// nombre de messages non lus du Cahier de liaison pouvait alors être
+// obsolète. Ces deux directives empêchent Next.js de mettre cette page en
+// cache côté serveur ; voir aussi EcouteurRepriseApp (composant client
+// monté dans layout.tsx) pour le cas de la restauration bfcache côté
+// navigateur.
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 const MAX_TACHES_APERCU = 4
 const MAX_MESSAGES_APERCU = 3
 

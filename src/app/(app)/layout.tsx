@@ -6,6 +6,7 @@ import { SidebarNav } from '@/components/sidebar-nav'
 import { OfficineSwitcher } from '@/components/officine-switcher'
 import { NotificationsCloche } from '@/components/notifications-cloche'
 import { EcouteurSession } from '@/components/ecouteur-session'
+import { EcouteurRepriseApp } from '@/components/ecouteur-reprise-app'
 import { getMesAdhesions } from '@/lib/data/adhesions'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getCurrentProfil } from '@/lib/data/profils'
@@ -37,6 +38,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex w-full flex-1 flex-col overflow-x-hidden lg:flex-row lg:overflow-x-visible">
       <EcouteurSession />
+      <EcouteurRepriseApp />
       <SidebarNav
         adhesions={adhesions}
         officineActiveId={officineActive!.officine_id}
