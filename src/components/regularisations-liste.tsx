@@ -37,18 +37,18 @@ export function ChampsFormulaire({
           defaultValue={regularisation?.patient_prenom}
           required
           placeholder="Prénom"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
         />
         <input
           name="patient_nom"
           defaultValue={regularisation?.patient_nom}
           required
           placeholder="Nom"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
         />
       </div>
       <div className="flex gap-2">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <label className="mb-1 block text-[11px] font-semibold text-muted">Date ordonnance</label>
           <input
             type="date"
@@ -58,7 +58,7 @@ export function ChampsFormulaire({
             className={`w-full ${CHAMP_CLASS}`}
           />
         </div>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <label className="mb-1 block text-[11px] font-semibold text-muted">À régulariser le</label>
           <input
             type="date"
