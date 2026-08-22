@@ -7,6 +7,8 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { formatDateLongue, formatHeure, formatJourCourt, getMonthGridDates, getWeekDates, toISODate } from '@/lib/dates'
+// DEBUG TEMPORAIRE — à retirer après diagnostic
+import { useToast } from '@/components/ui/toast-provider'
 
 const LIBELLE_TYPE: Record<Creneau['type'], string> = {
   travail: 'Travail',
@@ -43,6 +45,8 @@ export function PlanningEquipeMois({
   const router = useRouter()
   const [jourSelectionne, setJourSelectionne] = useState<string | null>(null)
   const aujourdhuiIso = toISODate(new Date())
+  // DEBUG TEMPORAIRE — à retirer après diagnostic
+  const toast = useToast()
 
   function couleurMembre(profilId: string): CouleurAvatar {
     return couleurs.get(profilId) ?? COULEUR_PAR_DEFAUT
@@ -100,7 +104,11 @@ export function PlanningEquipeMois({
             <button
               type="button"
               key={iso}
-              onClick={() => setJourSelectionne(iso)}
+              onClick={() => {
+                // DEBUG TEMPORAIRE — à retirer après diagnostic
+                toast({ type: 'info', message: 'Clic reçu sur ' + iso })
+                setJourSelectionne(iso)
+              }}
               className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl text-[12px] ${
                 !dansMoisAffiche ? 'text-muted/40' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
