@@ -7,6 +7,7 @@ import type { RendezVous } from '@/lib/data/rendez-vous'
 import type { Tache } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
 import type { MembreEquipe } from '@/lib/data/equipe'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleEditionTache } from '@/components/taches-list'
 import { formatDateLongue, formatJourCourt, getMonthGridDates, toISODate } from '@/lib/dates'
 import { useToast } from '@/components/ui/toast-provider'
@@ -19,6 +20,7 @@ export function AgendaVueGlobaleMois({
   moisAffiche,
   equipe,
   profilActuelId,
+  couleurs,
 }: {
   rendezVous: RendezVous[]
   taches: Tache[]
@@ -26,6 +28,7 @@ export function AgendaVueGlobaleMois({
   moisAffiche: Date
   equipe: MembreEquipe[]
   profilActuelId: string
+  couleurs: Map<string, CouleurAvatar>
 }) {
   const [jourSelectionne, setJourSelectionne] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -133,6 +136,7 @@ export function AgendaVueGlobaleMois({
                     isPendingToggle={isPendingTache}
                     onToggleTache={onToggleTache}
                     onEditerTache={setTacheEnEdition}
+                    couleurs={couleurs}
                   />
                 )
               })}

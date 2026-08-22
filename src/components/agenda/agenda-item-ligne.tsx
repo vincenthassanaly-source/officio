@@ -1,6 +1,8 @@
 import type { CategorieRdv, RendezVous } from '@/lib/data/rendez-vous'
 import type { Tache } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { dueInfo, formatHeureCourte } from '@/components/taches-list'
 import { estEnRetard } from '@/components/regularisations-liste'
 import Link from 'next/link'
@@ -69,6 +71,7 @@ export function ItemLigne({
   isPendingToggle,
   onToggleTache,
   onEditerTache,
+  couleurs,
 }: {
   item: ItemAgenda
   aujourdhuiIso: string
@@ -77,6 +80,7 @@ export function ItemLigne({
   isPendingToggle: boolean
   onToggleTache: (tache: Tache) => void
   onEditerTache: (tache: Tache) => void
+  couleurs: Map<string, CouleurAvatar>
 }) {
   if (item.type === 'rdv') {
     const r = item.rdv
@@ -112,6 +116,7 @@ export function ItemLigne({
   if (item.type === 'tache') {
     const t = item.tache
     const due = dueInfo(t)
+    const couleurAssigne = (t.assigne ? couleurs.get(t.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
     return (
       <div className="flex gap-3">
         <div className="w-12 shrink-0 pt-1 text-right">
@@ -147,7 +152,11 @@ export function ItemLigne({
               {t.titre}
             </div>
             {t.assigne && (
-              <span className="shrink-0 text-[10px] text-muted">{t.assigne.initiales}</span>
+              <span
+                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+              >
+                {t.assigne.initiales}
+              </span>
             )}
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
               {t.echeance_heure ? `Tâche · ${formatHeureCourte(t.echeance_heure)}` : 'Tâche'}

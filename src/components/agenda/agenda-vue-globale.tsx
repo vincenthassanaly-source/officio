@@ -7,6 +7,7 @@ import type { RendezVous } from '@/lib/data/rendez-vous'
 import type { Tache } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
 import type { MembreEquipe } from '@/lib/data/equipe'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleEditionTache } from '@/components/taches-list'
 import { formatJourCourt, toISODate } from '@/lib/dates'
 import { useToast } from '@/components/ui/toast-provider'
@@ -19,6 +20,7 @@ export function AgendaVueGlobale({
   weekDates,
   equipe,
   profilActuelId,
+  couleurs,
 }: {
   rendezVous: RendezVous[]
   taches: Tache[]
@@ -26,6 +28,7 @@ export function AgendaVueGlobale({
   weekDates: Date[]
   equipe: MembreEquipe[]
   profilActuelId: string
+  couleurs: Map<string, CouleurAvatar>
 }) {
   const [dateSelectionnee, setDateSelectionnee] = useState(() => {
     const aujourdhui = toISODate(new Date())
@@ -153,6 +156,7 @@ export function AgendaVueGlobale({
                         isPendingToggle={isPendingTache}
                         onToggleTache={onToggleTache}
                         onEditerTache={setTacheEnEdition}
+                        couleurs={couleurs}
                       />
                     )
                   })}

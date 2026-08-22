@@ -319,6 +319,7 @@ export function Agenda({
                 weekDates={weekDates}
                 equipe={equipe}
                 profilActuelId={profilActuelId}
+                couleurs={couleurs}
               />
             ) : (
               <PlanningEquipe
@@ -338,6 +339,7 @@ export function Agenda({
               moisAffiche={moisAffiche}
               equipe={equipe}
               profilActuelId={profilActuelId}
+              couleurs={couleurs}
             />
           ) : (
             <PlanningEquipeMois
