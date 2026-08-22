@@ -43,6 +43,26 @@ function genererDatesRecurrence(dateDebut: string, recurrence: RecurrenceCreneau
   return dates
 }
 
+// Garde-fou technique (pas une règle métier) : limite un congé saisi en
+// plage à 90 jours consécutifs, pour éviter qu'une date de fin choisie très
+// loin dans le futur par erreur ne génère d'un coup des centaines de lignes.
+const MAX_JOURS_PLAGE_CONGE = 90
+
+// Génère la liste des dates ISO quotidiennes entre dateDebut et dateFin
+// inclus, pour un congé sur plusieurs jours consécutifs. Distincte de
+// genererDatesRecurrence ci-dessus : un congé en plage couvre CHAQUE jour de
+// l'intervalle (pas un jour sur 7/14 comme la récurrence hebdomadaire de
+// travail/repos) — les deux notions ne sont pas mélangées.
+function genererDatesPlageConge(dateDebut: string, dateFin: string): string[] {
+  const dates: string[] = []
+  let courante = dateDebut
+  while (courante <= dateFin && dates.length < MAX_JOURS_PLAGE_CONGE) {
+    dates.push(courante)
+    courante = ajouterJours(courante, 1)
+  }
+  return dates
+}
+
 export async function creerRendezVous(formData: FormData) {
   const titre = String(formData.get('titre') ?? '').trim()
   const categorie = String(formData.get('categorie') ?? 'rdv')
@@ -90,6 +110,7 @@ export async function creerCreneau(formData: FormData) {
   const note = String(formData.get('note') ?? '').trim() || null
   const recurrence = String(formData.get('recurrence') ?? 'aucune') as RecurrenceCreneau
   const recurrenceFin = String(formData.get('recurrence_fin') ?? '') || null
+  const dateFin = String(formData.get('date_fin') ?? '') || null
 
   if (!profilId || !date) return
 
@@ -97,7 +118,15 @@ export async function creerCreneau(formData: FormData) {
   const officine = await getOfficineActive()
   if (!profilActuel || !officine) throw new Error('Non connecté')
 
-  const dates = genererDatesRecurrence(date, recurrence, recurrenceFin)
+  // Congé en plage : prioritaire sur la récurrence hebdomadaire (non
+  // applicable à ce type, le formulaire ne l'affiche d'ailleurs pas pour
+  // Congé — voir planning-equipe.tsx). Sans date_fin valide (absente ou
+  // antérieure à date), repli sur genererDatesRecurrence qui renvoie alors
+  // un congé d'un seul jour, comportement strictement inchangé.
+  const dates =
+    type === 'conge' && dateFin && dateFin >= date
+      ? genererDatesPlageConge(date, dateFin)
+      : genererDatesRecurrence(date, recurrence, recurrenceFin)
   // serie_id ne relie les lignes que s'il y a effectivement plusieurs
   // occurrences — un créneau ponctuel garde serie_id à NULL comme avant.
   const serieId = dates.length > 1 ? randomUUID() : null
