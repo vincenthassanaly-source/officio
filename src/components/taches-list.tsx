@@ -451,7 +451,7 @@ function CarteTache({
   )
 }
 
-function ModaleEditionTache({
+export function ModaleEditionTache({
   tache,
   equipe,
   profilActuelId,

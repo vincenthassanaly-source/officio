@@ -1,11 +1,13 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { toggleTache } from '@/app/actions/taches'
 import type { Tache } from '@/lib/data/taches'
 import type { MessageAvecDetails } from '@/lib/data/messages'
+import type { MembreEquipe } from '@/lib/data/equipe'
 import { toISODate } from '@/lib/dates'
+import { ModaleEditionTache } from '@/components/taches-list'
 
 function badgeEcheance(echeance: string | null, aujourdhuiIso: string): { label: string; className: string } | null {
   if (!echeance) return null
@@ -28,13 +30,18 @@ export function AccueilDashboard({
   totalTachesAFaire,
   messagesNonLusApercu,
   totalMessagesNonLus,
+  equipe,
+  profilActuelId,
 }: {
   tachesDuJour: Tache[]
   totalTachesAFaire: number
   messagesNonLusApercu: MessageAvecDetails[]
   totalMessagesNonLus: number
+  equipe: MembreEquipe[]
+  profilActuelId: string
 }) {
   const [isPending, startTransition] = useTransition()
+  const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
   const aujourdhuiIso = toISODate(new Date())
 
   const toutEstAJour = totalTachesAFaire === 0 && totalMessagesNonLus === 0
@@ -68,24 +75,48 @@ export function AccueilDashboard({
             {tachesDuJour.map((t) => {
               const badge = badgeEcheance(t.echeance, aujourdhuiIso)
               return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => startTransition(() => toggleTache(t.id, t.statut))}
-                  disabled={isPending}
-                  className="flex items-center gap-2.5 text-left disabled:opacity-60"
-                >
-                  <span className="h-[18px] w-[18px] shrink-0 rounded-[6px] border-2 border-border" />
-                  <span className="min-w-0 flex-1 truncate text-[13px] text-ink">{t.titre}</span>
-                  {badge && (
-                    <span className={`shrink-0 text-[10px] font-semibold ${badge.className}`}>{badge.label}</span>
-                  )}
-                </button>
+                <div key={t.id} className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => startTransition(() => toggleTache(t.id, t.statut))}
+                    disabled={isPending}
+                    aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
+                    className="flex shrink-0 items-center justify-center disabled:opacity-60"
+                  >
+                    <span
+                      className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 ${
+                        t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
+                      }`}
+                    >
+                      {t.statut === 'fait' && <span className="text-[10px] font-bold text-white">✓</span>}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTacheEnEdition(t)}
+                    disabled={isPending}
+                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left disabled:opacity-60"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-ink">{t.titre}</span>
+                    {badge && (
+                      <span className={`shrink-0 text-[10px] font-semibold ${badge.className}`}>{badge.label}</span>
+                    )}
+                  </button>
+                </div>
               )
             })}
           </div>
         )}
       </div>
+
+      {tacheEnEdition && (
+        <ModaleEditionTache
+          tache={tacheEnEdition}
+          equipe={equipe}
+          profilActuelId={profilActuelId}
+          onFerme={() => setTacheEnEdition(null)}
+        />
+      )}
 
       <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">

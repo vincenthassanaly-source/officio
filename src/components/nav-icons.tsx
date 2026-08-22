@@ -224,3 +224,24 @@ export function IconRupturesStock({ className }: IconProps) {
     </svg>
   )
 }
+
+// Flèche remontant un produit vers le rayon (étagère) : cohérent avec le
+// thème "réapprovisionnement depuis la réserve" du module Pleins de rayon.
+export function IconPleinsRayon({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 14V4" />
+      <path d="M8 8l4-4 4 4" />
+      <path d="M4 14h16" />
+      <path d="M5 14v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6" />
+    </svg>
+  )
+}
