@@ -1,6 +1,7 @@
+import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getRendezVous } from '@/lib/data/rendez-vous'
-import { getTachesEcheancePeriode } from '@/lib/data/taches'
+import { getTachesPeriode } from '@/lib/data/taches'
 import { getRegularisationsPeriode } from '@/lib/data/regularisations'
 import { getPlannings } from '@/lib/data/plannings'
 import { getEquipe } from '@/lib/data/equipe'
@@ -13,7 +14,7 @@ export default async function AgendaPage({
 }: {
   searchParams: Promise<{ semaine?: string }>
 }) {
-  const officine = await getOfficineActive()
+  const [officine, profil] = await Promise.all([getOfficineActive(), getCurrentProfil()])
   if (!officine) return null
 
   const { semaine } = await searchParams
@@ -24,7 +25,7 @@ export default async function AgendaPage({
 
   const [rendezVous, taches, regularisations, creneaux, equipe, couleurs] = await Promise.all([
     getRendezVous(officine.officine_id, dateDebut, dateFin),
-    getTachesEcheancePeriode(officine.officine_id, dateDebut, dateFin),
+    getTachesPeriode(officine.officine_id, dateDebut, dateFin),
     getRegularisationsPeriode(officine.officine_id, dateDebut, dateFin),
     getPlannings(officine.officine_id, dateDebut, dateFin),
     getEquipe(officine.officine_id),
@@ -42,6 +43,7 @@ export default async function AgendaPage({
         equipe={equipe}
         weekDates={weekDates}
         couleurs={couleurs}
+        profilActuelId={profil?.id ?? ''}
       />
     </>
   )
