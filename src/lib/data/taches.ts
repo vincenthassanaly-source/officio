@@ -18,15 +18,49 @@ export type Tache = {
 // rester valide pendant toute une session de consultation raisonnable.
 const DUREE_SIGNED_URL_PHOTO = 60 * 60
 
+const SELECT_TACHE =
+  `id, titre, statut, echeance, echeance_heure, photo_chemin_stockage,
+   assigne:profils!taches_assigne_id_fkey ( id, nom_complet, initiales )`
+
+type LigneTache = {
+  id: string
+  titre: string
+  statut: string
+  echeance: string | null
+  echeance_heure: string | null
+  photo_chemin_stockage: string | null
+  assigne: { id: string; nom_complet: string; initiales: string }[] | { id: string; nom_complet: string; initiales: string } | null
+}
+
+async function mapperLigneTache(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  t: LigneTache
+): Promise<Tache> {
+  let photoUrl: string | null = null
+  if (t.photo_chemin_stockage) {
+    const { data: signee } = await supabase.storage
+      .from('taches-photos')
+      .createSignedUrl(t.photo_chemin_stockage, DUREE_SIGNED_URL_PHOTO)
+    photoUrl = signee?.signedUrl ?? null
+  }
+
+  return {
+    id: t.id,
+    titre: t.titre,
+    statut: t.statut as StatutTache,
+    echeance: t.echeance,
+    echeance_heure: t.echeance_heure,
+    assigne: Array.isArray(t.assigne) ? t.assigne[0] ?? null : t.assigne,
+    photoUrl,
+  }
+}
+
 export async function getTaches(officineId: string): Promise<Tache[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('taches')
-    .select(
-      `id, titre, statut, echeance, echeance_heure, photo_chemin_stockage,
-       assigne:profils!taches_assigne_id_fkey ( id, nom_complet, initiales )`
-    )
+    .select(SELECT_TACHE)
     .eq('officine_id', officineId)
     .order('created_at', { ascending: false })
 
@@ -35,61 +69,36 @@ export async function getTaches(officineId: string): Promise<Tache[]> {
     return []
   }
 
-  return Promise.all(
-    (data ?? []).map(async (t) => {
-      let photoUrl: string | null = null
-      if (t.photo_chemin_stockage) {
-        const { data: signee } = await supabase.storage
-          .from('taches-photos')
-          .createSignedUrl(t.photo_chemin_stockage, DUREE_SIGNED_URL_PHOTO)
-        photoUrl = signee?.signedUrl ?? null
-      }
-
-      return {
-        id: t.id,
-        titre: t.titre,
-        statut: t.statut as StatutTache,
-        echeance: t.echeance,
-        echeance_heure: t.echeance_heure,
-        assigne: Array.isArray(t.assigne) ? t.assigne[0] ?? null : t.assigne,
-        photoUrl,
-      }
-    })
-  )
-}
-
-export type TacheEcheance = {
-  id: string
-  titre: string
-  statut: StatutTache
-  echeance: string
-  echeance_heure: string | null
+  return Promise.all((data ?? []).map((t) => mapperLigneTache(supabase, t)))
 }
 
 // Pour la vue globale de l'agenda (src/components/agenda/agenda-vue-globale.tsx) :
 // filtré côté requête comme getRegularisationsPeriode (src/lib/data/
 // regularisations.ts), pas récupéré en entier puis filtré côté client. Les
 // tâches sans échéance sont naturellement exclues : `gte`/`lte` sur une
-// colonne ne retiennent jamais les lignes où elle est NULL.
-export async function getTachesEcheancePeriode(
+// colonne ne retiennent jamais les lignes où elle est NULL. Renvoie le type
+// Tache complet (assigne + photoUrl signée) comme getTaches ci-dessus : la
+// vue globale de l'agenda réutilise ModaleEditionTache telle quelle, qui en
+// a besoin.
+export async function getTachesPeriode(
   officineId: string,
   dateDebut: string,
   dateFin: string
-): Promise<TacheEcheance[]> {
+): Promise<Tache[]> {
   const supabase = await createClient()
 
   const { data, error } = await supabase
     .from('taches')
-    .select('id, titre, statut, echeance, echeance_heure')
+    .select(SELECT_TACHE)
     .eq('officine_id', officineId)
     .gte('echeance', dateDebut)
     .lte('echeance', dateFin)
     .order('echeance', { ascending: true })
 
   if (error) {
-    console.error('getTachesEcheancePeriode', error)
+    console.error('getTachesPeriode', error)
     return []
   }
 
-  return (data ?? []) as TacheEcheance[]
+  return Promise.all((data ?? []).map((t) => mapperLigneTache(supabase, t)))
 }
