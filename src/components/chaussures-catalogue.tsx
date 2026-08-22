@@ -5,9 +5,7 @@ import Image from 'next/image'
 import { modifierPrixChaussure } from '@/app/actions/chaussures'
 import { ChaussuresScanner } from '@/components/chaussures-scanner'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
-import type { ChaussureModele, ChaussureVariante, GenreChaussure, RayonChaussure } from '@/lib/data/chaussures'
-
-const RAYONS: RayonChaussure[] = ['ÉTÉ', 'HIVER', 'PERMANENT', 'FINS DE SÉRIE']
+import type { ChaussureModele, ChaussureVariante, GenreChaussure } from '@/lib/data/chaussures'
 
 const GENRES: { value: GenreChaussure; label: string }[] = [
   { value: 'femme', label: 'Femme' },
@@ -269,7 +267,6 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 
 export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModele[] }) {
   const [vue, setVue] = useState<'catalogue' | 'scanner'>('catalogue')
-  const [rayon, setRayon] = useState<RayonChaussure>('ÉTÉ')
   const [genre, setGenre] = useState<GenreFiltre>(GENRE_TOUS)
   const [recherche, setRecherche] = useState('')
   const [chaussureOuverteId, setChaussureOuverteId] = useState<string | null>(null)
@@ -277,35 +274,25 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
 
   useFermerAvecRetour(chaussureOuverteId !== null, () => setChaussureOuverteId(null))
 
-  const comptesRayon = useMemo(() => {
-    const c: Record<RayonChaussure, number> = { 'ÉTÉ': 0, HIVER: 0, PERMANENT: 0, 'FINS DE SÉRIE': 0 }
-    chaussures.forEach((ch) => {
-      c[ch.rayon] += 1
-    })
-    return c
-  }, [chaussures])
-
-  const chaussuresDuRayon = useMemo(() => chaussures.filter((ch) => ch.rayon === rayon), [chaussures, rayon])
-
   const genresDisponibles = useMemo(() => {
     const c: Partial<Record<GenreChaussure, number>> = {}
-    chaussuresDuRayon.forEach((ch) => {
+    chaussures.forEach((ch) => {
       c[ch.genre] = (c[ch.genre] ?? 0) + 1
     })
     return GENRES.filter((g) => c[g.value]).map((g) => ({ ...g, compte: c[g.value] ?? 0 }))
-  }, [chaussuresDuRayon])
+  }, [chaussures])
 
   const genreActif: GenreFiltre =
     genre === GENRE_TOUS || genresDisponibles.some((g) => g.value === genre) ? genre : GENRE_TOUS
 
   const tabsGenre = useMemo(() => {
     if (genresDisponibles.length <= 1) return []
-    return [{ value: GENRE_TOUS, label: 'Tous', compte: chaussuresDuRayon.length }, ...genresDisponibles]
-  }, [genresDisponibles, chaussuresDuRayon])
+    return [{ value: GENRE_TOUS, label: 'Tous', compte: chaussures.length }, ...genresDisponibles]
+  }, [genresDisponibles, chaussures])
 
   const groupes = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
-    const visibles = chaussuresDuRayon
+    const visibles = chaussures
       .filter((ch) => genreActif === GENRE_TOUS || ch.genre === genreActif)
       .filter(
         (ch) =>
@@ -321,40 +308,12 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
       parCategorie.set(ch.categorie, liste)
     }
     return [...parCategorie.entries()].sort(([a], [b]) => a.localeCompare(b))
-  }, [chaussuresDuRayon, genreActif, recherche])
+  }, [chaussures, genreActif, recherche])
 
   const totalVisible = groupes.reduce((somme, [, liste]) => somme + liste.length, 0)
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      {vue === 'catalogue' && (
-        <div className="flex gap-1.5 overflow-x-auto">
-          {RAYONS.map((r) => (
-            <button
-              type="button"
-              key={r}
-              onClick={() => {
-                setVue('catalogue')
-                setRayon(r)
-                setGenre(GENRE_TOUS)
-              }}
-              className={`flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                rayon === r ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
-              }`}
-            >
-              {r}
-              <span
-                className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9.5px] font-bold ${
-                  rayon === r ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
-                }`}
-              >
-                {comptesRayon[r]}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
       {vue === 'scanner' && (
         <ChaussuresScanner
           onSelectionner={(id) => {
