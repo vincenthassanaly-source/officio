@@ -1,3 +1,4 @@
+import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getRendezVous } from '@/lib/data/rendez-vous'
 import { getTachesEcheancePeriode } from '@/lib/data/taches'
@@ -22,7 +23,8 @@ export default async function AgendaPage({
   const dateDebut = toISODate(weekDates[0])
   const dateFin = toISODate(weekDates[6])
 
-  const [rendezVous, taches, regularisations, creneaux, equipe, couleurs] = await Promise.all([
+  const [profil, rendezVous, taches, regularisations, creneaux, equipe, couleurs] = await Promise.all([
+    getCurrentProfil(),
     getRendezVous(officine.officine_id, dateDebut, dateFin),
     getTachesEcheancePeriode(officine.officine_id, dateDebut, dateFin),
     getRegularisationsPeriode(officine.officine_id, dateDebut, dateFin),
@@ -42,6 +44,7 @@ export default async function AgendaPage({
         equipe={equipe}
         weekDates={weekDates}
         couleurs={couleurs}
+        profilActuelId={profil?.id ?? ''}
       />
     </>
   )

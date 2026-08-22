@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AgendaVueGlobale } from './agenda-vue-globale'
 import { PlanningEquipe } from './planning-equipe'
 import type { RendezVous } from '@/lib/data/rendez-vous'
-import type { TacheEcheance } from '@/lib/data/taches'
+import type { Tache } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
 import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -28,14 +28,16 @@ export function Agenda({
   equipe,
   weekDates,
   couleurs,
+  profilActuelId,
 }: {
   rendezVous: RendezVous[]
-  taches: TacheEcheance[]
+  taches: Tache[]
   regularisations: Regularisation[]
   creneaux: Creneau[]
   equipe: MembreEquipe[]
   weekDates: Date[]
   couleurs: Map<string, CouleurAvatar>
+  profilActuelId: string
 }) {
   const router = useRouter()
   const [onglet, setOnglet] = useState<'globale' | 'planning'>('globale')
@@ -186,6 +188,8 @@ export function Agenda({
               taches={taches}
               regularisations={regularisations}
               weekDates={weekDates}
+              equipe={equipe}
+              profilActuelId={profilActuelId}
             />
           ) : (
             <PlanningEquipe

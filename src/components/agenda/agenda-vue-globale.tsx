@@ -3,10 +3,12 @@
 import { useMemo, useRef, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { supprimerRendezVous } from '@/app/actions/agenda'
+import { toggleTache } from '@/app/actions/taches'
 import type { CategorieRdv, RendezVous } from '@/lib/data/rendez-vous'
-import type { TacheEcheance } from '@/lib/data/taches'
+import type { Tache } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
-import { dueInfo, formatHeureCourte } from '@/components/taches-list'
+import type { MembreEquipe } from '@/lib/data/equipe'
+import { dueInfo, formatHeureCourte, ModaleEditionTache } from '@/components/taches-list'
 import { estEnRetard } from '@/components/regularisations-liste'
 import { formatJourCourt, toISODate } from '@/lib/dates'
 
@@ -23,7 +25,7 @@ const CATEGORIES: { value: CategorieRdv; label: string; className: string }[] = 
 // qu'alphabétique ou chronologique toutes catégories confondues.
 type ItemAgenda =
   | { type: 'rdv'; rdv: RendezVous }
-  | { type: 'tache'; tache: TacheEcheance }
+  | { type: 'tache'; tache: Tache }
   | { type: 'regularisation'; regularisation: Regularisation }
 
 function ItemLigne({
@@ -31,11 +33,15 @@ function ItemLigne({
   aujourdhuiIso,
   isPending,
   onSupprimerRdv,
+  onToggle,
+  onEdit,
 }: {
   item: ItemAgenda
   aujourdhuiIso: string
   isPending: boolean
   onSupprimerRdv: (id: string) => void
+  onToggle: (id: string, statut: Tache['statut']) => void
+  onEdit: (tache: Tache) => void
 }) {
   if (item.type === 'rdv') {
     const r = item.rdv
@@ -72,12 +78,32 @@ function ItemLigne({
     const t = item.tache
     const due = dueInfo(t)
     return (
-      <Link href="/liaison" className="flex gap-3">
+      <div className="flex gap-3">
         <div className="w-12 shrink-0 pt-1 text-right">
           <div className="text-[10px] text-muted">Journée</div>
         </div>
-        <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
-          <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-1 items-center gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
+          <button
+            type="button"
+            onClick={() => onToggle(t.id, t.statut)}
+            disabled={isPending}
+            aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
+            className="flex shrink-0 items-center justify-center disabled:opacity-60"
+          >
+            <span
+              className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 ${
+                t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
+              }`}
+            >
+              {t.statut === 'fait' && <span className="text-[10px] font-bold text-white">✓</span>}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => onEdit(t)}
+            disabled={isPending}
+            className="flex min-w-0 flex-1 items-start justify-between gap-2 text-left disabled:opacity-60"
+          >
             <div
               className={`text-sm font-semibold ${t.statut === 'fait' ? 'text-muted line-through' : 'text-ink'}`}
             >
@@ -86,9 +112,9 @@ function ItemLigne({
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
               {t.echeance_heure ? `Tâche · ${formatHeureCourte(t.echeance_heure)}` : 'Tâche'}
             </span>
-          </div>
+          </button>
         </div>
-      </Link>
+      </div>
     )
   }
 
@@ -125,11 +151,15 @@ export function AgendaVueGlobale({
   taches,
   regularisations,
   weekDates,
+  equipe,
+  profilActuelId,
 }: {
   rendezVous: RendezVous[]
-  taches: TacheEcheance[]
+  taches: Tache[]
   regularisations: Regularisation[]
   weekDates: Date[]
+  equipe: MembreEquipe[]
+  profilActuelId: string
 }) {
   const [dateSelectionnee, setDateSelectionnee] = useState(() => {
     const aujourdhui = toISODate(new Date())
@@ -137,6 +167,7 @@ export function AgendaVueGlobale({
     return semaineContientAujourdhui ? aujourdhui : toISODate(weekDates[0])
   })
   const [isPending, startTransition] = useTransition()
+  const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
   const sectionsRef = useRef<Record<string, HTMLDivElement | null>>({})
   const aujourdhuiIso = toISODate(new Date())
 
@@ -150,7 +181,9 @@ export function AgendaVueGlobale({
     }
 
     for (const r of rendezVous) ajouter(r.date, { type: 'rdv', rdv: r })
-    for (const t of taches) ajouter(t.echeance, { type: 'tache', tache: t })
+    // echeance non nulle en pratique : getTachesEcheancePeriode filtre côté
+    // requête avec gte/lte, qui n'incluent jamais les lignes NULL.
+    for (const t of taches) if (t.echeance) ajouter(t.echeance, { type: 'tache', tache: t })
     for (const r of regularisations) ajouter(r.date_regularisation, { type: 'regularisation', regularisation: r })
 
     const rang = (item: ItemAgenda) => (item.type === 'rdv' ? 0 : item.type === 'tache' ? 1 : 2)
@@ -174,7 +207,7 @@ export function AgendaVueGlobale({
   const joursCharges = useMemo(() => {
     const set = new Set<string>()
     for (const r of rendezVous) set.add(r.date)
-    for (const t of taches) set.add(t.echeance)
+    for (const t of taches) if (t.echeance) set.add(t.echeance)
     for (const r of regularisations) set.add(r.date_regularisation)
     return set
   }, [rendezVous, taches, regularisations])
@@ -259,6 +292,8 @@ export function AgendaVueGlobale({
                         aujourdhuiIso={aujourdhuiIso}
                         isPending={isPending}
                         onSupprimerRdv={(id) => startTransition(() => supprimerRendezVous(id))}
+                        onToggle={(id, statut) => startTransition(() => toggleTache(id, statut))}
+                        onEdit={(t) => setTacheEnEdition(t)}
                       />
                     )
                   })}
@@ -268,6 +303,15 @@ export function AgendaVueGlobale({
           )
         })}
       </div>
+
+      {tacheEnEdition && (
+        <ModaleEditionTache
+          tache={tacheEnEdition}
+          equipe={equipe}
+          profilActuelId={profilActuelId}
+          onFerme={() => setTacheEnEdition(null)}
+        />
+      )}
     </div>
   )
 }

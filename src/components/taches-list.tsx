@@ -21,9 +21,8 @@ export function formatHeureCourte(heure: string): string {
 
 // Exportée pour être réutilisée par agenda-vue-globale.tsx (même code
 // couleur/urgence que dans cette liste). Type relâché à Pick<...> plutôt que
-// Tache entière : la vue globale de l'agenda ne récupère que id/titre/
-// statut/echeance/echeance_heure (getTachesEcheancePeriode), pas
-// assigne/photoUrl.
+// Tache entière : cette fonction n'a besoin que des champs d'échéance/statut,
+// pas d'assigne/photoUrl.
 export function dueInfo(
   tache: Pick<Tache, 'statut' | 'echeance' | 'echeance_heure'>
 ): { label: string; className: string } {
