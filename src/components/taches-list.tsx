@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState, useTransition, type TransitionStartFunction } from 'react'
+import { useEffect, useState, useSyncExternalStore, useTransition, type TransitionStartFunction } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
 import { creerTache, toggleTache, supprimerTache, modifierTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
@@ -451,6 +452,17 @@ function CarteTache({
   )
 }
 
+// Abonnement vide : rien à écouter, sert seulement de moyen idiomatique
+// (useSyncExternalStore) pour détecter le montage côté client sans
+// déclencher de setState synchrone dans un effet (interdit par le lint
+// react-hooks/set-state-in-effect). getServerSnapshot renvoie false — rien
+// n'est rendu côté serveur — et getSnapshot renvoie true dès l'hydratation.
+// Utilisé par ModaleEditionTache ci-dessous pour ne monter son portail
+// (createPortal) qu'après hydratation.
+function sabonnerSansChangement() {
+  return () => {}
+}
+
 export function ModaleEditionTache({
   tache,
   equipe,
@@ -469,8 +481,19 @@ export function ModaleEditionTache({
   const [photoSupprimee, setPhotoSupprimee] = useState(false)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
+  // Rendu via un portail vers document.body (voir le createPortal plus bas) :
+  // échappe systématiquement à un ancêtre CSS avec transform actif (ex.
+  // .agenda-glisse-* dans agenda.tsx, dont le fill-mode `both` maintient
+  // translateX(0) en permanence), qui sinon devient le référentiel de
+  // positionnement de ce `fixed inset-0` au lieu du viewport — la modale se
+  // retrouverait confinée dans ce petit conteneur. document.body n'existe
+  // pas côté serveur : monté seulement après hydratation pour éviter un
+  // mismatch SSR/hydratation (voir sabonnerSansChangement plus haut).
+  const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
 
-  return (
+  if (!monte) return null
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onFerme}
@@ -549,6 +572,7 @@ export function ModaleEditionTache({
           Enregistrer
         </button>
       </form>
-    </div>
+    </div>,
+    document.body
   )
 }
