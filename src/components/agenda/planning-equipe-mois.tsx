@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -128,54 +129,112 @@ export function PlanningEquipeMois({
       </div>
 
       {jourSelectionne && (
-        <div className="mt-2 flex flex-col gap-3 rounded-[20px] bg-surface shadow-card p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(jourSelectionne)}</span>
-            <button
-              type="button"
-              onClick={() => setJourSelectionne(null)}
-              className="text-[11px] font-semibold text-muted"
-            >
-              Fermer
-            </button>
-          </div>
-
-          {creneauxJourSelectionne.length === 0 ? (
-            <p className="py-4 text-center text-[12.5px] text-muted">Rien de prévu ce jour-là.</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {creneauxJourSelectionne.map((c) => {
-                const membre = equipe.find((m) => m.id === c.profil_id)
-                const couleur = couleurMembre(c.profil_id)
-                return (
-                  <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border p-2.5">
-                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleur.fond}`} />
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate text-[13px] font-semibold text-ink">
-                        {membre?.nom_complet ?? 'Employé'}
-                      </div>
-                      <div className="text-[11px] text-muted">
-                        {LIBELLE_TYPE[c.type]}
-                        {c.type === 'travail' && c.heure_debut && c.heure_fin
-                          ? ` · ${formatHeure(c.heure_debut)}-${formatHeure(c.heure_fin)}`
-                          : ''}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={() => voirCetteSemaine(jourSelectionne)}
-            className="self-start text-[12.5px] font-semibold text-primary"
-          >
-            Voir cette semaine
-          </button>
-        </div>
+        <ModaleDetailJour
+          iso={jourSelectionne}
+          creneaux={creneauxJourSelectionne}
+          equipe={equipe}
+          couleurMembre={couleurMembre}
+          onVoirCetteSemaine={() => voirCetteSemaine(jourSelectionne)}
+          onFerme={() => setJourSelectionne(null)}
+        />
       )}
     </div>
+  )
+}
+
+// Abonnement vide : rien à écouter, sert seulement de moyen idiomatique
+// (useSyncExternalStore) pour détecter le montage côté client sans
+// déclencher de setState synchrone dans un effet (interdit par le lint
+// react-hooks/set-state-in-effect). getServerSnapshot renvoie false — rien
+// n'est rendu côté serveur — et getSnapshot renvoie true dès l'hydratation.
+// Utilisé par ModaleDetailJour ci-dessous pour ne monter son portail
+// (createPortal) qu'après hydratation. Même pattern que ModaleEditionTache
+// dans src/components/taches-list.tsx (dupliqué ici plutôt que factorisé
+// pour ne pas coupler ces deux fichiers sur un détail d'implémentation).
+function sabonnerSansChangement() {
+  return () => {}
+}
+
+function ModaleDetailJour({
+  iso,
+  creneaux,
+  equipe,
+  couleurMembre,
+  onVoirCetteSemaine,
+  onFerme,
+}: {
+  iso: string
+  creneaux: Creneau[]
+  equipe: MembreEquipe[]
+  couleurMembre: (profilId: string) => CouleurAvatar
+  onVoirCetteSemaine: () => void
+  onFerme: () => void
+}) {
+  // Rendu via un portail vers document.body : échappe systématiquement à un
+  // ancêtre CSS avec transform actif (ex. .agenda-glisse-* dans agenda.tsx,
+  // dont le fill-mode `both` maintient translateX(0) en permanence), qui
+  // sinon devient le référentiel de positionnement de ce `fixed inset-0` au
+  // lieu du viewport — la modale se retrouverait confinée dans ce petit
+  // conteneur. document.body n'existe pas côté serveur : monté seulement
+  // après hydratation pour éviter un mismatch SSR/hydratation (voir
+  // sabonnerSansChangement plus haut).
+  const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
+
+  if (!monte) return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      onClick={onFerme}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[85vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(iso)}</span>
+          <button
+            type="button"
+            onClick={onFerme}
+            aria-label="Fermer"
+            className="text-[11px] font-semibold text-muted"
+          >
+            Fermer
+          </button>
+        </div>
+
+        {creneaux.length === 0 ? (
+          <p className="py-4 text-center text-[12.5px] text-muted">Rien de prévu ce jour-là.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {creneaux.map((c) => {
+              const membre = equipe.find((m) => m.id === c.profil_id)
+              const couleur = couleurMembre(c.profil_id)
+              return (
+                <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border p-2.5">
+                  <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleur.fond}`} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13px] font-semibold text-ink">
+                      {membre?.nom_complet ?? 'Employé'}
+                    </div>
+                    <div className="text-[11px] text-muted">
+                      {LIBELLE_TYPE[c.type]}
+                      {c.type === 'travail' && c.heure_debut && c.heure_fin
+                        ? ` · ${formatHeure(c.heure_debut)}-${formatHeure(c.heure_fin)}`
+                        : ''}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        <button type="button" onClick={onVoirCetteSemaine} className="self-start text-[12.5px] font-semibold text-primary">
+          Voir cette semaine
+        </button>
+      </div>
+    </div>,
+    document.body
   )
 }

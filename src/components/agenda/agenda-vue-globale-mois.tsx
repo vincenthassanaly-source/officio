@@ -1,6 +1,7 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useState, useSyncExternalStore, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { supprimerRendezVous } from '@/app/actions/agenda'
 import { toggleTache } from '@/app/actions/taches'
 import type { RendezVous } from '@/lib/data/rendez-vous'
@@ -11,7 +12,7 @@ import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleEditionTache } from '@/components/taches-list'
 import { formatDateLongue, formatJourCourt, getMonthGridDates, toISODate } from '@/lib/dates'
 import { useToast } from '@/components/ui/toast-provider'
-import { ItemLigne, regrouperItemsParJour } from './agenda-item-ligne'
+import { ItemLigne, regrouperItemsParJour, type ItemAgenda } from './agenda-item-ligne'
 
 export function AgendaVueGlobaleMois({
   rendezVous,
@@ -103,46 +104,18 @@ export function AgendaVueGlobaleMois({
       </div>
 
       {jourSelectionne && (
-        <div className="mt-2 flex flex-col gap-3 rounded-[20px] bg-surface shadow-card p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(jourSelectionne)}</span>
-            <button
-              type="button"
-              onClick={() => setJourSelectionne(null)}
-              className="text-[11px] font-semibold text-muted"
-            >
-              Fermer
-            </button>
-          </div>
-
-          {itemsJourSelectionne.length === 0 ? (
-            <p className="py-4 text-center text-[12.5px] text-muted">Rien de prévu ce jour-là.</p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {itemsJourSelectionne.map((item) => {
-                const cle =
-                  item.type === 'rdv'
-                    ? `rdv-${item.rdv.id}`
-                    : item.type === 'tache'
-                      ? `tache-${item.tache.id}`
-                      : `regularisation-${item.regularisation.id}`
-                return (
-                  <ItemLigne
-                    key={cle}
-                    item={item}
-                    aujourdhuiIso={aujourdhuiIso}
-                    isPending={isPending}
-                    onSupprimerRdv={(id) => startTransition(() => supprimerRendezVous(id))}
-                    isPendingToggle={isPendingTache}
-                    onToggleTache={onToggleTache}
-                    onEditerTache={setTacheEnEdition}
-                    couleurs={couleurs}
-                  />
-                )
-              })}
-            </div>
-          )}
-        </div>
+        <ModaleDetailJour
+          iso={jourSelectionne}
+          items={itemsJourSelectionne}
+          aujourdhuiIso={aujourdhuiIso}
+          isPending={isPending}
+          isPendingTache={isPendingTache}
+          onSupprimerRdv={(id) => startTransition(() => supprimerRendezVous(id))}
+          onToggleTache={onToggleTache}
+          onEditerTache={setTacheEnEdition}
+          couleurs={couleurs}
+          onFerme={() => setJourSelectionne(null)}
+        />
       )}
 
       {tacheEnEdition && (
@@ -155,5 +128,107 @@ export function AgendaVueGlobaleMois({
         />
       )}
     </div>
+  )
+}
+
+// Abonnement vide : rien à écouter, sert seulement de moyen idiomatique
+// (useSyncExternalStore) pour détecter le montage côté client sans
+// déclencher de setState synchrone dans un effet (interdit par le lint
+// react-hooks/set-state-in-effect). getServerSnapshot renvoie false — rien
+// n'est rendu côté serveur — et getSnapshot renvoie true dès l'hydratation.
+// Utilisé par ModaleDetailJour ci-dessous pour ne monter son portail
+// (createPortal) qu'après hydratation. Même pattern que ModaleEditionTache
+// dans src/components/taches-list.tsx (dupliqué ici plutôt que factorisé
+// pour ne pas coupler ces deux fichiers sur un détail d'implémentation).
+function sabonnerSansChangement() {
+  return () => {}
+}
+
+function ModaleDetailJour({
+  iso,
+  items,
+  aujourdhuiIso,
+  isPending,
+  isPendingTache,
+  onSupprimerRdv,
+  onToggleTache,
+  onEditerTache,
+  couleurs,
+  onFerme,
+}: {
+  iso: string
+  items: ItemAgenda[]
+  aujourdhuiIso: string
+  isPending: boolean
+  isPendingTache: boolean
+  onSupprimerRdv: (id: string) => void
+  onToggleTache: (tache: Tache) => void
+  onEditerTache: (tache: Tache) => void
+  couleurs: Map<string, CouleurAvatar>
+  onFerme: () => void
+}) {
+  // Rendu via un portail vers document.body : échappe systématiquement à un
+  // ancêtre CSS avec transform actif (ex. .agenda-glisse-* dans agenda.tsx,
+  // dont le fill-mode `both` maintient translateX(0) en permanence), qui
+  // sinon devient le référentiel de positionnement de ce `fixed inset-0` au
+  // lieu du viewport — la modale se retrouverait confinée dans ce petit
+  // conteneur. document.body n'existe pas côté serveur : monté seulement
+  // après hydratation pour éviter un mismatch SSR/hydratation (voir
+  // sabonnerSansChangement plus haut).
+  const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
+
+  if (!monte) return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      onClick={onFerme}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[85vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+      >
+        <div className="flex items-center justify-between">
+          <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(iso)}</span>
+          <button
+            type="button"
+            onClick={onFerme}
+            aria-label="Fermer"
+            className="text-[11px] font-semibold text-muted"
+          >
+            Fermer
+          </button>
+        </div>
+
+        {items.length === 0 ? (
+          <p className="py-4 text-center text-[12.5px] text-muted">Rien de prévu ce jour-là.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {items.map((item) => {
+              const cle =
+                item.type === 'rdv'
+                  ? `rdv-${item.rdv.id}`
+                  : item.type === 'tache'
+                    ? `tache-${item.tache.id}`
+                    : `regularisation-${item.regularisation.id}`
+              return (
+                <ItemLigne
+                  key={cle}
+                  item={item}
+                  aujourdhuiIso={aujourdhuiIso}
+                  isPending={isPending}
+                  onSupprimerRdv={onSupprimerRdv}
+                  isPendingToggle={isPendingTache}
+                  onToggleTache={onToggleTache}
+                  onEditerTache={onEditerTache}
+                  couleurs={couleurs}
+                />
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
   )
 }
