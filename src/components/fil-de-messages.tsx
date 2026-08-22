@@ -8,6 +8,7 @@ import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
+import { ajouterEnAttente, listerEnAttente, retirerEnAttente } from '@/lib/messages-lus-en-attente'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 
@@ -53,13 +54,51 @@ export function FilDeMessages({
   const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
 
   // Ouvrir le fil vaut lecture : on marque automatiquement comme lus tous les
-  // messages affichés, sans action manuelle de l'utilisateur.
+  // messages affichés, sans action manuelle de l'utilisateur. La requête peut
+  // échouer ou être interrompue (réseau mobile instable, PWA mise en
+  // arrière-plan/tuée par l'OS pendant l'appel) : on retente avec un court
+  // backoff, et on garde toute tentative non confirmée en localStorage pour
+  // la retenter au prochain montage plutôt que de perdre l'échec en silence.
   useEffect(() => {
+    const idsConnus = new Set(messages.map((m) => m.id))
     const idsNonLus = messages
       .filter((m) => !m.lecteurs.some((l) => l.profil_id === profilActuelId))
       .map((m) => m.id)
-    if (idsNonLus.length > 0) {
-      startTransition(() => marquerPlusieursLus(idsNonLus))
+    // On ne retente que les ids en attente qui existent toujours parmi les
+    // messages courants : un message supprimé entre-temps ferait échouer
+    // l'upsert indéfiniment (contrainte de clé étrangère) sinon.
+    const idsEnAttente = listerEnAttente(profilActuelId).filter((id) => idsConnus.has(id))
+    const idsAMarquer = Array.from(new Set([...idsNonLus, ...idsEnAttente]))
+
+    if (idsAMarquer.length === 0) return
+
+    let annule = false
+    ajouterEnAttente(profilActuelId, idsAMarquer)
+
+    async function marquerAvecRetry() {
+      const delais = [0, 1500, 5000]
+      for (const delai of delais) {
+        if (annule) return
+        if (delai > 0) await new Promise((resolve) => setTimeout(resolve, delai))
+        try {
+          await marquerPlusieursLus(idsAMarquer)
+          retirerEnAttente(profilActuelId, idsAMarquer)
+          return
+        } catch (err) {
+          console.error('Échec du marquage comme lu, nouvelle tentative…', err)
+        }
+      }
+      // Toutes les tentatives ont échoué : les ids restent en attente en
+      // localStorage, ils seront retentés au prochain montage du fil (ex:
+      // réouverture de la PWA) ou dès le retour de la connexion.
+    }
+
+    marquerAvecRetry()
+    window.addEventListener('online', marquerAvecRetry)
+
+    return () => {
+      annule = true
+      window.removeEventListener('online', marquerAvecRetry)
     }
   }, [messages, profilActuelId])
 
