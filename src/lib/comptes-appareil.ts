@@ -58,3 +58,21 @@ export function retirerCompte(profilId: string): void {
   const comptes = chargerBrut().filter((c) => c.profilId !== profilId)
   sauvegarder(comptes)
 }
+
+// Suivi en mémoire (non persisté : propre à cet onglet, perdu au rechargement)
+// du dernier rafraîchissement de session tenté pour un compte, réussi ou non.
+// Sert uniquement à éviter qu'un rafraîchissement manuel (switch-identite.tsx,
+// juste avant setSession()) ne duplique un rafraîchissement en tâche de fond
+// (ecouteur-session.tsx) qui vient tout juste d'avoir lieu pour le même
+// compte — pas un verrou de concurrence, juste un throttle.
+const RECENCE_MS = 5 * 60 * 1000
+const dernierRafraichissement = new Map<string, number>()
+
+export function marquerRafraichissementRecent(profilId: string): void {
+  dernierRafraichissement.set(profilId, Date.now())
+}
+
+export function rafraichissementRecent(profilId: string): boolean {
+  const horodatage = dernierRafraichissement.get(profilId)
+  return horodatage !== undefined && Date.now() - horodatage < RECENCE_MS
+}

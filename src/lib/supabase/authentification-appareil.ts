@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 export type ResultatAuthentificationAppareil =
   | { erreur: string }
@@ -12,19 +12,16 @@ export type ResultatAuthentificationAppareil =
     }
 
 /**
- * Authentifie un email/mot de passe sans jamais toucher aux cookies de session
- * du navigateur (contrairement à `@/lib/supabase/client` et `@/lib/supabase/server`,
- * qui sont liés aux cookies partagés par toute l'app via @supabase/ssr).
- *
- * Sert à mémoriser un compte supplémentaire sur cet appareil (comptes-appareil.ts)
- * ou à rafraîchir les tokens d'un compte déjà mémorisé, sans jamais affecter la
- * session active de l'utilisateur actuellement connecté dans ce navigateur.
+ * Client Supabase isolé (persistSession: false, autoRefreshToken: false) qui
+ * ne touche jamais aux cookies de session du navigateur, contrairement à
+ * `@/lib/supabase/client` et `@/lib/supabase/server` (liés aux cookies
+ * partagés par toute l'app via @supabase/ssr). Réutilisé par
+ * authentifierCompteAppareil() ci-dessous, par le rafraîchissement en tâche
+ * de fond des comptes inactifs (ecouteur-session.tsx) et par le
+ * rafraîchissement silencieux avant bascule (switch-identite.tsx).
  */
-export async function authentifierCompteAppareil(
-  email: string,
-  password: string
-): Promise<ResultatAuthentificationAppareil> {
-  const supabase = createClient(
+export function creerClientAppareilIsole(): SupabaseClient {
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -35,6 +32,19 @@ export async function authentifierCompteAppareil(
       },
     }
   )
+}
+
+/**
+ * Authentifie un email/mot de passe sans jamais toucher aux cookies de session
+ * du navigateur. Sert à mémoriser un compte supplémentaire sur cet appareil
+ * (comptes-appareil.ts) ou à reconnecter manuellement un compte déjà mémorisé
+ * dont le rafraîchissement automatique a échoué.
+ */
+export async function authentifierCompteAppareil(
+  email: string,
+  password: string
+): Promise<ResultatAuthentificationAppareil> {
+  const supabase = creerClientAppareilIsole()
 
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
