@@ -73,6 +73,13 @@ export function EcouteurSession() {
             // switcher pour autant, l'utilisateur doit pouvoir se
             // reconnecter dessus manuellement (voir ReconnexionCompte dans
             // switch-identite.tsx).
+            console.warn('[ecouteur-session] Échec du rafraîchissement en tâche de fond', {
+              profilId: compte.profilId,
+              code: error?.code,
+              status: error?.status,
+              message: error?.message ?? 'session absente après refreshSession()',
+              horodatage: new Date().toISOString(),
+            })
             continue
           }
 

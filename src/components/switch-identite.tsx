@@ -139,6 +139,13 @@ export function SwitchIdentite({
           refresh_token: sessionActuelle.session.refresh_token,
         })
       }
+      console.warn('[switch-identite] Échec de setSession() lors de la bascule de compte', {
+        profilId: compte.profilId,
+        code: error.code,
+        status: error.status,
+        message: error.message,
+        horodatage: new Date().toISOString(),
+      })
       setComptesExpires((e) => ({ ...e, [compte.profilId]: true }))
       setEnCoursId(null)
       return
