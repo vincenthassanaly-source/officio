@@ -134,6 +134,91 @@ export function PlanningEquipe({
     return g
   }, [heureMin, heureMax])
 
+  // Bandes de congé continues sous la ligne des jours (voir le rendu plus
+  // bas). Regroupe les créneaux `conge` de la semaine affichée par serie_id
+  // (créneaux créés en plage via date_fin, voir creerCreneau), avec un repli
+  // par profil_id + colonnes strictement contiguës pour les congés créés
+  // avant cette évolution (une ligne par jour, serie_id à NULL). Le
+  // clipping aux bornes de la semaine est déjà acquis en amont : `creneaux`
+  // ne contient que les jours de la semaine affichée (getPlannings filtre
+  // par date côté requête), donc une plage à cheval sur deux semaines
+  // s'arrête naturellement ici et reprend dans les données de la semaine
+  // suivante.
+  const bandesConge = useMemo(() => {
+    const isoSemaine = weekDates.map(toISODate)
+
+    type Groupe = { profilId: string; cols: number[]; creneauReference: Creneau }
+    const groupes: Groupe[] = []
+    const parSerie = new Map<string, Groupe>()
+    const sansSerie: { profilId: string; col: number; creneau: Creneau }[] = []
+
+    for (const c of creneaux) {
+      if (c.type !== 'conge') continue
+      const col = isoSemaine.indexOf(c.date)
+      if (col === -1) continue
+
+      if (c.serie_id) {
+        const existant = parSerie.get(c.serie_id)
+        if (existant) {
+          existant.cols.push(col)
+        } else {
+          const groupe: Groupe = { profilId: c.profil_id, cols: [col], creneauReference: c }
+          parSerie.set(c.serie_id, groupe)
+          groupes.push(groupe)
+        }
+      } else {
+        sansSerie.push({ profilId: c.profil_id, col, creneau: c })
+      }
+    }
+
+    const parProfil = new Map<string, { col: number; creneau: Creneau }[]>()
+    for (const item of sansSerie) {
+      const liste = parProfil.get(item.profilId)
+      if (liste) liste.push(item)
+      else parProfil.set(item.profilId, [item])
+    }
+    for (const [profilId, liste] of parProfil) {
+      const triee = [...liste].sort((a, b) => a.col - b.col)
+      let courant: typeof triee = []
+      for (const item of triee) {
+        const dernier = courant[courant.length - 1]
+        if (dernier && item.col !== dernier.col + 1) {
+          groupes.push({ profilId, cols: courant.map((i) => i.col), creneauReference: courant[0].creneau })
+          courant = []
+        }
+        courant.push(item)
+      }
+      if (courant.length > 0) {
+        groupes.push({ profilId, cols: courant.map((i) => i.col), creneauReference: courant[0].creneau })
+      }
+    }
+
+    const candidats = groupes
+      .map((g) => ({
+        profilId: g.profilId,
+        colDebut: Math.min(...g.cols),
+        colFin: Math.max(...g.cols),
+        creneauReference: g.creneauReference,
+      }))
+      .sort((a, b) => a.colDebut - b.colDebut || a.colFin - b.colFin)
+
+    // Empilement façon mini-Gantt : une ligne par congé actif, réutilisée
+    // dès qu'elle est libre (plutôt qu'une ligne fixe par membre) — deux
+    // congés qui ne se chevauchent jamais dans la semaine partagent la même
+    // ligne.
+    const finParLigne: number[] = []
+    return candidats.map((c) => {
+      let ligne = finParLigne.findIndex((fin) => fin < c.colDebut)
+      if (ligne === -1) {
+        ligne = finParLigne.length
+        finParLigne.push(c.colFin)
+      } else {
+        finParLigne[ligne] = c.colFin
+      }
+      return { ...c, ligne, cle: c.creneauReference.serie_id ?? c.creneauReference.id }
+    })
+  }, [creneaux, weekDates])
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap gap-x-3 gap-y-1.5">
@@ -281,7 +366,7 @@ export function PlanningEquipe({
         <div />
         {weekDates.map((d) => {
           const iso = toISODate(d)
-          const badges = creneaux.filter((c) => c.date === iso && c.type !== 'travail')
+          const badges = creneaux.filter((c) => c.date === iso && c.type === 'repos')
           return (
             <div key={iso} className="flex flex-wrap justify-center gap-0.5 py-1">
               {badges.map((c) => {
@@ -292,10 +377,8 @@ export function PlanningEquipe({
                     key={c.id}
                     onClick={() => setCreneauDetail(c)}
                     disabled={isPending}
-                    title={`${membre?.nom_complet ?? ''} — ${c.type === 'repos' ? 'Repos' : 'Congé'} (cliquer pour le détail)`}
-                    className={`rounded px-1 py-0.5 text-[8px] font-bold ${
-                      c.type === 'repos' ? 'bg-neutral-soft text-neutral-text' : 'bg-accent-soft text-accent'
-                    }`}
+                    title={`${membre?.nom_complet ?? ''} — Repos (cliquer pour le détail)`}
+                    className="rounded bg-neutral-soft px-1 py-0.5 text-[8px] font-bold text-neutral-text"
                   >
                     {membre?.initiales ?? '?'}
                   </button>
@@ -304,6 +387,35 @@ export function PlanningEquipe({
             </div>
           )
         })}
+
+        {bandesConge.length > 0 && (
+          <div
+            className="col-span-8 grid grid-cols-[28px_repeat(7,1fr)] gap-x-1 gap-y-1 pb-1"
+            style={{ gridAutoRows: '22px' }}
+          >
+            {bandesConge.map((b) => {
+              const membre = equipe.find((m) => m.id === b.profilId)
+              const nom = membre?.nom_complet.split(' ')[0] ?? membre?.initiales ?? '?'
+              const plage =
+                b.colDebut === b.colFin
+                  ? formatJourCourt(weekDates[b.colDebut])
+                  : `${formatJourCourt(weekDates[b.colDebut])} – ${formatJourCourt(weekDates[b.colFin])}`
+              return (
+                <button
+                  type="button"
+                  key={b.cle}
+                  onClick={() => setCreneauDetail(b.creneauReference)}
+                  disabled={isPending}
+                  title={`${membre?.nom_complet ?? ''} — Congé (${plage}, cliquer pour le détail)`}
+                  className={`flex h-[22px] min-w-0 items-center justify-center rounded-full px-2 text-[10px] font-semibold disabled:opacity-70 ${couleurMembre(b.profilId).fond} ${couleurMembre(b.profilId).texte}`}
+                  style={{ gridColumn: `${b.colDebut + 2} / ${b.colFin + 3}`, gridRow: b.ligne + 1 }}
+                >
+                  <span className="min-w-0 truncate">{nom}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         <div className="relative" style={{ height: hauteurGrille }}>
           {graduations.map((h) => (
