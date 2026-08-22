@@ -146,6 +146,9 @@ export function ItemLigne({
             >
               {t.titre}
             </div>
+            {t.assigne && (
+              <span className="shrink-0 text-[10px] text-muted">{t.assigne.initiales}</span>
+            )}
             <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
               {t.echeance_heure ? `Tâche · ${formatHeureCourte(t.echeance_heure)}` : 'Tâche'}
             </span>
