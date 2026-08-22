@@ -9,6 +9,19 @@ import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { Agenda } from '@/components/agenda/agenda'
 import { getWeekDates, toISODate } from '@/lib/dates'
 
+// Sur mobile (PWA installée), fermer complètement l'app (swipe dans les
+// apps récentes) puis la rouvrir peut afficher un instantané mis en cache
+// par le navigateur/l'OS Android (cache disque ou restauration de
+// processus WebAPK) plutôt que le résultat d'une requête fraîche — même
+// pattern que sur le tableau de bord (src/app/(app)/page.tsx) pour le
+// nombre de messages non lus du Cahier de liaison, appliqué ici aux
+// créneaux du Planning équipe. Ces deux directives empêchent Next.js de
+// mettre cette page en cache côté serveur ; voir aussi EcouteurRepriseApp
+// (composant client monté dans layout.tsx) pour le cas de la restauration
+// bfcache côté navigateur.
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 export default async function AgendaPage({
   searchParams,
 }: {
