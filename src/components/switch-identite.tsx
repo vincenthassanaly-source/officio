@@ -3,8 +3,15 @@
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { listerComptes, retirerCompte, ajouterOuMettreAJourCompte, type CompteAppareil } from '@/lib/comptes-appareil'
-import { authentifierCompteAppareil } from '@/lib/supabase/authentification-appareil'
+import {
+  listerComptes,
+  retirerCompte,
+  ajouterOuMettreAJourCompte,
+  marquerRafraichissementRecent,
+  rafraichissementRecent,
+  type CompteAppareil,
+} from '@/lib/comptes-appareil'
+import { authentifierCompteAppareil, creerClientAppareilIsole } from '@/lib/supabase/authentification-appareil'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
@@ -127,10 +134,42 @@ export function SwitchIdentite({
     const supabase = createClient()
     const { data: sessionActuelle } = await supabase.auth.getSession()
 
-    const { error } = await supabase.auth.setSession({
-      access_token: compte.accessToken,
-      refresh_token: compte.refreshToken,
-    })
+    let accessToken = compte.accessToken
+    let refreshToken = compte.refreshToken
+
+    // Les tokens mémorisés peuvent être périmés si ce compte n'a pas été
+    // rafraîchi récemment (ni par le switch en tâche de fond de
+    // ecouteur-session.tsx, ni par une bascule précédente). On tente un
+    // refreshSession() silencieux via un client isolé avant setSession() :
+    // s'il réussit, la bascule aboutit sans jamais demander le mot de passe.
+    // Si le rafraîchissement en tâche de fond vient d'avoir lieu pour ce
+    // compte, on ne le duplique pas — les tokens mémorisés sont déjà à jour.
+    if (!rafraichissementRecent(compte.profilId)) {
+      const clientIsole = creerClientAppareilIsole()
+      const { data: rafraichissement, error: erreurRafraichissement } = await clientIsole.auth.refreshSession({
+        refresh_token: compte.refreshToken,
+      })
+      marquerRafraichissementRecent(compte.profilId)
+
+      if (erreurRafraichissement || !rafraichissement.session) {
+        console.warn('[switch-identite] Échec du refreshSession() silencieux avant bascule', {
+          profilId: compte.profilId,
+          code: erreurRafraichissement?.code,
+          status: erreurRafraichissement?.status,
+          message: erreurRafraichissement?.message ?? 'session absente après refreshSession()',
+          horodatage: new Date().toISOString(),
+        })
+        setComptesExpires((e) => ({ ...e, [compte.profilId]: true }))
+        setEnCoursId(null)
+        return
+      }
+
+      accessToken = rafraichissement.session.access_token
+      refreshToken = rafraichissement.session.refresh_token
+      ajouterOuMettreAJourCompte({ ...compte, accessToken, refreshToken })
+    }
+
+    const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
 
     if (error) {
       if (sessionActuelle.session) {
