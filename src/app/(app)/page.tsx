@@ -95,6 +95,8 @@ export default async function AccueilPage() {
         totalTachesAFaire={tachesAFaireTous.length}
         messagesNonLusApercu={messagesNonLusApercu}
         totalMessagesNonLus={nonLus}
+        equipe={equipe}
+        profilActuelId={profil?.id ?? ''}
       />
 
       <div className="mt-5 grid grid-cols-2 gap-2.5">
