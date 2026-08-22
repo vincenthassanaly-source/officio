@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AgendaVueGlobale } from './agenda-vue-globale'
 import { AgendaVueGlobaleMois } from './agenda-vue-globale-mois'
@@ -24,6 +24,32 @@ const TOLERANCE_SWIPE_VERTICAL_PX = 60
 
 function moisISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+// Délais croissants (ms) appliqués aux 4 préchargements d'un même
+// useEffect, dans l'ordre [+1, -1, +2, -2] : l'unité la plus proche part en
+// premier, la plus lointaine en dernier. requestIdleCallback aurait été
+// l'alternative "idle time" suggérée, mais il n'existe pas sur Safari/iOS
+// (moteur principal visé par cette PWA officine) — un délai croissant en
+// setTimeout est donc l'option fiable sur toutes les plateformes.
+const DELAIS_PRECHARGEMENT_MS = [0, 150, 300, 450]
+
+// router.prefetch(href, { kind: 'full' }) n'est pas documenté ni exporté par
+// l'API publique de next/navigation (voir le rapport
+// scripts/RAPPORT-agenda-prefetch-semaines-mois-*.md pour la vérification
+// dans node_modules/next/dist) : PrefetchKind.FULL vit uniquement dans
+// next/dist/client/components/router-reducer/router-reducer-types, non
+// réexporté par next/navigation. Le runtime de Next 16.2.12 installé lit
+// néanmoins bien `options.kind` et bascule sur FetchStrategy.Full (le seul
+// mode qui précharge les données dynamiques du Server Component, pas
+// seulement le shell figé par loading.tsx) — d'où ce cast local ciblé
+// plutôt qu'un import profond dans next/dist, plus fragile.
+type RouterAvecPrefetchComplet = {
+  prefetch(href: string, options: { kind: 'full' }): void
+}
+
+function prefetchComplet(router: ReturnType<typeof useRouter>, href: string) {
+  ;(router as unknown as RouterAvecPrefetchComplet).prefetch(href, { kind: 'full' })
 }
 
 export function Agenda({
@@ -108,6 +134,37 @@ export function Agenda({
       router.replace(`/agenda?semaine=${toISODate(getWeekDates(moisAffiche)[0])}`)
     }
   }
+
+  // Précharge en tâche de fond les 2 semaines suivantes et les 2 semaines
+  // précédentes dès que la semaine affichée change, uniquement en vue
+  // semaine (sinon on préchargerait une vue non visible pour rien). Ne
+  // dépend que de `vue`/`weekDates` (référence stable côté client tant que
+  // le Server Component parent n'a pas re-rendu pour une nouvelle semaine)
+  // : rester sur la même semaine ne redéclenche donc jamais cet effet.
+  useEffect(() => {
+    if (vue !== 'semaine') return
+    const offsetsJours = [7, -7, 14, -14]
+    const minuteries = offsetsJours.map((offsetJours, index) => {
+      const cible = new Date(weekDates[0])
+      cible.setDate(cible.getDate() + offsetJours)
+      const href = `/agenda?semaine=${toISODate(cible)}`
+      return window.setTimeout(() => prefetchComplet(router, href), DELAIS_PRECHARGEMENT_MS[index])
+    })
+    return () => minuteries.forEach((id) => window.clearTimeout(id))
+  }, [vue, weekDates, router])
+
+  // Symétrique en vue mois : précharge les 2 mois suivants et précédents
+  // dès que le mois affiché change.
+  useEffect(() => {
+    if (vue !== 'mois') return
+    const offsetsMois = [1, -1, 2, -2]
+    const minuteries = offsetsMois.map((offsetMois, index) => {
+      const cible = new Date(moisAffiche.getFullYear(), moisAffiche.getMonth() + offsetMois, 1)
+      const href = `/agenda?vue=mois&mois=${moisISO(cible)}`
+      return window.setTimeout(() => prefetchComplet(router, href), DELAIS_PRECHARGEMENT_MS[index])
+    })
+    return () => minuteries.forEach((id) => window.clearTimeout(id))
+  }, [vue, moisAffiche, router])
 
   function gererToucheDebut(e: React.TouchEvent<HTMLDivElement>) {
     const cible = e.target as HTMLElement
