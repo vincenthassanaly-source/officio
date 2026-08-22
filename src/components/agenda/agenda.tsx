@@ -3,14 +3,16 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AgendaVueGlobale } from './agenda-vue-globale'
+import { AgendaVueGlobaleMois } from './agenda-vue-globale-mois'
 import { PlanningEquipe } from './planning-equipe'
+import { PlanningEquipeMois } from './planning-equipe-mois'
 import type { RendezVous } from '@/lib/data/rendez-vous'
 import type { Tache } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
 import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
-import { formatPeriodeSemaine, getWeekDates, toISODate } from '@/lib/dates'
+import { formatMoisAnnee, formatPeriodeSemaine, getWeekDates, toISODate } from '@/lib/dates'
 
 // Distance horizontale minimum pour qu'un geste soit considéré comme un
 // swipe intentionnel (plutôt qu'un tap ou un léger tremblement du doigt).
@@ -20,6 +22,10 @@ const SEUIL_SWIPE_HORIZONTAL_PX = 50
 // annule la détection pour ce geste.
 const TOLERANCE_SWIPE_VERTICAL_PX = 60
 
+function moisISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
 export function Agenda({
   rendezVous,
   taches,
@@ -27,6 +33,8 @@ export function Agenda({
   creneaux,
   equipe,
   weekDates,
+  vue,
+  moisAffiche,
   couleurs,
   profilActuelId,
 }: {
@@ -36,9 +44,6 @@ export function Agenda({
   creneaux: Creneau[]
   equipe: MembreEquipe[]
   weekDates: Date[]
-  // vue et moisAffiche : reçus dès cette étape depuis page.tsx (fetch serveur
-  // adapté à la granularité), pas encore consommés ici — le toggle et le
-  // rendu conditionnel semaine/mois arrivent avec les composants *Mois.
   vue: 'semaine' | 'mois'
   moisAffiche: Date
   couleurs: Map<string, CouleurAvatar>
@@ -46,23 +51,29 @@ export function Agenda({
 }) {
   const router = useRouter()
   const [onglet, setOnglet] = useState<'globale' | 'planning'>('globale')
-  // Sens du dernier changement de semaine (1 = vers la suivante, -1 = vers
+  // Sens du dernier changement de période (1 = vers la suivante, -1 = vers
   // la précédente), pilote le sens de la transition CSS ci-dessous. Mis à
-  // jour par allerVersSemaine (flèches ET swipe, qui l'appellent tous les
-  // deux avec un offsetJours de ±7) et par le bouton "Aujourd'hui".
+  // jour par allerVersSemaine/allerVersMois (flèches ET swipe) et par le
+  // bouton "Aujourd'hui".
   const [direction, setDirection] = useState<1 | -1>(1)
   // Point de départ du geste en cours (null si aucun geste, ou si le geste a
   // démarré sur une zone exclue via data-swipe-ignore, ex: le strip de jours
   // déjà scrollable au doigt dans AgendaVueGlobale).
   const toucheDebutRef = useRef<{ x: number; y: number } | null>(null)
   // true dès que le geste en cours s'est révélé vertical (scroll de page) :
-  // on ne déclenche alors plus de changement de semaine à la fin, sans avoir
+  // on ne déclenche alors plus de changement de période à la fin, sans avoir
   // bloqué le scroll natif (aucun preventDefault n'est appelé ici).
   const swipeAnnulePourGesteRef = useRef(false)
 
   const lundiAffiche = toISODate(weekDates[0])
   const lundiAujourdhui = toISODate(getWeekDates(new Date())[0])
   const estSemaineActuelle = lundiAffiche === lundiAujourdhui
+
+  const moisAfficheIso = moisISO(moisAffiche)
+  const moisActuelIso = moisISO(new Date())
+  const estMoisActuel = moisAfficheIso === moisActuelIso
+
+  const estPeriodeActuelle = vue === 'mois' ? estMoisActuel : estSemaineActuelle
 
   // replace plutôt que push : changer de semaine ne doit pas empiler une
   // étape d'historique par clic — sinon revenir en arrière depuis l'Agenda
@@ -75,6 +86,27 @@ export function Agenda({
     const cible = new Date(weekDates[0])
     cible.setDate(cible.getDate() + offsetJours)
     router.replace(`/agenda?semaine=${toISODate(cible)}`)
+  }
+
+  // Même pattern que allerVersMois dans regularisations.tsx.
+  function allerVersMois(offsetMois: number) {
+    setDirection(offsetMois > 0 ? 1 : -1)
+    const cible = new Date(moisAffiche.getFullYear(), moisAffiche.getMonth() + offsetMois, 1)
+    router.replace(`/agenda?vue=mois&mois=${moisISO(cible)}`)
+  }
+
+  // Bascule la granularité en conservant la période affichée : dérive le
+  // paramètre cible à partir de la date de référence actuelle plutôt que de
+  // toujours revenir à aujourd'hui — premier jour de la semaine affichée si
+  // on part de la vue semaine, n'importe quel jour du mois affiché (ici son
+  // 1er) si on part de la vue mois.
+  function allerVersVue(v: 'semaine' | 'mois') {
+    if (v === vue) return
+    if (v === 'mois') {
+      router.replace(`/agenda?vue=mois&mois=${moisISO(weekDates[0])}`)
+    } else {
+      router.replace(`/agenda?semaine=${toISODate(getWeekDates(moisAffiche)[0])}`)
+    }
   }
 
   function gererToucheDebut(e: React.TouchEvent<HTMLDivElement>) {
@@ -109,8 +141,13 @@ export function Agenda({
     const deltaY = touche.clientY - debut.y
     if (Math.abs(deltaX) < SEUIL_SWIPE_HORIZONTAL_PX || Math.abs(deltaY) > TOLERANCE_SWIPE_VERTICAL_PX) return
 
-    if (deltaX < 0) allerVersSemaine(7)
-    else allerVersSemaine(-7)
+    if (deltaX < 0) {
+      if (vue === 'mois') allerVersMois(1)
+      else allerVersSemaine(7)
+    } else {
+      if (vue === 'mois') allerVersMois(-1)
+      else allerVersSemaine(-7)
+    }
   }
 
   return (
@@ -118,20 +155,27 @@ export function Agenda({
       <div className="mb-3 flex items-center justify-between gap-2">
         <button
           type="button"
-          onClick={() => allerVersSemaine(-7)}
-          aria-label="Semaine précédente"
+          onClick={() => (vue === 'mois' ? allerVersMois(-1) : allerVersSemaine(-7))}
+          aria-label={vue === 'mois' ? 'Mois précédent' : 'Semaine précédente'}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-semibold text-muted hover:text-ink"
         >
           ‹
         </button>
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-[12.5px] font-semibold text-ink">{formatPeriodeSemaine(weekDates)}</span>
-          {!estSemaineActuelle && (
+          <span className="text-[12.5px] font-semibold text-ink">
+            {vue === 'mois' ? formatMoisAnnee(moisAffiche) : formatPeriodeSemaine(weekDates)}
+          </span>
+          {!estPeriodeActuelle && (
             <button
               type="button"
               onClick={() => {
-                setDirection(lundiAffiche < lundiAujourdhui ? 1 : -1)
-                router.replace('/agenda')
+                if (vue === 'mois') {
+                  setDirection(moisAfficheIso < moisActuelIso ? 1 : -1)
+                  router.replace('/agenda?vue=mois')
+                } else {
+                  setDirection(lundiAffiche < lundiAujourdhui ? 1 : -1)
+                  router.replace('/agenda')
+                }
               }}
               className="text-[11px] font-semibold text-primary"
             >
@@ -141,11 +185,32 @@ export function Agenda({
         </div>
         <button
           type="button"
-          onClick={() => allerVersSemaine(7)}
-          aria-label="Semaine suivante"
+          onClick={() => (vue === 'mois' ? allerVersMois(1) : allerVersSemaine(7))}
+          aria-label={vue === 'mois' ? 'Mois suivant' : 'Semaine suivante'}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-semibold text-muted hover:text-ink"
         >
           ›
+        </button>
+      </div>
+
+      <div className="mb-3 flex shrink-0 rounded-xl bg-track p-1">
+        <button
+          type="button"
+          onClick={() => allerVersVue('semaine')}
+          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+            vue === 'semaine' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+          }`}
+        >
+          Semaine
+        </button>
+        <button
+          type="button"
+          onClick={() => allerVersVue('mois')}
+          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+            vue === 'mois' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+          }`}
+        >
+          Mois
         </button>
       </div>
 
@@ -176,32 +241,53 @@ export function Agenda({
         onTouchMove={gererToucheMove}
         onTouchEnd={gererToucheFin}
       >
-        {/* Remonté à chaque changement de semaine (clé sur lundiAffiche,
-            indépendante de l'onglet actif) : le navigateur rejoue
-            automatiquement l'animation `agenda-glisse-*` définie dans
-            globals.css dès l'insertion de ce nouveau nœud dans le DOM. */}
+        {/* Remonté à chaque changement de période (clé sur lundiAffiche ou
+            moisAfficheIso selon la granularité, indépendante de l'onglet
+            actif) : le navigateur rejoue automatiquement l'animation
+            `agenda-glisse-*` définie dans globals.css dès l'insertion de ce
+            nouveau nœud dans le DOM. */}
         <div
-          key={lundiAffiche}
+          key={vue === 'mois' ? moisAfficheIso : lundiAffiche}
           className={`flex flex-1 flex-col ${
             direction === 1 ? 'agenda-glisse-suivant' : 'agenda-glisse-precedent'
           }`}
         >
-          {onglet === 'globale' ? (
-            <AgendaVueGlobale
-              key={lundiAffiche}
+          {vue === 'semaine' ? (
+            onglet === 'globale' ? (
+              <AgendaVueGlobale
+                key={lundiAffiche}
+                rendezVous={rendezVous}
+                taches={taches}
+                regularisations={regularisations}
+                weekDates={weekDates}
+                equipe={equipe}
+                profilActuelId={profilActuelId}
+              />
+            ) : (
+              <PlanningEquipe
+                key={lundiAffiche}
+                creneaux={creneaux}
+                equipe={equipe}
+                weekDates={weekDates}
+                couleurs={couleurs}
+              />
+            )
+          ) : onglet === 'globale' ? (
+            <AgendaVueGlobaleMois
+              key={moisAfficheIso}
               rendezVous={rendezVous}
               taches={taches}
               regularisations={regularisations}
-              weekDates={weekDates}
+              moisAffiche={moisAffiche}
               equipe={equipe}
               profilActuelId={profilActuelId}
             />
           ) : (
-            <PlanningEquipe
-              key={lundiAffiche}
+            <PlanningEquipeMois
+              key={moisAfficheIso}
               creneaux={creneaux}
               equipe={equipe}
-              weekDates={weekDates}
+              moisAffiche={moisAffiche}
               couleurs={couleurs}
             />
           )}
