@@ -72,7 +72,7 @@ function ItemLigne({
     const t = item.tache
     const due = dueInfo(t)
     return (
-      <Link href="/liaison" className="flex gap-3">
+      <Link href={`/liaison?onglet=taches&tache=${t.id}`} className="flex gap-3">
         <div className="w-12 shrink-0 pt-1 text-right">
           <div className="text-[10px] text-muted">Journée</div>
         </div>
