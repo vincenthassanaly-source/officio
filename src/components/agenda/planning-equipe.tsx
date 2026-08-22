@@ -192,28 +192,30 @@ export function PlanningEquipe({
               ))}
             </select>
           </div>
-          <div className="flex gap-2">
-            <select
-              name="recurrence"
-              value={recurrenceForm}
-              onChange={(e) => setRecurrenceForm(e.target.value as RecurrenceCreneau)}
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-            >
-              <option value="aucune">Créneau ponctuel</option>
-              <option value="hebdomadaire">Toutes les semaines</option>
-              <option value="toutes_les_2_semaines">Une semaine sur deux</option>
-            </select>
-            {recurrenceForm !== 'aucune' && (
-              <input
-                type="date"
-                name="recurrence_fin"
-                required
-                aria-label="Jusqu'au"
+          {typeForm !== 'conge' && (
+            <div className="flex gap-2">
+              <select
+                name="recurrence"
+                value={recurrenceForm}
+                onChange={(e) => setRecurrenceForm(e.target.value as RecurrenceCreneau)}
                 className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-              />
-            )}
-          </div>
-          {recurrenceForm !== 'aucune' && (
+              >
+                <option value="aucune">Créneau ponctuel</option>
+                <option value="hebdomadaire">Toutes les semaines</option>
+                <option value="toutes_les_2_semaines">Une semaine sur deux</option>
+              </select>
+              {recurrenceForm !== 'aucune' && (
+                <input
+                  type="date"
+                  name="recurrence_fin"
+                  required
+                  aria-label="Jusqu'au"
+                  className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+                />
+              )}
+            </div>
+          )}
+          {typeForm !== 'conge' && recurrenceForm !== 'aucune' && (
             <p className="text-[11px] text-muted">Jusqu&apos;à la date choisie ci-dessus (incluse).</p>
           )}
           <select
@@ -226,6 +228,16 @@ export function PlanningEquipe({
             <option value="repos">Repos</option>
             <option value="conge">Congé</option>
           </select>
+          {typeForm === 'conge' && (
+            <div>
+              <label className="mb-1 block text-[11px] font-semibold text-muted">Jusqu&apos;au (optionnel)</label>
+              <input
+                type="date"
+                name="date_fin"
+                className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+              />
+            </div>
+          )}
           {typeForm === 'travail' && (
             <div className="flex gap-2">
               <input
