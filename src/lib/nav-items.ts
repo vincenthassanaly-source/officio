@@ -9,6 +9,7 @@ import {
   IconVaccin,
   IconRupturesStock,
   IconPleinsRayon,
+  IconNote,
 } from '@/components/nav-icons'
 
 export const NAV_ITEMS = [
@@ -34,6 +35,7 @@ export const MODULES_SECONDAIRES = [
   { href: '/vaccins', label: 'Vaccins', icone: IconVaccin, couleurFond: 'bg-green-soft', couleurTexte: 'text-green' },
   { href: '/ruptures-stock', label: 'Ruptures de stock', icone: IconRupturesStock, couleurFond: 'bg-rec-soft', couleurTexte: 'text-rec' },
   { href: '/pleins-rayon', label: 'Pleins de rayon', icone: IconPleinsRayon, couleurFond: 'bg-brun-soft', couleurTexte: 'text-brun' },
+  { href: '/notes', label: 'Notes', icone: IconNote, couleurFond: 'bg-primary-soft', couleurTexte: 'text-primary-dark' },
 ]
 
 export function estLienActif(href: string, pathname: string): boolean {

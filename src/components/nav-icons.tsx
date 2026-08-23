@@ -225,6 +225,24 @@ export function IconRupturesStock({ className }: IconProps) {
   )
 }
 
+export function IconNote({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 3h11l3 3v15H5z" />
+      <path d="M16 3v3h3" />
+      <path d="M8 11h8M8 15h8M8 19h5" />
+    </svg>
+  )
+}
+
 // Grille 2x2 : symbole générique "plus de modules", utilisé par le bouton
 // "Plus" de la bottom nav mobile pour ouvrir le panneau des modules
 // secondaires (voir menu-plus-panel.tsx).
