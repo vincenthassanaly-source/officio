@@ -225,6 +225,28 @@ export function IconRupturesStock({ className }: IconProps) {
   )
 }
 
+// Grille 2x2 : symbole générique "plus de modules", utilisé par le bouton
+// "Plus" de la bottom nav mobile pour ouvrir le panneau des modules
+// secondaires (voir menu-plus-panel.tsx).
+export function IconPlus({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="3" y="3" width="8" height="8" rx="1.5" />
+      <rect x="13" y="3" width="8" height="8" rx="1.5" />
+      <rect x="3" y="13" width="8" height="8" rx="1.5" />
+      <rect x="13" y="13" width="8" height="8" rx="1.5" />
+    </svg>
+  )
+}
+
 // Flèche remontant un produit vers le rayon (étagère) : cohérent avec le
 // thème "réapprovisionnement depuis la réserve" du module Pleins de rayon.
 export function IconPleinsRayon({ className }: IconProps) {
