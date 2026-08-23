@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { marquerNotificationLue, marquerToutesNotificationsLues } from '@/app/actions/notifications'
+import { useNotificationsInApp } from '@/components/notifications-provider'
 import type { NotificationInApp } from '@/lib/data/notifications'
 import { formatDateRelative } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
@@ -32,13 +33,8 @@ function IconCloche({ className }: { className?: string }) {
   )
 }
 
-export function NotificationsCloche({
-  notifications,
-  nombreNonLues,
-}: {
-  notifications: NotificationInApp[]
-  nombreNonLues: number
-}) {
+export function NotificationsCloche() {
+  const { notifications, nombreNonLues } = useNotificationsInApp()
   const [ouvert, setOuvert] = useState(false)
   const [position, setPosition] = useState({ top: 0, right: 0 })
   const [isPending, startTransition] = useTransition()

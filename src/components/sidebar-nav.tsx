@@ -16,7 +16,6 @@ import {
 } from '@/components/nav-icons'
 import { signOut } from '@/app/actions/auth'
 import type { Adhesion } from '@/lib/data/adhesions'
-import type { NotificationInApp } from '@/lib/data/notifications'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
 const ICONES: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -33,15 +32,11 @@ export function SidebarNav({
   officineActiveId,
   profilActuel,
   couleurProfilActuel,
-  notifications,
-  nombreNonLues,
 }: {
   adhesions: Adhesion[]
   officineActiveId: string
   profilActuel: { id: string; nom_complet: string; initiales: string } | null
   couleurProfilActuel: CouleurAvatar
-  notifications: NotificationInApp[]
-  nombreNonLues: number
 }) {
   const pathname = usePathname()
 
@@ -49,7 +44,7 @@ export function SidebarNav({
     <aside className="hidden shrink-0 flex-col border-r border-border bg-surface px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-60 lg:overflow-y-auto">
       <div className="flex items-start gap-2">
         <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActiveId} />
-        <NotificationsCloche notifications={notifications} nombreNonLues={nombreNonLues} />
+        <NotificationsCloche />
       </div>
 
       <nav className="mt-6 flex flex-col gap-1">

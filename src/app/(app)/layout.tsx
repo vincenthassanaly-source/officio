@@ -5,6 +5,7 @@ import { PageViewTransition } from '@/components/page-view-transition'
 import { SidebarNav } from '@/components/sidebar-nav'
 import { OfficineSwitcher } from '@/components/officine-switcher'
 import { NotificationsCloche } from '@/components/notifications-cloche'
+import { NotificationsProvider } from '@/components/notifications-provider'
 import { EcouteurSession } from '@/components/ecouteur-session'
 import { EcouteurRepriseApp } from '@/components/ecouteur-reprise-app'
 import { getMesAdhesions } from '@/lib/data/adhesions'
@@ -36,81 +37,81 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const couleurProfilActuel = couleursMembres.get(profilActuel?.id ?? '') ?? COULEUR_PAR_DEFAUT
 
   return (
-    <div className="flex w-full flex-1 flex-col overflow-x-hidden lg:flex-row lg:overflow-x-visible">
-      <EcouteurSession />
-      <EcouteurRepriseApp />
-      <SidebarNav
-        adhesions={adhesions}
-        officineActiveId={officineActive!.officine_id}
-        profilActuel={profilActuel}
-        couleurProfilActuel={couleurProfilActuel}
-        notifications={notifications}
-        nombreNonLues={nombreNonLues}
-      />
+    <NotificationsProvider notifications={notifications} nombreNonLues={nombreNonLues}>
+      <div className="flex w-full flex-1 flex-col overflow-x-hidden lg:flex-row lg:overflow-x-visible">
+        <EcouteurSession />
+        <EcouteurRepriseApp />
+        <SidebarNav
+          adhesions={adhesions}
+          officineActiveId={officineActive!.officine_id}
+          profilActuel={profilActuel}
+          couleurProfilActuel={couleurProfilActuel}
+        />
 
-      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col lg:mx-0 lg:max-w-none">
-        <header className="flex items-start justify-between gap-2 px-4 pt-6 sm:gap-3 sm:px-8 lg:hidden">
-          <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActive!.officine_id} />
-          <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
-            <NotificationsCloche notifications={notifications} nombreNonLues={nombreNonLues} />
-            <div className="flex min-w-0 shrink-0 items-center gap-3 pt-1 sm:gap-4">
-              <Link
-                href="/inviter"
-                className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
-              >
-                Mon équipe
-              </Link>
-              <Link
-                href="/profil"
-                className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
-              >
-                Profil
-              </Link>
-              <form action={signOut}>
-                <button
-                  type="submit"
-                  aria-label="Se déconnecter"
-                  className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink"
+        <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col lg:mx-0 lg:max-w-none">
+          <header className="flex items-start justify-between gap-2 px-4 pt-6 sm:gap-3 sm:px-8 lg:hidden">
+            <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActive!.officine_id} />
+            <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
+              <NotificationsCloche />
+              <div className="flex min-w-0 shrink-0 items-center gap-3 pt-1 sm:gap-4">
+                <Link
+                  href="/inviter"
+                  className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
                 >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="shrink-0"
+                  Mon équipe
+                </Link>
+                <Link
+                  href="/profil"
+                  className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
+                >
+                  Profil
+                </Link>
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    aria-label="Se déconnecter"
+                    className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink"
                   >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                  <span className="hidden sm:inline">Se déconnecter</span>
-                </button>
-              </form>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="shrink-0"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    <span className="hidden sm:inline">Se déconnecter</span>
+                  </button>
+                </form>
+              </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Transition de page (fondu + léger slide) — uniquement sur cette zone
-            de contenu, ni sur la sidebar, ni sur le header, ni sur la
-            BottomNav, qui restent fixes. Voir globals.css pour les keyframes
-            `page-transition` et la neutralisation du crossfade racine par
-            défaut du navigateur, et page-view-transition.tsx pour pourquoi
-            cette ViewTransition est keyée sur le pathname plutôt qu'utilisée
-            directement ici (évite qu'une navigation restant sur la même page,
-            ex: le swipe semaine/mois de l'agenda, ne déclenche aussi cette
-            transition de page). */}
-        <PageViewTransition>
-          <div className="flex flex-1 flex-col px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8">
-            {children}
-          </div>
-        </PageViewTransition>
+          {/* Transition de page (fondu + léger slide) — uniquement sur cette zone
+              de contenu, ni sur la sidebar, ni sur le header, ni sur la
+              BottomNav, qui restent fixes. Voir globals.css pour les keyframes
+              `page-transition` et la neutralisation du crossfade racine par
+              défaut du navigateur, et page-view-transition.tsx pour pourquoi
+              cette ViewTransition est keyée sur le pathname plutôt qu'utilisée
+              directement ici (évite qu'une navigation restant sur la même page,
+              ex: le swipe semaine/mois de l'agenda, ne déclenche aussi cette
+              transition de page). */}
+          <PageViewTransition>
+            <div className="flex flex-1 flex-col px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8">
+              {children}
+            </div>
+          </PageViewTransition>
 
-        <BottomNav />
+          <BottomNav />
+        </div>
       </div>
-    </div>
+    </NotificationsProvider>
   )
 }

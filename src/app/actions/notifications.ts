@@ -5,6 +5,11 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceRoleClient } from '@/lib/supabase/service-role'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
+import {
+  getNotifications,
+  getNombreNotificationsNonLues,
+  type NotificationInApp,
+} from '@/lib/data/notifications'
 import type { CategorieNotification } from '@/lib/notifications/types'
 
 export type AbonnementPushInput = {
@@ -85,6 +90,27 @@ export async function marquerNotificationLue(id: string) {
   if (error) throw new Error(error.message)
 
   revalidatePath('/', 'layout')
+}
+
+// Rafraîchit uniquement le fil de notifications in-app (cloche), sans
+// `revalidatePath` : appelée par NotificationsProvider (voir
+// notifications-provider.tsx) au retour au premier plan de l'app, elle ne
+// déclenche donc pas de nouvelle exécution de tout AppLayout (adhésions,
+// profil, couleurs équipe...) contrairement à un `router.refresh()`.
+export async function getNotificationsFraiches(): Promise<{
+  notifications: NotificationInApp[]
+  nombreNonLues: number
+}> {
+  const profil = await getCurrentProfil()
+  const officine = await getOfficineActive()
+  if (!profil || !officine) return { notifications: [], nombreNonLues: 0 }
+
+  const [notifications, nombreNonLues] = await Promise.all([
+    getNotifications(officine.officine_id, profil.id),
+    getNombreNotificationsNonLues(officine.officine_id, profil.id),
+  ])
+
+  return { notifications, nombreNonLues }
 }
 
 export async function marquerToutesNotificationsLues() {
