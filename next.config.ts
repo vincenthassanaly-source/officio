@@ -29,19 +29,38 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        // Empêche le cache HTTP disque du navigateur/de l'OS de resservir un
-        // instantané obsolète des pages après fermeture complète puis
-        // réouverture de la PWA (notamment WebAPK Android) : la fraîcheur
-        // des données (ex. messages non lus du Cahier de liaison) doit
-        // toujours venir d'une requête réseau. Les assets statiques Next
-        // (hashés, immuables) ne sont pas concernés par cette exclusion.
-        source: '/((?!_next/static|_next/image).*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-store, must-revalidate',
-          },
-        ],
+        // Pages à fraîcheur immédiate obligatoire : l'accueil (aperçus
+        // liaison/agenda + cloche notifications), le Cahier de liaison et
+        // l'agenda. `no-store` empêche à la fois le cache HTTP disque et,
+        // sous Chrome/WebAPK Android, l'éligibilité de la page au bfcache —
+        // c'est ce second effet qui évite de resservir un instantané
+        // obsolète (ex. messages non lus) après fermeture complète puis
+        // réouverture de la PWA. Voir EcouteurRepriseApp pour le cas des
+        // pages hors de cette liste, qui elles restent bfcache-éligibles.
+        source: '/',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
+        source: '/liaison',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
+        source: '/agenda',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
+        // Toutes les autres pages (documents, carnet, fournisseurs, profil,
+        // huiles essentielles, chaussures, etc.) : leurs données changent
+        // rarement en cours de session, un court cache navigateur évite de
+        // refaire un aller-retour réseau complet à chaque navigation sans
+        // risquer un contenu significativement périmé. `private` car le
+        // contenu est propre à l'officine/l'utilisateur connecté (pas de
+        // cache partagé/CDN). Assets statiques Next (hashés, immuables) non
+        // concernés par cette règle : exclus explicitement, comme les 3
+        // routes ci-dessus (`.+` plutôt que `.*` exclut aussi la racine `/`
+        // elle-même, dont le nombre de caractères après le `/` est nul).
+        source: '/((?!_next/static|_next/image|liaison|agenda).+)',
+        headers: [{ key: 'Cache-Control', value: 'private, max-age=10, must-revalidate' }],
       },
     ]
   },
