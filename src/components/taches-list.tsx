@@ -12,6 +12,7 @@ import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 // Même format que formatHeure() dans rappels-agenda/route.ts ('HH:MM:SS' ou
 // 'HH:MM' -> 'HHhMM'). Exportée pour être réutilisée par
@@ -490,6 +491,11 @@ export function ModaleEditionTache({
   // pas côté serveur : monté seulement après hydratation pour éviter un
   // mismatch SSR/hydratation (voir sabonnerSansChangement plus haut).
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
+
+  // Toujours montée seulement quand ouverte (voir {tacheEnEdition && <ModaleEditionTache .../>}
+  // chez les appelants) : `ouvert` vaut donc toujours true tant que ce
+  // composant existe, et le démontage déclenche le nettoyage du hook.
+  useFermerAvecRetour(true, onFerme)
 
   if (!monte) return null
 
