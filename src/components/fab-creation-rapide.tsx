@@ -1,18 +1,19 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { IconLiaison, IconRegularisation } from '@/components/nav-icons'
+import { IconLiaison, IconRegularisation, IconNote } from '@/components/nav-icons'
 import { ChampPhoto } from '@/components/champ-photo'
 import { envoyerMessage } from '@/app/actions/liaison'
 import { creerTache } from '@/app/actions/taches'
 import { ajouterRegularisation } from '@/app/actions/regularisations'
+import { creerNote } from '@/app/actions/notes'
 import { ChampsFormulaire } from '@/components/regularisations-liste'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { toISODate } from '@/lib/dates'
 import type { Categorie } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
 
-type Vue = 'ferme' | 'menu' | 'message' | 'tache' | 'regularisation'
+type Vue = 'ferme' | 'menu' | 'message' | 'tache' | 'regularisation' | 'note'
 
 // Mêmes catégories/couleurs que le formulaire de fil-de-messages.tsx.
 const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
@@ -55,7 +56,11 @@ function IconTache({ className }: { className?: string }) {
   )
 }
 
-function MenuChoix({ onChoisir }: { onChoisir: (vue: 'message' | 'tache' | 'regularisation') => void }) {
+function MenuChoix({
+  onChoisir,
+}: {
+  onChoisir: (vue: 'message' | 'tache' | 'regularisation' | 'note') => void
+}) {
   return (
     <div className="flex flex-col gap-2 p-4">
       <div className="mb-1 text-center font-heading text-lg text-ink">Créer</div>
@@ -96,6 +101,19 @@ function MenuChoix({ onChoisir }: { onChoisir: (vue: 'message' | 'tache' | 'regu
         <div>
           <div className="text-[14px] font-semibold text-ink">Nouvelle régularisation</div>
           <div className="text-[11.5px] text-muted">Enregistrer une ordonnance à régulariser</div>
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={() => onChoisir('note')}
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-dark">
+          <IconNote className="h-5 w-5" />
+        </div>
+        <div>
+          <div className="text-[14px] font-semibold text-ink">Nouvelle note</div>
+          <div className="text-[11.5px] text-muted">Partager une note avec l&rsquo;équipe</div>
         </div>
       </button>
     </div>
@@ -247,6 +265,50 @@ function FormulaireRegularisation({ onCree }: { onCree: () => void }) {
   )
 }
 
+function FormulaireNote({ onCree }: { onCree: () => void }) {
+  const [titre, setTitre] = useState('')
+  const [contenu, setContenu] = useState('')
+  const [isPending, startTransition] = useTransition()
+
+  return (
+    <form
+      action={(formData) => {
+        startTransition(async () => {
+          await creerNote(formData)
+          setTitre('')
+          setContenu('')
+          onCree()
+        })
+      }}
+      className="flex flex-col gap-3 p-4"
+    >
+      <div className="font-heading text-lg text-ink">Nouvelle note</div>
+      <input
+        name="titre"
+        value={titre}
+        onChange={(e) => setTitre(e.target.value)}
+        placeholder="Titre de la note"
+        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
+      />
+      <textarea
+        name="contenu"
+        value={contenu}
+        onChange={(e) => setContenu(e.target.value)}
+        placeholder="Contenu de la note"
+        rows={4}
+        className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+      />
+      <button
+        type="submit"
+        disabled={isPending || !titre.trim() || !contenu.trim()}
+        className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+      >
+        Ajouter la note
+      </button>
+    </form>
+  )
+}
+
 export function FabCreationRapide({
   equipe,
   profilActuelId,
@@ -294,6 +356,7 @@ export function FabCreationRapide({
               <FormulaireTache equipe={equipe} profilActuelId={profilActuelId} onCree={fermer} />
             )}
             {vue === 'regularisation' && <FormulaireRegularisation onCree={fermer} />}
+            {vue === 'note' && <FormulaireNote onCree={fermer} />}
           </div>
         </div>
       )}

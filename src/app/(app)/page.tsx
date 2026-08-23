@@ -11,6 +11,7 @@ import { getSuggestions } from '@/lib/data/suggestions'
 import { getRupturesStock } from '@/lib/data/ruptures-stock'
 import { getProduitsARecommander } from '@/lib/data/produits-a-recommander'
 import { getPleinsRayon } from '@/lib/data/pleins-rayon'
+import { getNotes } from '@/lib/data/notes'
 import { getEquipe } from '@/lib/data/equipe'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
@@ -29,6 +30,7 @@ import {
   IconSuggestions,
   IconRupturesStock,
   IconPleinsRayon,
+  IconNote,
 } from '@/components/nav-icons'
 
 // Sur mobile (PWA installée), fermer complètement l'app (swipe dans les
@@ -66,6 +68,7 @@ export default async function AccueilPage() {
     rupturesStock,
     produitsARecommander,
     pleinsRayon,
+    notes,
   ] = await Promise.all([
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
@@ -78,6 +81,7 @@ export default async function AccueilPage() {
     getRupturesStock(officine.officine_id),
     getProduitsARecommander(officine.officine_id),
     getPleinsRayon(officine.officine_id),
+    getNotes(officine.officine_id),
   ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
@@ -273,6 +277,18 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Pleins de rayon</div>
             <div className="mt-0.5 text-[11px] text-muted">{pleinsRayon.length} en cours</div>
+          </div>
+        </Link>
+        <Link
+          href="/notes"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary-dark">
+            <IconNote className="h-[18px] w-[18px]" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Notes</div>
+            <div className="mt-0.5 text-[11px] text-muted">{notes.length} notes</div>
           </div>
         </Link>
       </div>

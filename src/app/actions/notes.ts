@@ -25,6 +25,7 @@ export async function creerNote(formData: FormData) {
   if (error) throw new Error(error.message)
 
   revalidatePath('/notes')
+  revalidatePath('/')
 }
 
 export async function supprimerNote(id: string) {
@@ -43,4 +44,5 @@ export async function supprimerNote(id: string) {
   if (error) throw new Error(error.message)
 
   revalidatePath('/notes')
+  revalidatePath('/')
 }
