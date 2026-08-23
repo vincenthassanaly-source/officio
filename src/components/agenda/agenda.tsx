@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, ViewTransition } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AgendaVueGlobale } from './agenda-vue-globale'
 import { AgendaVueGlobaleMois } from './agenda-vue-globale-mois'
@@ -292,81 +292,66 @@ export function Agenda({
         </button>
       </div>
 
-      {/* La navigation de semaine/mois passe par router.replace() (voir
-          allerVersSemaine/allerVersMois plus haut), que Next.js enrobe dans
-          une transition React — ce qui active par défaut la
-          <ViewTransition default="page-transition"> englobante de
-          (app)/layout.tsx, même s'il s'agit de la même page. Cette
-          ViewTransition native du navigateur peint son instantané dans le
-          top layer, au-dessus de tout le document (y compris la BottomNav
-          `fixed`, quel que soit son z-index) : c'est elle, et non un souci
-          d'overflow/stacking CSS classique, qui faisait apparaître le
-          contenu glissant par-dessus la barre de navigation. On isole donc
-          explicitement cette zone de la ViewTransition ancêtre : elle garde
-          uniquement l'animation CSS `agenda-glisse-*` ci-dessous, qui reste
-          un DOM normal correctement borné par l'empilement standard. */}
-      <ViewTransition default="none">
+      <div
+        className="flex flex-1 flex-col"
+        onTouchStart={gererToucheDebut}
+        onTouchMove={gererToucheMove}
+        onTouchEnd={gererToucheFin}
+      >
+        {/* Remonté à chaque changement de période (clé sur lundiAffiche ou
+            moisAfficheIso selon la granularité, indépendante de l'onglet
+            actif) : le navigateur rejoue automatiquement l'animation
+            `agenda-glisse-*` définie dans globals.css dès l'insertion de ce
+            nouveau nœud dans le DOM. */}
         <div
-          className="flex flex-1 flex-col"
-          onTouchStart={gererToucheDebut}
-          onTouchMove={gererToucheMove}
-          onTouchEnd={gererToucheFin}
+          key={vue === 'mois' ? moisAfficheIso : lundiAffiche}
+          className={`flex flex-1 flex-col ${
+            direction === 1 ? 'agenda-glisse-suivant' : 'agenda-glisse-precedent'
+          }`}
         >
-          {/* Remonté à chaque changement de période (clé sur lundiAffiche ou
-              moisAfficheIso selon la granularité, indépendante de l'onglet
-              actif) : le navigateur rejoue automatiquement l'animation
-              `agenda-glisse-*` définie dans globals.css dès l'insertion de ce
-              nouveau nœud dans le DOM. */}
-          <div
-            key={vue === 'mois' ? moisAfficheIso : lundiAffiche}
-            className={`flex flex-1 flex-col ${
-              direction === 1 ? 'agenda-glisse-suivant' : 'agenda-glisse-precedent'
-            }`}
-          >
-            {vue === 'semaine' ? (
-              onglet === 'globale' ? (
-                <AgendaVueGlobale
-                  key={lundiAffiche}
-                  rendezVous={rendezVous}
-                  taches={taches}
-                  regularisations={regularisations}
-                  weekDates={weekDates}
-                  equipe={equipe}
-                  profilActuelId={profilActuelId}
-                  couleurs={couleurs}
-                />
-              ) : (
-                <PlanningEquipe
-                  key={lundiAffiche}
-                  creneaux={creneaux}
-                  equipe={equipe}
-                  weekDates={weekDates}
-                  couleurs={couleurs}
-                />
-              )
-            ) : onglet === 'globale' ? (
-              <AgendaVueGlobaleMois
-                key={moisAfficheIso}
+          {vue === 'semaine' ? (
+            onglet === 'globale' ? (
+              <AgendaVueGlobale
+                key={lundiAffiche}
                 rendezVous={rendezVous}
                 taches={taches}
                 regularisations={regularisations}
-                moisAffiche={moisAffiche}
+                weekDates={weekDates}
                 equipe={equipe}
                 profilActuelId={profilActuelId}
                 couleurs={couleurs}
               />
             ) : (
-              <PlanningEquipeMois
-                key={moisAfficheIso}
+              <PlanningEquipe
+                key={lundiAffiche}
                 creneaux={creneaux}
                 equipe={equipe}
-                moisAffiche={moisAffiche}
+                weekDates={weekDates}
                 couleurs={couleurs}
               />
-            )}
-          </div>
+            )
+          ) : onglet === 'globale' ? (
+            <AgendaVueGlobaleMois
+              key={moisAfficheIso}
+              rendezVous={rendezVous}
+              taches={taches}
+              regularisations={regularisations}
+              moisAffiche={moisAffiche}
+              equipe={equipe}
+              profilActuelId={profilActuelId}
+              couleurs={couleurs}
+            />
+          ) : (
+            <PlanningEquipeMois
+              key={moisAfficheIso}
+              creneaux={creneaux}
+              equipe={equipe}
+              moisAffiche={moisAffiche}
+              couleurs={couleurs}
+            />
+          )}
         </div>
-      </ViewTransition>
+      </div>
     </div>
   )
 }

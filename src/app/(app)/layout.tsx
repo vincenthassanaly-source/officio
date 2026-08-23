@@ -1,7 +1,7 @@
 import Link from 'next/link'
-import { ViewTransition } from 'react'
 import { redirect } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
+import { PageViewTransition } from '@/components/page-view-transition'
 import { SidebarNav } from '@/components/sidebar-nav'
 import { OfficineSwitcher } from '@/components/officine-switcher'
 import { NotificationsCloche } from '@/components/notifications-cloche'
@@ -98,12 +98,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             de contenu, ni sur la sidebar, ni sur le header, ni sur la
             BottomNav, qui restent fixes. Voir globals.css pour les keyframes
             `page-transition` et la neutralisation du crossfade racine par
-            défaut du navigateur. */}
-        <ViewTransition default="page-transition">
+            défaut du navigateur, et page-view-transition.tsx pour pourquoi
+            cette ViewTransition est keyée sur le pathname plutôt qu'utilisée
+            directement ici (évite qu'une navigation restant sur la même page,
+            ex: le swipe semaine/mois de l'agenda, ne déclenche aussi cette
+            transition de page). */}
+        <PageViewTransition>
           <div className="flex flex-1 flex-col px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8">
             {children}
           </div>
-        </ViewTransition>
+        </PageViewTransition>
 
         <BottomNav />
       </div>
