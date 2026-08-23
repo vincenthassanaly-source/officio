@@ -8,6 +8,7 @@ const CHAMP_CLASS =
 
 const PRIX_FLACON = 2
 const PRIX_GELULES = 4
+const PRIX_GELULES_VEGETALES = 8
 
 type LigneMelange = {
   id: string
@@ -149,10 +150,59 @@ function SelecteurHuile({
   )
 }
 
+function CompteurGelules({
+  libelle,
+  prixUnitaire,
+  quantite,
+  onChange,
+}: {
+  libelle: string
+  prixUnitaire: number
+  quantite: number
+  onChange: (quantite: number) => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 text-[13px] text-ink">
+      <span className="min-w-0 flex-1">
+        {libelle} — {formatEuro(prixUnitaire)}
+      </span>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => onChange(Math.max(0, quantite - 1))}
+          disabled={quantite <= 0}
+          aria-label={`Retirer un paquet — ${libelle}`}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-track text-ink hover:text-primary disabled:opacity-30"
+        >
+          −
+        </button>
+        <input
+          type="number"
+          min="0"
+          step="1"
+          value={quantite}
+          onChange={(e) => onChange(Math.max(0, Math.floor(Number(e.target.value)) || 0))}
+          aria-label={`Quantité — ${libelle}`}
+          className={`w-12 shrink-0 px-1 py-1 text-center ${CHAMP_CLASS}`}
+        />
+        <button
+          type="button"
+          onClick={() => onChange(quantite + 1)}
+          aria-label={`Ajouter un paquet — ${libelle}`}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-track text-ink hover:text-primary"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssentielle[] }) {
   const [lignes, setLignes] = useState<LigneMelange[]>(() => [nouvelleLigne()])
   const [mode, setMode] = useState<'melange' | 'flacons_separes'>('melange')
-  const [gelules, setGelules] = useState(false)
+  const [nbGelules, setNbGelules] = useState(0)
+  const [nbGelulesVegetales, setNbGelulesVegetales] = useState(0)
 
   function ajouterLigne() {
     setLignes((l) => [...l, nouvelleLigne()])
@@ -169,7 +219,8 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
   function reinitialiser() {
     setLignes([nouvelleLigne()])
     setMode('melange')
-    setGelules(false)
+    setNbGelules(0)
+    setNbGelulesVegetales(0)
   }
 
   const detail = useMemo(() => {
@@ -187,8 +238,9 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
   const lignesRenseignees = detail.filter((d) => d.renseignee).length
   const sousTotalHuiles = detail.reduce((somme, d) => somme + d.prix, 0)
   const coutFlacons = mode === 'melange' ? PRIX_FLACON : PRIX_FLACON * lignesRenseignees
-  const coutGelules = gelules ? PRIX_GELULES : 0
-  const totalAvantArrondi = sousTotalHuiles + coutFlacons + coutGelules
+  const coutGelules = nbGelules * PRIX_GELULES
+  const coutGelulesVegetales = nbGelulesVegetales * PRIX_GELULES_VEGETALES
+  const totalAvantArrondi = sousTotalHuiles + coutFlacons + coutGelules + coutGelulesVegetales
   const total = arrondirDixCentimesSuperieur(totalAvantArrondi)
 
   return (
@@ -263,15 +315,18 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
           </button>
         </div>
 
-        <label className="flex items-center gap-2 text-[13px] text-ink">
-          <input
-            type="checkbox"
-            checked={gelules}
-            onChange={(e) => setGelules(e.target.checked)}
-            className="h-4 w-4 accent-[var(--color-primary)]"
-          />
-          Ajouter un paquet de gélules vides (100) — {formatEuro(PRIX_GELULES)}
-        </label>
+        <CompteurGelules
+          libelle="Gélules vides (100)"
+          prixUnitaire={PRIX_GELULES}
+          quantite={nbGelules}
+          onChange={setNbGelules}
+        />
+        <CompteurGelules
+          libelle="Gélules vides végétales (100)"
+          prixUnitaire={PRIX_GELULES_VEGETALES}
+          quantite={nbGelulesVegetales}
+          onChange={setNbGelulesVegetales}
+        />
       </div>
 
       <div className="flex flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3.5">
@@ -291,10 +346,17 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
           <span className="font-semibold text-ink">{formatEuro(coutFlacons)}</span>
         </div>
 
-        {gelules && (
+        {nbGelules > 0 && (
           <div className="flex items-center justify-between text-[12.5px] text-muted">
-            <span>Gélules vides (100)</span>
+            <span>Gélules vides (100) × {nbGelules}</span>
             <span className="font-semibold text-ink">{formatEuro(coutGelules)}</span>
+          </div>
+        )}
+
+        {nbGelulesVegetales > 0 && (
+          <div className="flex items-center justify-between text-[12.5px] text-muted">
+            <span>Gélules vides végétales (100) × {nbGelulesVegetales}</span>
+            <span className="font-semibold text-ink">{formatEuro(coutGelulesVegetales)}</span>
           </div>
         )}
 
