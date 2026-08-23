@@ -55,7 +55,10 @@ export function SidebarNav({
             <Link
               key={item.href}
               href={item.href}
-              prefetch={false}
+              // prefetch={false} conservé uniquement sur /, /liaison et /agenda :
+              // ces pages sont en Cache-Control no-store (voir next.config.ts),
+              // le prefetch resservirait un contenu obsolète (ex. non lus).
+              prefetch={item.href === '/' || item.href === '/liaison' || item.href === '/agenda' ? false : undefined}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${
                 actif ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-neutral-soft hover:text-ink'
               }`}
@@ -78,14 +81,12 @@ export function SidebarNav({
         )}
         <Link
           href="/inviter"
-          prefetch={false}
           className="rounded-lg px-3 py-2 text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink"
         >
           Mon équipe
         </Link>
         <Link
           href="/profil"
-          prefetch={false}
           className="rounded-lg px-3 py-2 text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink"
         >
           Profil

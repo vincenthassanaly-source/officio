@@ -35,7 +35,10 @@ export function BottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              prefetch={false}
+              // prefetch={false} conservé uniquement sur /, /liaison et /agenda :
+              // ces pages sont en Cache-Control no-store (voir next.config.ts),
+              // le prefetch resservirait un contenu obsolète (ex. non lus).
+              prefetch={item.href === '/' || item.href === '/liaison' || item.href === '/agenda' ? false : undefined}
               className={`flex shrink-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-3 py-1.5 text-xs font-semibold sm:px-4 ${
                 actif ? 'bg-primary-soft text-primary' : 'text-muted'
               }`}

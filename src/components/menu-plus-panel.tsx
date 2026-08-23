@@ -38,7 +38,6 @@ export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer:
               <Link
                 key={module.href}
                 href={module.href}
-                prefetch={false}
                 onClick={() => {
                   signalerNavigation()
                   onFermer()
