@@ -5,6 +5,7 @@ import { getMessages } from '@/lib/data/messages'
 import { getTaches } from '@/lib/data/taches'
 import { getRendezVous } from '@/lib/data/rendez-vous'
 import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
+import { getContacts } from '@/lib/data/contacts'
 import { getCnoPatients } from '@/lib/data/cno'
 import { getSuggestions } from '@/lib/data/suggestions'
 import { getRupturesStock } from '@/lib/data/ruptures-stock'
@@ -18,6 +19,7 @@ import { FabCreationRapide } from '@/components/fab-creation-rapide'
 import {
   IconLiaison,
   IconAgenda,
+  IconCarnet,
   IconHuiles,
   IconFournisseurs,
   IconChaussures,
@@ -57,6 +59,7 @@ export default async function AccueilPage() {
     taches,
     rendezVous,
     huiles,
+    contacts,
     patientsCno,
     suggestions,
     equipe,
@@ -68,6 +71,7 @@ export default async function AccueilPage() {
     getTaches(officine.officine_id),
     getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
     getHuilesEssentielles(officine.officine_id),
+    getContacts(officine.officine_id),
     getCnoPatients(officine.officine_id),
     getSuggestions(officine.officine_id),
     getEquipe(officine.officine_id),
@@ -147,6 +151,18 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Agenda</div>
             <div className="mt-0.5 text-[11px] text-muted">{rendezVous.length} rendez-vous</div>
+          </div>
+        </Link>
+        <Link
+          href="/carnet"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary">
+            <IconCarnet className="h-[18px] w-[18px]" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Carnet d&rsquo;adresses</div>
+            <div className="mt-0.5 text-[11px] text-muted">{contacts.length} contacts</div>
           </div>
         </Link>
         <Link
