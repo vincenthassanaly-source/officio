@@ -72,6 +72,7 @@ export function ItemLigne({
   onToggleTache,
   onEditerTache,
   couleurs,
+  onNaviguer,
 }: {
   item: ItemAgenda
   aujourdhuiIso: string
@@ -81,6 +82,11 @@ export function ItemLigne({
   onToggleTache: (tache: Tache) => void
   onEditerTache: (tache: Tache) => void
   couleurs: Map<string, CouleurAvatar>
+  // Appelé juste avant que le lien de la régularisation ne déclenche une
+  // vraie navigation Next.js. Utilisé uniquement par AgendaVueGlobaleMois,
+  // qui affiche cet item dans un panneau fixed inset-0 (ModaleDetailJour) :
+  // voir signalerNavigation() dans la JSDoc de useFermerAvecRetour.
+  onNaviguer?: () => void
 }) {
   if (item.type === 'rdv') {
     const r = item.rdv
@@ -177,7 +183,7 @@ export function ItemLigne({
       : 'bg-primary-soft text-primary'
 
   return (
-    <Link href="/regularisations" className="flex gap-3">
+    <Link href="/regularisations" onClick={onNaviguer} className="flex gap-3">
       <div className="w-12 shrink-0 pt-1 text-right">
         <div className="text-[10px] text-muted">Journée</div>
       </div>

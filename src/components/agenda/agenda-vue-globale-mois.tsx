@@ -11,6 +11,7 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleEditionTache } from '@/components/taches-list'
 import { formatDateLongue, formatJourCourt, getMonthGridDates, toISODate } from '@/lib/dates'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { useToast } from '@/components/ui/toast-provider'
 import { ItemLigne, regrouperItemsParJour, type ItemAgenda } from './agenda-item-ligne'
 
@@ -177,6 +178,13 @@ function ModaleDetailJour({
   // sabonnerSansChangement plus haut).
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
 
+  // Toujours montée seulement quand ouverte (voir {jourSelectionne && <ModaleDetailJour .../>}
+  // dans AgendaVueGlobaleMois) : `ouvert` vaut donc toujours true tant que ce
+  // composant existe. Peut elle-même ouvrir ModaleEditionTache par-dessus
+  // (clic sur une tâche via onEditerTache) : les deux hooks s'empilent
+  // correctement, un retour fermant d'abord l'édition puis ce panneau.
+  const signalerNavigation = useFermerAvecRetour(true, onFerme)
+
   if (!monte) return null
 
   return createPortal(
@@ -222,6 +230,7 @@ function ModaleDetailJour({
                   onToggleTache={onToggleTache}
                   onEditerTache={onEditerTache}
                   couleurs={couleurs}
+                  onNaviguer={signalerNavigation}
                 />
               )
             })}
