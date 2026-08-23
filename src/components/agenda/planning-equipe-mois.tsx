@@ -8,6 +8,7 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { formatDateLongue, formatHeure, formatJourCourt, getMonthGridDates, getWeekDates, toISODate } from '@/lib/dates'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 const LIBELLE_TYPE: Record<Creneau['type'], string> = {
   travail: 'Travail',
@@ -180,6 +181,10 @@ function ModaleDetailJour({
   // sabonnerSansChangement plus haut).
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
 
+  // Toujours montée seulement quand ouverte (voir {jourSelectionne && <ModaleDetailJour .../>}
+  // ci-dessus) : `ouvert` vaut donc toujours true tant que ce composant existe.
+  const signalerNavigation = useFermerAvecRetour(true, onFerme)
+
   if (!monte) return null
 
   return createPortal(
@@ -230,7 +235,17 @@ function ModaleDetailJour({
           </div>
         )}
 
-        <button type="button" onClick={onVoirCetteSemaine} className="self-start text-[12.5px] font-semibold text-primary">
+        <button
+          type="button"
+          onClick={() => {
+            // router.replace() ci-dessus (voirCetteSemaine) reste sans effet sur
+            // l'historique tant que ce panneau n'est pas explicitement fermé —
+            // voir la JSDoc de useFermerAvecRetour sur signalerNavigation().
+            signalerNavigation()
+            onVoirCetteSemaine()
+          }}
+          className="self-start text-[12.5px] font-semibold text-primary"
+        >
           Voir cette semaine
         </button>
       </div>
