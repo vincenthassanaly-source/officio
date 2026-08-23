@@ -8,6 +8,7 @@ import { formatDateLongue, formatHeure, formatJourCourt, toISODate } from '@/lib
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 const LIBELLE_TYPE: Record<TypeCreneau, string> = {
   travail: 'Travail',
@@ -56,6 +57,8 @@ export function PlanningEquipe({
     setCreneauDetail(null)
     setEdition(false)
   }
+
+  useFermerAvecRetour(creneauDetail !== null, fermerDetail)
 
   function ouvrirModification(c: Creneau) {
     setTypeEdition(c.type)
