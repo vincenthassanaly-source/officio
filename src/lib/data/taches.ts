@@ -9,6 +9,7 @@ export type Tache = {
   echeance: string | null
   echeance_heure: string | null
   assigne: { id: string; nom_complet: string; initiales: string } | null
+  createur: { id: string; nom_complet: string; initiales: string } | null
   photoUrl: string | null
 }
 
@@ -20,7 +21,8 @@ const DUREE_SIGNED_URL_PHOTO = 60 * 60
 
 const SELECT_TACHE =
   `id, titre, statut, echeance, echeance_heure, photo_chemin_stockage,
-   assigne:profils!taches_assigne_id_fkey ( id, nom_complet, initiales )`
+   assigne:profils!taches_assigne_id_fkey ( id, nom_complet, initiales ),
+   createur:profils!taches_created_by_fkey ( id, nom_complet, initiales )`
 
 type LigneTache = {
   id: string
@@ -30,6 +32,7 @@ type LigneTache = {
   echeance_heure: string | null
   photo_chemin_stockage: string | null
   assigne: { id: string; nom_complet: string; initiales: string }[] | { id: string; nom_complet: string; initiales: string } | null
+  createur: { id: string; nom_complet: string; initiales: string }[] | { id: string; nom_complet: string; initiales: string } | null
 }
 
 async function mapperLigneTache(
@@ -51,6 +54,7 @@ async function mapperLigneTache(
     echeance: t.echeance,
     echeance_heure: t.echeance_heure,
     assigne: Array.isArray(t.assigne) ? t.assigne[0] ?? null : t.assigne,
+    createur: Array.isArray(t.createur) ? t.createur[0] ?? null : t.createur,
     photoUrl,
   }
 }

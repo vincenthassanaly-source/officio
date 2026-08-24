@@ -530,6 +530,11 @@ export function ModaleEditionTache({
             ×
           </button>
         </div>
+        {tache.createur && (
+          <p className="text-xs text-muted">
+            Créée par {tache.createur.id === profilActuelId ? 'moi' : tache.createur.nom_complet}
+          </p>
+        )}
         <input
           name="titre"
           required
