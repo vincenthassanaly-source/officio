@@ -6,6 +6,8 @@ import { toggleTache } from '@/app/actions/taches'
 import type { Tache } from '@/lib/data/taches'
 import type { MessageAvecDetails } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
+import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { toISODate } from '@/lib/dates'
 import { ModaleEditionTache } from '@/components/taches-list'
 
@@ -31,6 +33,7 @@ export function AccueilDashboard({
   messagesNonLusApercu,
   totalMessagesNonLus,
   equipe,
+  couleurs,
   profilActuelId,
 }: {
   tachesDuJour: Tache[]
@@ -38,6 +41,7 @@ export function AccueilDashboard({
   messagesNonLusApercu: MessageAvecDetails[]
   totalMessagesNonLus: number
   equipe: MembreEquipe[]
+  couleurs: Map<string, CouleurAvatar>
   profilActuelId: string
 }) {
   const [isPending, startTransition] = useTransition()
@@ -74,6 +78,7 @@ export function AccueilDashboard({
           <div className="flex flex-col gap-2">
             {tachesDuJour.map((t) => {
               const badge = badgeEcheance(t.echeance, aujourdhuiIso)
+              const couleurAssigne = (t.assigne ? couleurs.get(t.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
               return (
                 <div key={t.id} className="flex items-center gap-2.5">
                   <button
@@ -97,6 +102,13 @@ export function AccueilDashboard({
                     disabled={isPending}
                     className="flex min-w-0 flex-1 items-center gap-2.5 text-left disabled:opacity-60"
                   >
+                    {t.assigne && (
+                      <span
+                        className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+                      >
+                        {t.assigne.initiales}
+                      </span>
+                    )}
                     <span className="min-w-0 flex-1 truncate text-[13px] text-ink">{t.titre}</span>
                     {badge && (
                       <span className={`shrink-0 text-[10px] font-semibold ${badge.className}`}>{badge.label}</span>

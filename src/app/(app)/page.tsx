@@ -13,6 +13,7 @@ import { getProduitsARecommander } from '@/lib/data/produits-a-recommander'
 import { getPleinsRayon } from '@/lib/data/pleins-rayon'
 import { getNotes } from '@/lib/data/notes'
 import { getEquipe } from '@/lib/data/equipe'
+import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
 import { RechercheGlobale } from '@/components/recherche-globale'
@@ -65,6 +66,7 @@ export default async function AccueilPage() {
     patientsCno,
     suggestions,
     equipe,
+    couleurs,
     rupturesStock,
     produitsARecommander,
     pleinsRayon,
@@ -78,6 +80,7 @@ export default async function AccueilPage() {
     getCnoPatients(officine.officine_id),
     getSuggestions(officine.officine_id),
     getEquipe(officine.officine_id),
+    getCouleursMembres(officine.officine_id),
     getRupturesStock(officine.officine_id),
     getProduitsARecommander(officine.officine_id),
     getPleinsRayon(officine.officine_id),
@@ -129,6 +132,7 @@ export default async function AccueilPage() {
         messagesNonLusApercu={messagesNonLusApercu}
         totalMessagesNonLus={nonLus}
         equipe={equipe}
+        couleurs={couleurs}
         profilActuelId={profil?.id ?? ''}
       />
 
