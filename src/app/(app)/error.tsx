@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { IllustrationErreur } from '@/components/illustrations'
+import { signalerErreurClient } from '@/app/actions/erreurs-client'
 
 // Rendu par Next.js à l'intérieur de (app)/layout.tsx : la sidebar/BottomNav
 // (rendues par le layout) restent visibles, seul le contenu de la page
@@ -19,6 +20,18 @@ export default function ErreurAppli({
     // Jamais de détail technique affiché à l'utilisateur — uniquement en
     // console, et seulement en développement.
     if (process.env.NODE_ENV === 'development') console.error(error)
+
+    // Journalisation best-effort dans client_errors (diagnostic de l'écran
+    // générique ci-dessous) — .catch supplémentaire par prudence, même si
+    // signalerErreurClient() n'est déjà censée jamais rejeter : ne doit
+    // jamais faire planter cet écran d'erreur.
+    signalerErreurClient({
+      message: error.message,
+      digest: error.digest,
+      stackPremiereLigne: error.stack?.split('\n')[0],
+      url: typeof window !== 'undefined' ? window.location.href : null,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+    }).catch(() => {})
   }, [error])
 
   return (

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { IllustrationErreur } from '@/components/illustrations'
+import { signalerErreurClient } from '@/app/actions/erreurs-client'
 
 // Filet de secours pour les erreurs hors du groupe (app) (ex : login,
 // inscription, bienvenue) — ces routes n'ont pas de sidebar/BottomNav,
@@ -18,6 +19,19 @@ export default function ErreurRacine({
     // Jamais de détail technique affiché à l'utilisateur — uniquement en
     // console, et seulement en développement.
     if (process.env.NODE_ENV === 'development') console.error(error)
+
+    // Journalisation best-effort dans client_errors (diagnostic de l'écran
+    // générique ci-dessous). Ces routes n'ont souvent ni officine active ni
+    // utilisateur authentifié (login, inscription, bienvenue) : l'insert
+    // échoue alors silencieusement côté RLS (cf. migration), sans jamais
+    // faire planter cet écran d'erreur — d'où le .catch supplémentaire.
+    signalerErreurClient({
+      message: error.message,
+      digest: error.digest,
+      stackPremiereLigne: error.stack?.split('\n')[0],
+      url: typeof window !== 'undefined' ? window.location.href : null,
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+    }).catch(() => {})
   }, [error])
 
   return (
