@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { envoyerMessage, marquerPlusieursLus, supprimerMessage } from '@/app/actions/liaison'
+import { envoyerMessage, marquerPlusieursLus, supprimerMessage, togglePouceMessage } from '@/app/actions/liaison'
 import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
@@ -213,6 +213,7 @@ export function FilDeMessages({
 
         {messagesFiltres.map((m, index) => {
           const dejaLu = m.lecteurs.some((l) => l.profil_id === profilActuelId)
+          const monPouce = m.pouces.some((p) => p.profil_id === profilActuelId)
           const cat = CATEGORIES.find((c) => c.value === m.categorie) ?? CATEGORIES[0]
           const urgent = m.categorie === 'urgent'
           const couleurAuteur = (m.auteur ? couleurs.get(m.auteur.id) : null) ?? COULEUR_PAR_DEFAUT
@@ -271,21 +272,64 @@ export function FilDeMessages({
                 <p className="text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>
 
                 <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5">
-                  <div className="flex">
-                    {m.lecteurs.map((l, i) => {
-                      const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
-                      return (
-                        <div
-                          key={l.profil_id}
-                          className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
-                          style={{ zIndex: m.lecteurs.length - i }}
-                        >
-                          {l.initiales}
-                        </div>
-                      )
-                    })}
+                  <div className="flex items-center gap-2">
+                    <div className="flex">
+                      {m.lecteurs.map((l, i) => {
+                        const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
+                        return (
+                          <div
+                            key={l.profil_id}
+                            className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+                            style={{ zIndex: m.lecteurs.length - i }}
+                          >
+                            {l.initiales}
+                          </div>
+                        )
+                      })}
+                    </div>
+                    {m.pouces.length > 0 && (
+                      <div className="flex">
+                        {m.pouces.map((p, i) => {
+                          const c = couleurs.get(p.profil_id) ?? COULEUR_PAR_DEFAUT
+                          return (
+                            <div
+                              key={p.profil_id}
+                              className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+                              style={{ zIndex: m.pouces.length - i }}
+                            >
+                              {p.initiales}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
-                  {dejaLu && <span className="text-[11px] font-semibold text-muted">Lu</span>}
+                  <div className="flex items-center gap-2.5">
+                    {dejaLu && <span className="text-[11px] font-semibold text-muted">Lu</span>}
+                    <button
+                      type="button"
+                      disabled={isPending}
+                      onClick={() =>
+                        startTransition(async () => {
+                          try {
+                            await togglePouceMessage(m.id)
+                          } catch (err) {
+                            toast({
+                              type: 'erreur',
+                              message: err instanceof Error ? err.message : "Échec de l'envoi du pouce.",
+                            })
+                          }
+                        })
+                      }
+                      aria-label={monPouce ? 'Retirer mon pouce' : 'Mettre un pouce'}
+                      aria-pressed={monPouce}
+                      className={`shrink-0 text-base leading-none transition-transform active:scale-90 disabled:opacity-50 ${
+                        monPouce ? 'opacity-100' : 'opacity-35 grayscale hover:opacity-70 hover:grayscale-0'
+                      }`}
+                    >
+                      👍
+                    </button>
+                  </div>
                 </div>
               </div>
             </Fragment>
