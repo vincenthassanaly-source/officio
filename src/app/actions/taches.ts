@@ -168,3 +168,28 @@ export async function toggleTache(id: string, statutActuel: StatutTache) {
 
   revalidatePath('/')
 }
+
+// Geste explicite et volontaire ("vu et pris en compte"), distinct du statut
+// fait/à faire : toggle par personne, sur le même modèle que
+// togglePouceMessage (src/app/actions/liaison.ts).
+export async function togglePouceTache(id: string) {
+  const profil = await getCurrentProfil()
+  if (!profil) throw new Error('Non connecté')
+
+  const supabase = await createClient()
+
+  const { data: existant } = await supabase
+    .from('taches_pouces')
+    .select('profil_id')
+    .eq('tache_id', id)
+    .eq('profil_id', profil.id)
+    .maybeSingle()
+
+  const { error } = existant
+    ? await supabase.from('taches_pouces').delete().eq('tache_id', id).eq('profil_id', profil.id)
+    : await supabase.from('taches_pouces').insert({ tache_id: id, profil_id: profil.id })
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/')
+}

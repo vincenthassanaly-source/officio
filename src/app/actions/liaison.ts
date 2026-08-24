@@ -79,3 +79,32 @@ export async function marquerPlusieursLus(messageIds: string[]) {
 
   revalidatePath('/')
 }
+
+// Geste explicite et volontaire ("vu et pris en compte"), distinct de
+// l'accusé de lecture automatique (messages_lus) : toggle par personne, sur
+// le même modèle que togglePouceTache (src/app/actions/taches.ts).
+export async function togglePouceMessage(messageId: string) {
+  const profil = await getCurrentProfil()
+  if (!profil) throw new Error('Non connecté')
+
+  const supabase = await createClient()
+
+  const { data: existant } = await supabase
+    .from('messages_pouces')
+    .select('profil_id')
+    .eq('message_id', messageId)
+    .eq('profil_id', profil.id)
+    .maybeSingle()
+
+  const { error } = existant
+    ? await supabase
+        .from('messages_pouces')
+        .delete()
+        .eq('message_id', messageId)
+        .eq('profil_id', profil.id)
+    : await supabase.from('messages_pouces').insert({ message_id: messageId, profil_id: profil.id })
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/')
+}
