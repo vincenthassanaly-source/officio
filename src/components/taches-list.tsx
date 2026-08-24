@@ -1,6 +1,13 @@
 'use client'
 
-import { useEffect, useState, useSyncExternalStore, useTransition, type TransitionStartFunction } from 'react'
+import {
+  useEffect,
+  useOptimistic,
+  useState,
+  useSyncExternalStore,
+  useTransition,
+  type TransitionStartFunction,
+} from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
 import { creerTache, toggleTache, supprimerTache, modifierTache, togglePouceTache } from '@/app/actions/taches'
@@ -99,6 +106,27 @@ export function TachesList({
   // une tâche active qu'une tâche archivée.
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
   const toast = useToast()
+  // Pouce optimiste : bascule immédiatement le pouce du profil courant dans
+  // le tableau `pouces` de la tâche ciblée (ajout si absent, retrait si
+  // présent), avant même la réponse du serveur — même pattern que
+  // basculerOptimiste dans suggestions.tsx. L'initiale utilisée pour l'ajout
+  // vient de `equipe` (toujours à jour, contrairement à un état séparé).
+  const [tachesOptimistes, basculerPouceOptimiste] = useOptimistic(taches, (etat, id: string) =>
+    etat.map((t) => {
+      if (t.id !== id) return t
+      const dejaPouce = t.pouces.some((p) => p.profil_id === profilActuelId)
+      if (dejaPouce) return { ...t, pouces: t.pouces.filter((p) => p.profil_id !== profilActuelId) }
+      const mesInitiales = equipe.find((m) => m.id === profilActuelId)?.initiales ?? '?'
+      return { ...t, pouces: [...t.pouces, { profil_id: profilActuelId, initiales: mesInitiales }] }
+    })
+  )
+  // Bascule le pouce en optimiste puis appelle le serveur : passée à
+  // CarteTache, qui l'appelle déjà dans son propre startTransition (gestion
+  // d'erreur/toast inchangée là-bas).
+  function basculerPouce(id: string) {
+    basculerPouceOptimiste(id)
+    return togglePouceTache(id)
+  }
   // Accordéon "Tâches archivées". Fermé par défaut, sauf si la tâche visée
   // par ?tache=<id> au chargement est elle-même archivée (calculé ici plutôt
   // que dans un effect : évite un rendu en cascade pour un état qu'on connaît
@@ -108,7 +136,7 @@ export function TachesList({
     return !!idParam && taches.find((t) => t.id === idParam)?.statut === 'fait'
   })
 
-  const visibles = filtre === 'tous' ? taches : taches.filter((t) => t.assigne?.id === filtre)
+  const visibles = filtre === 'tous' ? tachesOptimistes : tachesOptimistes.filter((t) => t.assigne?.id === filtre)
   const actives = visibles.filter((t) => t.statut === 'a_faire')
   const archivees = visibles.filter((t) => t.statut === 'fait')
 
@@ -273,6 +301,7 @@ export function TachesList({
             isPending={isPending}
             startTransition={startTransition}
             onEditer={setTacheEnEdition}
+            onBasculerPouce={basculerPouce}
           />
         ))}
       </div>
@@ -309,6 +338,7 @@ export function TachesList({
                     isPending={isPending}
                     startTransition={startTransition}
                     onEditer={setTacheEnEdition}
+                    onBasculerPouce={basculerPouce}
                   />
                 ))}
               </div>
@@ -341,6 +371,7 @@ function CarteTache({
   isPending,
   startTransition,
   onEditer,
+  onBasculerPouce,
 }: {
   tache: Tache
   couleurs: Map<string, CouleurAvatar>
@@ -349,6 +380,7 @@ function CarteTache({
   isPending: boolean
   startTransition: TransitionStartFunction
   onEditer: (tache: Tache) => void
+  onBasculerPouce: (id: string) => Promise<void>
 }) {
   const due = dueInfo(tache)
   const couleurAssigne = (tache.assigne ? couleurs.get(tache.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
@@ -447,7 +479,7 @@ function CarteTache({
           onClick={() =>
             startTransition(async () => {
               try {
-                await togglePouceTache(tache.id)
+                await onBasculerPouce(tache.id)
               } catch (err) {
                 toast({
                   type: 'erreur',
