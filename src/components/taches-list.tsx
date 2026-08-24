@@ -3,7 +3,7 @@
 import { useEffect, useState, useSyncExternalStore, useTransition, type TransitionStartFunction } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
-import { creerTache, toggleTache, supprimerTache, modifierTache } from '@/app/actions/taches'
+import { creerTache, toggleTache, supprimerTache, modifierTache, togglePouceTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -268,6 +268,7 @@ export function TachesList({
             key={t.id}
             tache={t}
             couleurs={couleurs}
+            profilActuelId={profilActuelId}
             idSurligne={idSurligne}
             isPending={isPending}
             startTransition={startTransition}
@@ -303,6 +304,7 @@ export function TachesList({
                     key={t.id}
                     tache={t}
                     couleurs={couleurs}
+                    profilActuelId={profilActuelId}
                     idSurligne={idSurligne}
                     isPending={isPending}
                     startTransition={startTransition}
@@ -334,6 +336,7 @@ export function TachesList({
 function CarteTache({
   tache,
   couleurs,
+  profilActuelId,
   idSurligne,
   isPending,
   startTransition,
@@ -341,6 +344,7 @@ function CarteTache({
 }: {
   tache: Tache
   couleurs: Map<string, CouleurAvatar>
+  profilActuelId: string
   idSurligne: string | null
   isPending: boolean
   startTransition: TransitionStartFunction
@@ -348,6 +352,7 @@ function CarteTache({
 }) {
   const due = dueInfo(tache)
   const couleurAssigne = (tache.assigne ? couleurs.get(tache.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
+  const monPouce = tache.pouces.some((p) => p.profil_id === profilActuelId)
   // État local à la carte plutôt que remonté à TachesList : chaque carte
   // porte déjà sa propre tâche, une seule peut être en confirmation de
   // suppression à la fois (pas besoin d'un id à retenir côté parent).
@@ -419,6 +424,47 @@ function CarteTache({
           {due.label}
         </span>
       </button>
+      <div className="flex shrink-0 items-center gap-1.5">
+        {tache.pouces.length > 0 && (
+          <div className="flex">
+            {tache.pouces.map((p, i) => {
+              const c = couleurs.get(p.profil_id) ?? COULEUR_PAR_DEFAUT
+              return (
+                <div
+                  key={p.profil_id}
+                  className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+                  style={{ zIndex: tache.pouces.length - i }}
+                >
+                  {p.initiales}
+                </div>
+              )
+            })}
+          </div>
+        )}
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() =>
+            startTransition(async () => {
+              try {
+                await togglePouceTache(tache.id)
+              } catch (err) {
+                toast({
+                  type: 'erreur',
+                  message: err instanceof Error ? err.message : "Échec de l'envoi du pouce.",
+                })
+              }
+            })
+          }
+          aria-label={monPouce ? 'Retirer mon pouce' : 'Mettre un pouce'}
+          aria-pressed={monPouce}
+          className={`text-base leading-none transition-transform active:scale-90 disabled:opacity-50 ${
+            monPouce ? 'opacity-100' : 'opacity-35 grayscale hover:opacity-70 hover:grayscale-0'
+          }`}
+        >
+          👍
+        </button>
+      </div>
       <button
         type="button"
         disabled={isPending}
