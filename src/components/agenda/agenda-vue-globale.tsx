@@ -60,10 +60,13 @@ export function AgendaVueGlobale({
     })
   }
 
-  const itemsParJour = useMemo(
-    () => regrouperItemsParJour(rendezVous, taches, regularisations),
-    [rendezVous, taches, regularisations]
-  )
+  // Une tâche cochée (statut 'fait') disparaît de cette vue dès le
+  // cochage — elle reste consultable dans la section archive de la page
+  // Tâches (comportement existant, non modifié ici).
+  const itemsParJour = useMemo(() => {
+    const tachesActives = taches.filter((t) => t.statut !== 'fait')
+    return regrouperItemsParJour(rendezVous, tachesActives, regularisations)
+  }, [rendezVous, taches, regularisations])
 
   const joursCharges = useMemo(() => {
     const set = new Set<string>()
