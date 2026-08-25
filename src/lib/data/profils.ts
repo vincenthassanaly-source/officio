@@ -18,18 +18,42 @@ export type Profil = {
 // rendu (initiales/prénom absents au réveil de l'app). Même classe de bug
 // que celle documentée pour getMesAdhesions() dans
 // scripts/RAPPORT-fix-session-bienvenue-2026-08-21.md — ne pas retirer.
+//
+// Pour la même raison, les erreurs de auth.getUser() et de la requête
+// profils sont vérifiées explicitement et lèvent : un `profil` à `null`
+// ne doit jamais signifier autre chose qu'une absence réelle de session,
+// jamais un échec réseau masqué. Un profil silencieusement null a
+// notamment fait passer des messages du cahier de liaison réellement lus
+// pour non lus dans (app)/page.tsx (profil?.id devient undefined, plus
+// aucun lecteur ne matche) — voir
+// scripts/RAPPORT-fix-profil-null-messages-non-lus-2026-08-25.md.
 export const getCurrentProfil = cache(async (): Promise<Profil | null> => {
   const supabase = await createClient()
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser()
+
+  if (authError) {
+    console.error('getCurrentProfil: auth.getUser()', authError)
+    throw new Error('Impossible de vérifier la session utilisateur', { cause: authError })
+  }
+
   if (!user) return null
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profils')
     .select('id, nom_complet, initiales')
     .eq('id', user.id)
     .single()
+
+  // PGRST116 : .single() n'a trouvé aucune ligne (ou plusieurs). C'est le
+  // cas légitime d'un profil pas encore propagé juste après la création du
+  // compte, pas un échec Supabase — ne pas le transformer en erreur.
+  if (error && error.code !== 'PGRST116') {
+    console.error('getCurrentProfil: select profils', error)
+    throw new Error('Impossible de récupérer le profil', { cause: error })
+  }
 
   return data
 })
