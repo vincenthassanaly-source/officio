@@ -33,7 +33,10 @@ function IconCloche({ className }: { className?: string }) {
   )
 }
 
-export function NotificationsCloche() {
+// `avecFond` : variante utilisée uniquement par le header mobile (fond gris
+// permanent au lieu d'un fond visible seulement au survol), pour ne pas
+// changer l'apparence de la cloche dans la sidebar desktop.
+export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean } = {}) {
   const { notifications, nombreNonLues } = useNotificationsInApp()
   const [ouvert, setOuvert] = useState(false)
   const [position, setPosition] = useState({ top: 0, right: 0 })
@@ -94,7 +97,11 @@ export function NotificationsCloche() {
         type="button"
         onClick={toggle}
         aria-label="Notifications"
-        className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-neutral-soft hover:text-ink"
+        className={
+          avecFond
+            ? 'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-ink'
+            : 'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-neutral-soft hover:text-ink'
+        }
       >
         <IconCloche className="h-[18px] w-[18px]" />
         {nombreNonLues > 0 && (

@@ -14,7 +14,6 @@ import { getCurrentProfil } from '@/lib/data/profils'
 import { getNotifications, getNombreNotificationsNonLues } from '@/lib/data/notifications'
 import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
-import { signOut } from '../actions/auth'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // getMesAdhesions() lève désormais une erreur en cas d'échec technique
@@ -49,48 +48,40 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         />
 
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col lg:mx-0 lg:max-w-none">
-          <header className="flex items-start justify-between gap-2 px-4 pt-6 sm:gap-3 sm:px-8 lg:hidden">
-            <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActive!.officine_id} />
-            <div className="flex min-w-0 shrink-0 items-center gap-2 sm:gap-3">
-              <NotificationsCloche />
-              <div className="flex min-w-0 shrink-0 items-center gap-3 pt-1 sm:gap-4">
-                <Link
-                  href="/inviter"
-                  className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
+          <header className="relative flex items-center justify-between gap-2.5 bg-bg px-4 pb-3 pt-4 sm:px-8 lg:hidden">
+            <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActive!.officine_id} avecLogo />
+            <div className="flex shrink-0 items-center gap-2">
+              <NotificationsCloche avecFond />
+              <Link
+                href="/inviter"
+                aria-label="Mon équipe"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-ink"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 >
-                  Mon équipe
-                </Link>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </Link>
+              {profilActuel && (
                 <Link
                   href="/profil"
-                  className="shrink-0 text-xs font-semibold text-muted hover:text-ink"
+                  aria-label="Profil"
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold shadow-[0_0_0_1.5px_var(--color-border)] ${couleurProfilActuel.fond} ${couleurProfilActuel.texte}`}
                 >
-                  Profil
+                  {profilActuel.initiales}
                 </Link>
-                <form action={signOut}>
-                  <button
-                    type="submit"
-                    aria-label="Se déconnecter"
-                    className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-muted hover:text-ink"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="shrink-0"
-                    >
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    <span className="hidden sm:inline">Se déconnecter</span>
-                  </button>
-                </form>
-              </div>
+              )}
             </div>
           </header>
 

@@ -7,6 +7,7 @@ import { ProfilForm } from '@/components/profil-form'
 import { NotificationsParametres } from '@/components/notifications-parametres'
 import { GestionOfficines } from '@/components/gestion-officines'
 import { LienRetour } from '@/components/lien-retour'
+import { signOut } from '@/app/actions/auth'
 
 export default async function ProfilPage() {
   const supabase = await createClient()
@@ -40,6 +41,14 @@ export default async function ProfilPage() {
         />
         {officine && <NotificationsParametres preferences={preferences} />}
         <GestionOfficines adhesions={adhesions} officineActiveId={officine?.officine_id ?? ''} />
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="w-full rounded-[20px] bg-surface p-4 text-left text-sm font-semibold text-muted shadow-card hover:text-ink"
+          >
+            Se déconnecter
+          </button>
+        </form>
       </div>
     </>
   )
