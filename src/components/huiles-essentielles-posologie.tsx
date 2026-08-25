@@ -113,12 +113,12 @@ export function HuilesEssentiellesPosologie() {
               value={dureeValeur}
               onChange={(e) => setDureeValeur(e.target.value)}
               placeholder="ex : 10"
-              className={`flex-1 ${CHAMP_CLASS}`}
+              className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
             />
             <select
               value={dureeUnite}
               onChange={(e) => setDureeUnite(e.target.value as UniteDuree)}
-              className={`flex-1 ${CHAMP_CLASS}`}
+              className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
             >
               <option value="jours">Jours</option>
               <option value="semaines">Semaines</option>
