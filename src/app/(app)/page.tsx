@@ -12,6 +12,7 @@ import { getRupturesStock } from '@/lib/data/ruptures-stock'
 import { getProduitsARecommander } from '@/lib/data/produits-a-recommander'
 import { getPleinsRayon } from '@/lib/data/pleins-rayon'
 import { getNotes } from '@/lib/data/notes'
+import { getJournalActivite } from '@/lib/data/journal-activite'
 import { getEquipe } from '@/lib/data/equipe'
 import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { getWeekDates, toISODate } from '@/lib/dates'
@@ -32,6 +33,7 @@ import {
   IconRupturesStock,
   IconPleinsRayon,
   IconNote,
+  IconActivite,
 } from '@/components/nav-icons'
 
 // Sur mobile (PWA installée), fermer complètement l'app (swipe dans les
@@ -70,6 +72,7 @@ export default async function AccueilPage() {
     produitsARecommander,
     pleinsRayon,
     notes,
+    journalActivite,
   ] = await Promise.all([
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
@@ -84,10 +87,17 @@ export default async function AccueilPage() {
     getProduitsARecommander(officine.officine_id),
     getPleinsRayon(officine.officine_id),
     getNotes(officine.officine_id),
+    getJournalActivite(officine.officine_id),
   ])
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
   const suggestionsNonTraitees = suggestions.filter((s) => !s.fait).length
+  // Sur les 30 dernières entrées du journal (toutes activités confondues),
+  // celles du jour même — cohérent avec la comparaison "Aujourd'hui" déjà
+  // utilisée pour les séparateurs de jour (voir formatSeparateurJour).
+  const activitesAujourdhui = journalActivite.entrees.filter(
+    (e) => new Date(e.created_at).toDateString() === aujourdhui.toDateString()
+  ).length
 
   const messagesNonLusTous = messages.filter((m) => !m.lecteurs.some((l) => l.profil_id === profil?.id))
   const nonLus = messagesNonLusTous.length
@@ -292,6 +302,18 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Notes</div>
             <div className="mt-0.5 text-[11px] text-muted">{notes.length} notes</div>
+          </div>
+        </Link>
+        <Link
+          href="/activite"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-neutral-soft text-neutral-text">
+            <IconActivite className="h-[18px] w-[18px]" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Activité</div>
+            <div className="mt-0.5 text-[11px] text-muted">{activitesAujourdhui} activités récentes</div>
           </div>
         </Link>
       </div>
