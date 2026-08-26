@@ -44,7 +44,10 @@ const LIMITE_JOURNAL = 30
 // entre deux chargements de page.
 export async function getJournalActivite(
   officineId: string,
-  options?: { module?: ModuleJournal; profilId?: string; curseurAvant?: string }
+  // `module` accepte une valeur unique ou un tableau (chips de filtre en
+  // multi-select côté UI, voir src/components/journal-activite.tsx) : un
+  // tableau vide équivaut à l'absence de filtre (tous les modules).
+  options?: { module?: ModuleJournal | ModuleJournal[]; profilId?: string; curseurAvant?: string }
 ): Promise<PageJournalActivite> {
   const supabase = await createClient()
 
@@ -55,7 +58,11 @@ export async function getJournalActivite(
     .order('created_at', { ascending: false })
     .limit(LIMITE_JOURNAL)
 
-  if (options?.module) requete = requete.eq('module', options.module)
+  if (Array.isArray(options?.module)) {
+    if (options.module.length > 0) requete = requete.in('module', options.module)
+  } else if (options?.module) {
+    requete = requete.eq('module', options.module)
+  }
   if (options?.profilId) requete = requete.eq('profil_id', options.profilId)
   if (options?.curseurAvant) requete = requete.lt('created_at', options.curseurAvant)
 

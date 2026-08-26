@@ -8,6 +8,7 @@ import { SwitchIdentite } from '@/components/switch-identite'
 import { NotificationsCloche } from '@/components/notifications-cloche'
 import {
   IconAccueil,
+  IconActivite,
   IconAgenda,
   IconCarnet,
   IconDocuments,
@@ -68,6 +69,20 @@ export function SidebarNav({
             </Link>
           )
         })}
+
+        {/* Hors NAV_ITEMS (donc hors bottom nav mobile / panneau "Plus") :
+            le prompt d'origine ne demandait cette entrée que dans la sidebar
+            desktop — voir RAPPORT pour la décision. */}
+        <Link
+          href="/activite"
+          prefetch={false}
+          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${
+            estLienActif('/activite', pathname) ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-neutral-soft hover:text-ink'
+          }`}
+        >
+          <IconActivite className="h-[18px] w-[18px] shrink-0" />
+          Activité
+        </Link>
       </nav>
 
       <div className="mt-auto flex flex-col gap-1 border-t border-border pt-4">

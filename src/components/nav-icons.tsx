@@ -265,6 +265,27 @@ export function IconPlus({ className }: IconProps) {
   )
 }
 
+// Fil chronologique (timeline à puces) : cohérent avec le thème "journal
+// d'activité collectif" de la page /activite.
+export function IconActivite({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="5" cy="6" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="18" r="1.5" fill="currentColor" stroke="none" />
+      <path d="M10 6h11M10 12h11M10 18h11" />
+    </svg>
+  )
+}
+
 // Flèche remontant un produit vers le rayon (étagère) : cohérent avec le
 // thème "réapprovisionnement depuis la réserve" du module Pleins de rayon.
 export function IconPleinsRayon({ className }: IconProps) {
