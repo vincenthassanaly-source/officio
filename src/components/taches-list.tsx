@@ -660,6 +660,30 @@ export function ModaleEditionTache({
         >
           Enregistrer
         </button>
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() =>
+            startTransition(async () => {
+              try {
+                await toggleTache(tache.id, tache.statut)
+                onFerme()
+                toast({
+                  type: 'succes',
+                  message: tache.statut === 'fait' ? 'Tâche remise à faire.' : 'Tâche marquée comme faite.',
+                })
+              } catch (err) {
+                toast({
+                  type: 'erreur',
+                  message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
+                })
+              }
+            })
+          }
+          className="rounded-xl border border-border py-2.5 text-[13.5px] font-semibold text-muted disabled:opacity-60"
+        >
+          {tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme faite'}
+        </button>
       </form>
     </div>,
     document.body
