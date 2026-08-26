@@ -18,6 +18,7 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { LightboxImage } from '@/components/lightbox-image'
 import { useToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
@@ -389,6 +390,7 @@ function CarteTache({
   // porte déjà sa propre tâche, une seule peut être en confirmation de
   // suppression à la fois (pas besoin d'un id à retenir côté parent).
   const [confirmationOuverte, setConfirmationOuverte] = useState(false)
+  const [photoAgrandie, setPhotoAgrandie] = useState(false)
   const toast = useToast()
 
   return (
@@ -400,10 +402,13 @@ function CarteTache({
         }`}
       >
       {tache.photoUrl && (
-        <a href={tache.photoUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
+        <button type="button" onClick={() => setPhotoAgrandie(true)} aria-label="Agrandir la photo" className="shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage, pas une image du projet */}
           <img src={tache.photoUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
-        </a>
+        </button>
+      )}
+      {photoAgrandie && tache.photoUrl && (
+        <LightboxImage src={tache.photoUrl} onFerme={() => setPhotoAgrandie(false)} />
       )}
       <button
         type="button"

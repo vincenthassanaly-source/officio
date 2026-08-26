@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { comprimerImage } from '@/lib/image'
+import { LightboxImage } from '@/components/lightbox-image'
 
 // Sélecteur de photo réutilisé par les formulaires de création de tâche
 // (taches-list.tsx, fab-creation-rapide.tsx) et par la modale d'édition de
@@ -26,6 +27,7 @@ export function ChampPhoto({
   photoInitiale?: string | null
 }) {
   const [apercu, setApercu] = useState<string | null>(photoInitiale)
+  const [agrandie, setAgrandie] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   async function choisir(fichier: File) {
@@ -56,8 +58,10 @@ export function ChampPhoto({
       />
       {apercu ? (
         <div className="relative h-16 w-16">
-          {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob URL), pas une image distante */}
-          <img src={apercu} alt="" className="h-16 w-16 rounded-xl object-cover" />
+          <button type="button" onClick={() => setAgrandie(true)} aria-label="Agrandir la photo">
+            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob URL), pas une image distante */}
+            <img src={apercu} alt="" className="h-16 w-16 rounded-xl object-cover" />
+          </button>
           <button
             type="button"
             onClick={retirer}
@@ -66,6 +70,7 @@ export function ChampPhoto({
           >
             ×
           </button>
+          {agrandie && <LightboxImage src={apercu} onFerme={() => setAgrandie(false)} />}
         </div>
       ) : (
         <button
