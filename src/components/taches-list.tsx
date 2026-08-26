@@ -618,12 +618,12 @@ export function ModaleEditionTache({
             Créée par {tache.createur.id === profilActuelId ? 'moi' : tache.createur.nom_complet}
           </p>
         )}
-        <input
+        <textarea
           name="titre"
           required
           defaultValue={tache.titre}
           placeholder="Titre de la tâche"
-          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
         <select
           name="assigne_id"

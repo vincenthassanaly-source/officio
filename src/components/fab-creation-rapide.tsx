@@ -194,11 +194,11 @@ function FormulaireTache({
       className="flex flex-col gap-3 p-4"
     >
       <div className="font-heading text-lg text-ink">Nouvelle tâche</div>
-      <input
+      <textarea
         name="titre"
         required
         placeholder="Titre de la tâche"
-        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+        className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
       />
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <select
