@@ -46,7 +46,6 @@ import {
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
-const MAX_TACHES_APERCU = 4
 const MAX_MESSAGES_APERCU = 3
 
 export default async function AccueilPage() {
@@ -106,7 +105,7 @@ export default async function AccueilPage() {
       if (a.echeance && b.echeance) return a.echeance.localeCompare(b.echeance)
       return 0
     })
-  const tachesDuJour = tachesAFaireTous.slice(0, MAX_TACHES_APERCU)
+  const tachesDuJour = tachesAFaireTous
 
   const prenom = profil?.nom_complet.split(' ')[0] ?? ''
   const dateLabel = aujourdhui.toLocaleDateString('fr-FR', {

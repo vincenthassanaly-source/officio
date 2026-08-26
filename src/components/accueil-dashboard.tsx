@@ -66,16 +66,11 @@ export function AccueilDashboard({
       <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Tâches</span>
-          {totalTachesAFaire > tachesDuJour.length && (
-            <Link href="/liaison" className="text-[11px] font-semibold text-primary">
-              Voir tout ({totalTachesAFaire})
-            </Link>
-          )}
         </div>
         {tachesDuJour.length === 0 ? (
           <p className="py-2 text-center text-[12.5px] text-muted">Aucune tâche en attente</p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex max-h-[320px] flex-col gap-2 overflow-y-auto">
             {tachesDuJour.map((t) => {
               const badge = badgeEcheance(t.echeance, aujourdhuiIso)
               const couleurAssigne = (t.assigne ? couleurs.get(t.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
