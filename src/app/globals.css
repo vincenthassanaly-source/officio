@@ -156,6 +156,65 @@ button,
   }
 }
 
+/* Écran de démarrage custom (voir components/app-splash.tsx) — le manifest
+   PWA (public/manifest.ts) ne supporte qu'une couleur unie pour
+   background_color, donc l'effet "métal brossé" haut de gamme est recréé
+   ici côté app et affiché le temps du premier chargement.
+   Couches du fond (de la plus visible à la plus profonde) :
+   1. reflet lumineux doux, décentré, façon éclairage studio ;
+   2. fines cannelures concentriques (repeating-radial-gradient) — le
+      "brossage" circulaire façon platine vinyle / grille d'enceinte hi-fi ;
+   3. dégradé radial gris-bleu nuit métallique, plus clair au centre pour
+      détacher l'icône, plus sombre vers les bords. */
+.app-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #12141c;
+  background-image: radial-gradient(
+      circle at 32% 22%,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 45%
+    ),
+    repeating-radial-gradient(
+      circle at center,
+      rgba(255, 255, 255, 0.035) 0px,
+      transparent 1.5px,
+      transparent 3px,
+      rgba(0, 0, 0, 0.32) 4px
+    ),
+    radial-gradient(circle at center, #38415a 0%, #1c202c 55%, #0d0f16 100%);
+  opacity: 1;
+  transition: opacity 400ms ease-out;
+}
+
+.app-splash-sortie {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-splash-icone {
+  width: 6.5rem;
+  height: 6.5rem;
+  filter: drop-shadow(0 14px 32px rgba(0, 0, 0, 0.55));
+}
+
+@media (min-width: 640px) {
+  .app-splash-icone {
+    width: 9rem;
+    height: 9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-splash {
+    transition-duration: 0.01ms;
+  }
+}
+
 /* Toasts (voir components/ui/toast-provider.tsx) — même durée/easing que
    les transitions de page ci-dessus pour rester cohérent. */
 @keyframes toast-in {
