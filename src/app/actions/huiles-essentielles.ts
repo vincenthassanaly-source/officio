@@ -18,6 +18,18 @@ export async function changerStatutHuile(id: string, nouveauStatut: StatutHuile)
   revalidatePath('/')
 }
 
+export async function modifierVolumeACommander(id: string, volumeMl: number | null) {
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('huiles_essentielles')
+    .update({ volume_a_commander_ml: volumeMl })
+    .eq('id', id)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/huiles-essentielles')
+}
+
 export async function ajouterHuile(formData: FormData) {
   const nom = String(formData.get('nom') ?? '').trim()
   const prixReference = Number(formData.get('prix_reference') ?? 0)
