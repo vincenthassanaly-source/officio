@@ -5,6 +5,7 @@ import {
   ajouterHuile,
   changerStatutHuile,
   modifierHuile,
+  modifierVolumeACommander,
 } from '@/app/actions/huiles-essentielles'
 import type { HuileEssentielle, StatutHuile } from '@/lib/data/huiles-essentielles'
 
@@ -17,13 +18,19 @@ const STATUTS: { value: StatutHuile; label: string }[] = [
 const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
 
+const CHAMP_VOLUME_COMMANDE_CLASS =
+  'w-16 rounded-lg border border-border bg-bg px-2 py-1.5 text-[13px] text-ink outline-none focus:border-primary disabled:opacity-60'
+
+function formatVolume(volume: number) {
+  return volume % 1 === 0 ? volume : volume.toLocaleString('fr-FR')
+}
+
 function formatPrix(prix: number, volume: number) {
   const prixFormate = prix.toLocaleString('fr-FR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })
-  const volumeFormate = volume % 1 === 0 ? volume : volume.toLocaleString('fr-FR')
-  return `${prixFormate} € / ${volumeFormate} mL`
+  return `${prixFormate} € / ${formatVolume(volume)} mL`
 }
 
 function ChampsFormulaire({ huile }: { huile?: HuileEssentielle }) {
@@ -61,6 +68,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [idsEnTransition, setIdsEnTransition] = useState<Set<string>>(new Set())
+  const [idsVolumeEnSauvegarde, setIdsVolumeEnSauvegarde] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
 
   function marquerTransition(id: string, action: () => Promise<void>) {
@@ -68,6 +76,22 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
     startTransition(async () => {
       await action()
       setIdsEnTransition((prev) => {
+        const suivant = new Set(prev)
+        suivant.delete(id)
+        return suivant
+      })
+    })
+  }
+
+  function sauvegarderVolumeACommander(id: string, valeurSaisie: string) {
+    const valeurBrute = valeurSaisie.trim()
+    const volumeMl = valeurBrute === '' ? null : Number(valeurBrute)
+    if (volumeMl !== null && !Number.isFinite(volumeMl)) return
+
+    setIdsVolumeEnSauvegarde((prev) => new Set(prev).add(id))
+    startTransition(async () => {
+      await modifierVolumeACommander(id, volumeMl)
+      setIdsVolumeEnSauvegarde((prev) => {
         const suivant = new Set(prev)
         suivant.delete(id)
         return suivant
@@ -205,9 +229,30 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
               }`}
             >
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[13px] font-semibold text-ink">{h.nom}</div>
+                <div className="flex items-center gap-2">
+                  <div className="truncate text-[13px] font-semibold text-ink">{h.nom}</div>
+                  {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') && (
+                    <div className="flex shrink-0 items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        defaultValue={h.volume_a_commander_ml ?? ''}
+                        onBlur={(e) => sauvegarderVolumeACommander(h.id, e.target.value)}
+                        disabled={idsVolumeEnSauvegarde.has(h.id)}
+                        placeholder="Vol."
+                        aria-label="Volume à commander"
+                        className={CHAMP_VOLUME_COMMANDE_CLASS}
+                      />
+                      <span className="text-[11px] text-muted">mL</span>
+                    </div>
+                  )}
+                </div>
                 <div className="mt-0.5 font-mono text-[11px] text-muted">
                   {formatPrix(h.prix_reference, h.volume_reference_ml)}
+                  {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') &&
+                    h.volume_a_commander_ml != null &&
+                    ` · Commande : ${formatVolume(h.volume_a_commander_ml)} mL`}
                 </div>
               </div>
               {ongletStatut === 'en_stock' ? (
