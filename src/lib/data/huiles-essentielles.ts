@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 
-export type StatutHuile = 'en_stock' | 'en_commande' | 'a_commander'
+export type StatutHuile = 'en_stock' | 'non_tenu_en_stock' | 'en_commande' | 'a_commander'
 
 export type HuileEssentielle = {
   id: string
