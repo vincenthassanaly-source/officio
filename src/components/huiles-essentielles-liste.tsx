@@ -46,7 +46,7 @@ function ChampsFormulaire({ huile }: { huile?: HuileEssentielle }) {
           defaultValue={huile?.prix_reference}
           required
           placeholder="Prix (€)"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
         />
         <input
           type="number"
@@ -55,7 +55,7 @@ function ChampsFormulaire({ huile }: { huile?: HuileEssentielle }) {
           min="1"
           defaultValue={huile?.volume_reference_ml ?? 10}
           placeholder="Volume (mL)"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
         />
       </div>
     </>
