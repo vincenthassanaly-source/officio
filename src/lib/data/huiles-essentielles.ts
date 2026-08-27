@@ -7,6 +7,7 @@ export type HuileEssentielle = {
   nom: string
   prix_reference: number
   volume_reference_ml: number
+  volume_a_commander_ml: number | null
   statut: StatutHuile
 }
 
@@ -15,7 +16,7 @@ export async function getHuilesEssentielles(officineId: string): Promise<HuileEs
 
   const { data, error } = await supabase
     .from('huiles_essentielles')
-    .select('id, nom, prix_reference, volume_reference_ml, statut')
+    .select('id, nom, prix_reference, volume_reference_ml, volume_a_commander_ml, statut')
     .eq('officine_id', officineId)
     .order('nom', { ascending: true })
 
