@@ -10,7 +10,7 @@ import {
 import type { HuileEssentielle, StatutHuile } from '@/lib/data/huiles-essentielles'
 
 const STATUTS: { value: StatutHuile; label: string }[] = [
-  { value: 'en_stock', label: 'En stock' },
+  { value: 'en_stock', label: 'Huile essentielle' },
   { value: 'a_commander', label: 'À commander' },
   { value: 'en_commande', label: 'En commande' },
 ]
@@ -64,6 +64,7 @@ function ChampsFormulaire({ huile }: { huile?: HuileEssentielle }) {
 
 export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[] }) {
   const [ongletStatut, setOngletStatut] = useState<StatutHuile>('en_stock')
+  const [filtreDisponibilite, setFiltreDisponibilite] = useState<'en_stock' | 'non_tenu_en_stock'>('en_stock')
   const [recherche, setRecherche] = useState('')
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
@@ -100,7 +101,12 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
   }
 
   const comptes = useMemo(() => {
-    const c: Record<StatutHuile, number> = { en_stock: 0, en_commande: 0, a_commander: 0 }
+    const c: Record<StatutHuile, number> = {
+      en_stock: 0,
+      non_tenu_en_stock: 0,
+      en_commande: 0,
+      a_commander: 0,
+    }
     huiles.forEach((h) => {
       c[h.statut] += 1
     })
@@ -109,10 +115,11 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
 
   const visibles = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
+    const statutFiltre = ongletStatut === 'en_stock' ? filtreDisponibilite : ongletStatut
     return huiles
-      .filter((h) => h.statut === ongletStatut)
+      .filter((h) => h.statut === statutFiltre)
       .filter((h) => !rechercheNormalisee || h.nom.toLowerCase().includes(rechercheNormalisee))
-  }, [huiles, ongletStatut, recherche])
+  }, [huiles, ongletStatut, filtreDisponibilite, recherche])
 
   return (
     <div className="flex flex-1 flex-col gap-3">
@@ -134,11 +141,34 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
                 ongletStatut === s.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
               }`}
             >
-              {comptes[s.value]}
+              {comptes[s.value === 'en_stock' ? filtreDisponibilite : s.value]}
             </span>
           </button>
         ))}
       </div>
+
+      {ongletStatut === 'en_stock' && (
+        <div className="flex shrink-0 rounded-xl bg-track p-1">
+          <button
+            type="button"
+            onClick={() => setFiltreDisponibilite('en_stock')}
+            className={`flex-1 rounded-lg py-2 text-[12.5px] font-semibold transition ${
+              filtreDisponibilite === 'en_stock' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+            }`}
+          >
+            En stock
+          </button>
+          <button
+            type="button"
+            onClick={() => setFiltreDisponibilite('non_tenu_en_stock')}
+            className={`flex-1 rounded-lg py-2 text-[12.5px] font-semibold transition ${
+              filtreDisponibilite === 'non_tenu_en_stock' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
+            }`}
+          >
+            Non tenu en stock
+          </button>
+        </div>
+      )}
 
       <input
         value={recherche}
