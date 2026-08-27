@@ -15,6 +15,15 @@ const STATUTS: { value: StatutHuile; label: string }[] = [
   { value: 'en_commande', label: 'En commande' },
 ]
 
+const LABELS_STATUT: Record<StatutHuile, string> = {
+  en_stock: 'En stock',
+  non_tenu_en_stock: 'Non tenu en stock',
+  a_commander: 'À commander',
+  en_commande: 'En commande',
+}
+
+const OPTIONS_STATUT: StatutHuile[] = ['en_stock', 'non_tenu_en_stock', 'a_commander', 'en_commande']
+
 const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
 
@@ -295,9 +304,9 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
                   }}
                   className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[16px] font-semibold text-ink outline-none focus:border-primary disabled:opacity-60"
                 >
-                  {STATUTS.map((s) => (
-                    <option key={s.value} value={s.value}>
-                      {s.label}
+                  {OPTIONS_STATUT.map((statut) => (
+                    <option key={statut} value={statut}>
+                      {LABELS_STATUT[statut]}
                     </option>
                   ))}
                 </select>
