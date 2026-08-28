@@ -1,20 +1,21 @@
 import Link from 'next/link'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
-import { getMessages } from '@/lib/data/messages'
-import { getTaches } from '@/lib/data/taches'
-import { getRendezVous } from '@/lib/data/rendez-vous'
-import { getHuilesEssentielles } from '@/lib/data/huiles-essentielles'
-import { getContacts } from '@/lib/data/contacts'
-import { getCnoPatients } from '@/lib/data/cno'
-import { getSuggestions } from '@/lib/data/suggestions'
-import { getRupturesStock } from '@/lib/data/ruptures-stock'
-import { getProduitsARecommander } from '@/lib/data/produits-a-recommander'
-import { getPleinsRayon } from '@/lib/data/pleins-rayon'
-import { getNotes } from '@/lib/data/notes'
-import { getJournalActivite } from '@/lib/data/journal-activite'
-import { getEquipe } from '@/lib/data/equipe'
-import { getCouleursMembres } from '@/lib/data/couleurs-membres'
+import { getMessages, type MessageAvecDetails } from '@/lib/data/messages'
+import { getTaches, type Tache } from '@/lib/data/taches'
+import { getRendezVous, type RendezVous } from '@/lib/data/rendez-vous'
+import { getHuilesEssentielles, type HuileEssentielle } from '@/lib/data/huiles-essentielles'
+import { getContacts, type Contact } from '@/lib/data/contacts'
+import { getCnoPatients, type PatientCno } from '@/lib/data/cno'
+import { getSuggestions, type SuggestionAvecAuteur } from '@/lib/data/suggestions'
+import { getRupturesStock, type RuptureStock } from '@/lib/data/ruptures-stock'
+import { getProduitsARecommander, type ProduitARecommander } from '@/lib/data/produits-a-recommander'
+import { getPleinsRayon, type PleinRayon } from '@/lib/data/pleins-rayon'
+import { getNotes, type NoteAvecAuteur } from '@/lib/data/notes'
+import { getJournalActivite, type PageJournalActivite } from '@/lib/data/journal-activite'
+import { getEquipe, type MembreEquipe } from '@/lib/data/equipe'
+import { getCouleursMembres, type CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { signalerErreurClient } from '@/app/actions/erreurs-client'
 import { getWeekDates, toISODate } from '@/lib/dates'
 import { AccueilDashboard } from '@/components/accueil-dashboard'
 import { RechercheGlobale } from '@/components/recherche-globale'
@@ -50,6 +51,20 @@ export const fetchCache = 'force-no-store'
 
 const MAX_MESSAGES_APERCU = 3
 
+// Extrait la valeur d'un résultat de Promise.allSettled, ou une valeur de
+// repli neutre en cas d'échec — journalise l'échec (console + client_errors)
+// sans jamais le faire remonter, pour dégrader une carte plutôt que planter
+// toute la page.
+function valeur<T>(nomFonction: string, resultat: PromiseSettledResult<T>, repli: T): T {
+  if (resultat.status === 'fulfilled') return resultat.value
+
+  console.error(nomFonction, resultat.reason)
+  const message = resultat.reason instanceof Error ? resultat.reason.message : String(resultat.reason)
+  void signalerErreurClient({ message, contexte: nomFonction }).catch(() => {})
+
+  return repli
+}
+
 export default async function AccueilPage() {
   const [officine, profil] = await Promise.all([getOfficineActive(), getCurrentProfil()])
   if (!officine) return null
@@ -58,22 +73,29 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
+  // Promise.allSettled plutôt que Promise.all : les 16 requêtes de l'accueil
+  // tournent en parallèle juste après l'ouverture de l'app, moment où une
+  // course sur le rafraîchissement du refresh token Supabase (usage unique)
+  // peut faire échouer l'une d'elles (même classe de bug que
+  // getCurrentProfil()/getMesAdhesions(), voir src/lib/data/profils.ts). Un
+  // seul échec ne doit dégrader que la carte concernée, jamais planter toute
+  // la page via l'error boundary — voir la fonction `valeur` ci-dessus.
   const [
-    messages,
-    taches,
-    rendezVous,
-    huiles,
-    contacts,
-    patientsCno,
-    suggestions,
-    equipe,
-    couleurs,
-    rupturesStock,
-    produitsARecommander,
-    pleinsRayon,
-    notes,
-    journalActivite,
-  ] = await Promise.all([
+    messagesR,
+    tachesR,
+    rendezVousR,
+    huilesR,
+    contactsR,
+    patientsCnoR,
+    suggestionsR,
+    equipeR,
+    couleursR,
+    rupturesStockR,
+    produitsARecommanderR,
+    pleinsRayonR,
+    notesR,
+    journalActiviteR,
+  ] = await Promise.allSettled([
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
     getRendezVous(officine.officine_id, toISODate(weekDates[0]), toISODate(weekDates[6])),
@@ -89,6 +111,37 @@ export default async function AccueilPage() {
     getNotes(officine.officine_id),
     getJournalActivite(officine.officine_id),
   ])
+
+  const messages = valeur('getMessages', messagesR, [] as MessageAvecDetails[])
+  const taches = valeur('getTaches', tachesR, [] as Tache[])
+  const rendezVous = valeur('getRendezVous', rendezVousR, [] as RendezVous[])
+  const huiles = valeur('getHuilesEssentielles', huilesR, [] as HuileEssentielle[])
+  const contacts = valeur('getContacts', contactsR, [] as Contact[])
+  const patientsCno = valeur('getCnoPatients', patientsCnoR, [] as PatientCno[])
+  const suggestions = valeur('getSuggestions', suggestionsR, [] as SuggestionAvecAuteur[])
+  const equipe = valeur('getEquipe', equipeR, [] as MembreEquipe[])
+  const couleurs = valeur('getCouleursMembres', couleursR, new Map<string, CouleurAvatar>())
+  const rupturesStock = valeur('getRupturesStock', rupturesStockR, [] as RuptureStock[])
+  const produitsARecommander = valeur('getProduitsARecommander', produitsARecommanderR, [] as ProduitARecommander[])
+  const pleinsRayon = valeur('getPleinsRayon', pleinsRayonR, [] as PleinRayon[])
+  const notes = valeur('getNotes', notesR, [] as NoteAvecAuteur[])
+  const journalActivite = valeur('getJournalActivite', journalActiviteR, {
+    entrees: [],
+    curseurSuivant: null,
+  } as PageJournalActivite)
+
+  // Un chiffre "—" plutôt qu'un décompte trompeur (ex: 0) sur les cartes dont
+  // la donnée a échoué à charger — voir `valeur` ci-dessus.
+  const messagesOk = messagesR.status === 'fulfilled'
+  const rendezVousOk = rendezVousR.status === 'fulfilled'
+  const contactsOk = contactsR.status === 'fulfilled'
+  const huilesOk = huilesR.status === 'fulfilled'
+  const patientsCnoOk = patientsCnoR.status === 'fulfilled'
+  const suggestionsOk = suggestionsR.status === 'fulfilled'
+  const rupturesOk = rupturesStockR.status === 'fulfilled' && produitsARecommanderR.status === 'fulfilled'
+  const pleinsRayonOk = pleinsRayonR.status === 'fulfilled'
+  const notesOk = notesR.status === 'fulfilled'
+  const journalActiviteOk = journalActiviteR.status === 'fulfilled'
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
   const suggestionsNonTraitees = suggestions.filter((s) => !s.fait).length
@@ -155,7 +208,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Cahier de liaison</div>
-            <div className="mt-0.5 text-[11px] text-muted">{nonLus} nouveaux messages</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {messagesOk ? `${nonLus} nouveaux messages` : '—'}
+            </div>
           </div>
         </Link>
         <Link
@@ -167,7 +222,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Agenda</div>
-            <div className="mt-0.5 text-[11px] text-muted">{rendezVous.length} rendez-vous</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {rendezVousOk ? `${rendezVous.length} rendez-vous` : '—'}
+            </div>
           </div>
         </Link>
         <Link
@@ -179,7 +236,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Carnet d&rsquo;adresses</div>
-            <div className="mt-0.5 text-[11px] text-muted">{contacts.length} contacts</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {contactsOk ? `${contacts.length} contacts` : '—'}
+            </div>
           </div>
         </Link>
         <Link
@@ -191,7 +250,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Huiles essentielles</div>
-            <div className="mt-0.5 text-[11px] text-muted">{huilesACommander} à commander</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {huilesOk ? `${huilesACommander} à commander` : '—'}
+            </div>
           </div>
         </Link>
         <Link
@@ -227,7 +288,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suivi CNO</div>
-            <div className="mt-0.5 text-[11px] text-muted">{patientsCno.length} patients suivis</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {patientsCnoOk ? `${patientsCno.length} patients suivis` : '—'}
+            </div>
           </div>
         </Link>
         <Link
@@ -251,7 +314,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suggestions</div>
-            <div className="mt-0.5 text-[11px] text-muted">{suggestionsNonTraitees} propositions</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {suggestionsOk ? `${suggestionsNonTraitees} propositions` : '—'}
+            </div>
           </div>
         </Link>
         <Link
@@ -276,7 +341,7 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Ruptures de stock</div>
             <div className="mt-0.5 text-[11px] text-muted">
-              {rupturesStock.length + produitsARecommander.length} en cours
+              {rupturesOk ? `${rupturesStock.length + produitsARecommander.length} en cours` : '—'}
             </div>
           </div>
         </Link>
@@ -289,7 +354,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Pleins de rayon</div>
-            <div className="mt-0.5 text-[11px] text-muted">{pleinsRayon.length} en cours</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {pleinsRayonOk ? `${pleinsRayon.length} en cours` : '—'}
+            </div>
           </div>
         </Link>
         <Link
@@ -301,7 +368,7 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Notes</div>
-            <div className="mt-0.5 text-[11px] text-muted">{notes.length} notes</div>
+            <div className="mt-0.5 text-[11px] text-muted">{notesOk ? `${notes.length} notes` : '—'}</div>
           </div>
         </Link>
         <Link
@@ -313,7 +380,9 @@ export default async function AccueilPage() {
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Activité</div>
-            <div className="mt-0.5 text-[11px] text-muted">{activitesAujourdhui} activités récentes</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {journalActiviteOk ? `${activitesAujourdhui} activités récentes` : '—'}
+            </div>
           </div>
         </Link>
       </div>
