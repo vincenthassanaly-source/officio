@@ -8,6 +8,7 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { useToast } from '@/components/ui/toast-provider'
 
 const MEMBRE_TOUS = 'tous'
 
@@ -42,20 +43,33 @@ export function JournalActivite({
   couleurs: Map<string, CouleurAvatar>
 }) {
   const router = useRouter()
+  const toast = useToast()
   const [entrees, setEntrees] = useState(pageInitiale.entrees)
   const [curseurSuivant, setCurseurSuivant] = useState(pageInitiale.curseurSuivant)
   const [modulesSelectionnes, setModulesSelectionnes] = useState<Set<ModuleJournal>>(new Set())
   const [membreSelectionne, setMembreSelectionne] = useState(MEMBRE_TOUS)
   const [isPending, startTransition] = useTransition()
 
+  // getJournalActivite() lève désormais une erreur explicite en cas d'échec
+  // Supabase (cf. src/lib/data/journal-activite.ts) plutôt que de renvoyer
+  // silencieusement une page vide. Côté serveur (chargement initial de
+  // /activite), cette erreur remonte à (app)/error.tsx. Ici, côté client
+  // (changement de filtre / "Charger plus"), on l'intercepte pour dégrader
+  // sans effacer la liste déjà affichée — même esprit que la dégradation
+  // "—" de l'accueil, adapté à une liste déjà peuplée plutôt qu'à un chiffre.
   function recharger(modulesActifs: Set<ModuleJournal>, membreActif: string) {
     startTransition(async () => {
-      const page = await chargerPageJournal({
-        module: modulesActifs.size > 0 ? Array.from(modulesActifs) : undefined,
-        profilId: membreActif !== MEMBRE_TOUS ? membreActif : undefined,
-      })
-      setEntrees(page.entrees)
-      setCurseurSuivant(page.curseurSuivant)
+      try {
+        const page = await chargerPageJournal({
+          module: modulesActifs.size > 0 ? Array.from(modulesActifs) : undefined,
+          profilId: membreActif !== MEMBRE_TOUS ? membreActif : undefined,
+        })
+        setEntrees(page.entrees)
+        setCurseurSuivant(page.curseurSuivant)
+      } catch (err) {
+        console.error('JournalActivite: recharger', err)
+        toast({ type: 'erreur', message: 'Impossible de charger le journal, réessaie dans quelques instants.' })
+      }
     })
   }
 
@@ -75,13 +89,18 @@ export function JournalActivite({
   function chargerPlus() {
     if (!curseurSuivant) return
     startTransition(async () => {
-      const page = await chargerPageJournal({
-        module: modulesSelectionnes.size > 0 ? Array.from(modulesSelectionnes) : undefined,
-        profilId: membreSelectionne !== MEMBRE_TOUS ? membreSelectionne : undefined,
-        curseurAvant: curseurSuivant,
-      })
-      setEntrees((prev) => [...prev, ...page.entrees])
-      setCurseurSuivant(page.curseurSuivant)
+      try {
+        const page = await chargerPageJournal({
+          module: modulesSelectionnes.size > 0 ? Array.from(modulesSelectionnes) : undefined,
+          profilId: membreSelectionne !== MEMBRE_TOUS ? membreSelectionne : undefined,
+          curseurAvant: curseurSuivant,
+        })
+        setEntrees((prev) => [...prev, ...page.entrees])
+        setCurseurSuivant(page.curseurSuivant)
+      } catch (err) {
+        console.error('JournalActivite: chargerPlus', err)
+        toast({ type: 'erreur', message: 'Impossible de charger la suite, réessaie dans quelques instants.' })
+      }
     })
   }
 
