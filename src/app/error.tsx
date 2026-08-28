@@ -31,6 +31,7 @@ export default function ErreurRacine({
       stackPremiereLigne: error.stack?.split('\n')[0],
       url: typeof window !== 'undefined' ? window.location.href : null,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      contexte: 'error-boundary-root',
     }).catch(() => {})
   }, [error])
 

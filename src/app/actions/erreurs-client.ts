@@ -18,6 +18,11 @@ export async function signalerErreurClient(details: {
   stackPremiereLigne?: string | null
   url?: string | null
   userAgent?: string | null
+  // Nom de la fonction source en échec (ex: "getRendezVous") pour un fetch
+  // isolé dégradé gracieusement sur l'accueil, ou nom de l'écran (ex:
+  // "error-boundary-app") pour un crash intercepté par un error boundary —
+  // voir scripts/migration-client-errors-contexte.sql.
+  contexte?: string
 }): Promise<void> {
   try {
     const [profil, officine] = await Promise.all([getCurrentProfil(), getOfficineActive()])
@@ -31,6 +36,7 @@ export async function signalerErreurClient(details: {
       stack_premiere_ligne: details.stackPremiereLigne?.slice(0, 500) ?? null,
       url: details.url ?? null,
       user_agent: details.userAgent?.slice(0, 500) ?? null,
+      contexte: details.contexte?.slice(0, 500) ?? null,
     })
 
     if (error) console.error('signalerErreurClient', error)

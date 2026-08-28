@@ -31,6 +31,7 @@ export default function ErreurAppli({
       stackPremiereLigne: error.stack?.split('\n')[0],
       url: typeof window !== 'undefined' ? window.location.href : null,
       userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      contexte: 'error-boundary-app',
     }).catch(() => {})
   }, [error])
 
