@@ -29,10 +29,20 @@ export type Profil = {
 // scripts/RAPPORT-fix-profil-null-messages-non-lus-2026-08-25.md.
 export const getCurrentProfil = cache(async (): Promise<Profil | null> => {
   const supabase = await createClient()
-  const {
+  let {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser()
+
+  // Une seule tentative de retry après ~300ms : laisse le temps à une
+  // rotation concurrente du refresh token de se terminer avant d'abandonner.
+  if (authError) {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    ;({
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser())
+  }
 
   if (authError) {
     console.error('getCurrentProfil: auth.getUser()', authError)
@@ -41,11 +51,22 @@ export const getCurrentProfil = cache(async (): Promise<Profil | null> => {
 
   if (!user) return null
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('profils')
     .select('id, nom_complet, initiales')
     .eq('id', user.id)
     .single()
+
+  // Même retry unique après ~300ms, pour la même raison qu'auth.getUser()
+  // ci-dessus.
+  if (error && error.code !== 'PGRST116') {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    ;({ data, error } = await supabase
+      .from('profils')
+      .select('id, nom_complet, initiales')
+      .eq('id', user.id)
+      .single())
+  }
 
   // PGRST116 : .single() n'a trouvé aucune ligne (ou plusieurs). C'est le
   // cas légitime d'un profil pas encore propagé juste après la création du

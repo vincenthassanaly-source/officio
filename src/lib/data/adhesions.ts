@@ -15,11 +15,23 @@ export const getMesAdhesions = cache(async (): Promise<Adhesion[]> => {
   } = await supabase.auth.getUser()
   if (!user) return []
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('adhesions')
     .select('officine_id, role, officines ( nom )')
     .eq('profil_id', user.id)
     .order('created_at', { ascending: true })
+
+  // Une seule tentative de retry après ~300ms avant de throw ci-dessous :
+  // laisse le temps à une rotation concurrente du refresh token Supabase de
+  // se terminer avant d'abandonner (même logique que getCurrentProfil()).
+  if (error) {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    ;({ data, error } = await supabase
+      .from('adhesions')
+      .select('officine_id, role, officines ( nom )')
+      .eq('profil_id', user.id)
+      .order('created_at', { ascending: true }))
+  }
 
   if (error) {
     console.error('getMesAdhesions', error)
