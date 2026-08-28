@@ -10,7 +10,6 @@ import { getCnoPatients, type PatientCno } from '@/lib/data/cno'
 import { getSuggestions, type SuggestionAvecAuteur } from '@/lib/data/suggestions'
 import { getRupturesStock, type RuptureStock } from '@/lib/data/ruptures-stock'
 import { getProduitsARecommander, type ProduitARecommander } from '@/lib/data/produits-a-recommander'
-import { getPleinsRayon, type PleinRayon } from '@/lib/data/pleins-rayon'
 import { getNotes, type NoteAvecAuteur } from '@/lib/data/notes'
 import { getJournalActivite, type PageJournalActivite } from '@/lib/data/journal-activite'
 import { getEquipe, type MembreEquipe } from '@/lib/data/equipe'
@@ -32,7 +31,6 @@ import {
   IconVaccin,
   IconSuggestions,
   IconRupturesStock,
-  IconPleinsRayon,
   IconNote,
   IconActivite,
 } from '@/components/nav-icons'
@@ -73,7 +71,7 @@ export default async function AccueilPage() {
   const aujourdhuiIso = toISODate(aujourdhui)
   const weekDates = getWeekDates(aujourdhui)
 
-  // Promise.allSettled plutôt que Promise.all : les 16 requêtes de l'accueil
+  // Promise.allSettled plutôt que Promise.all : les 15 requêtes de l'accueil
   // tournent en parallèle juste après l'ouverture de l'app, moment où une
   // course sur le rafraîchissement du refresh token Supabase (usage unique)
   // peut faire échouer l'une d'elles (même classe de bug que
@@ -92,7 +90,6 @@ export default async function AccueilPage() {
     couleursR,
     rupturesStockR,
     produitsARecommanderR,
-    pleinsRayonR,
     notesR,
     journalActiviteR,
   ] = await Promise.allSettled([
@@ -107,7 +104,6 @@ export default async function AccueilPage() {
     getCouleursMembres(officine.officine_id),
     getRupturesStock(officine.officine_id),
     getProduitsARecommander(officine.officine_id),
-    getPleinsRayon(officine.officine_id),
     getNotes(officine.officine_id),
     getJournalActivite(officine.officine_id),
   ])
@@ -123,7 +119,6 @@ export default async function AccueilPage() {
   const couleurs = valeur('getCouleursMembres', couleursR, new Map<string, CouleurAvatar>())
   const rupturesStock = valeur('getRupturesStock', rupturesStockR, [] as RuptureStock[])
   const produitsARecommander = valeur('getProduitsARecommander', produitsARecommanderR, [] as ProduitARecommander[])
-  const pleinsRayon = valeur('getPleinsRayon', pleinsRayonR, [] as PleinRayon[])
   const notes = valeur('getNotes', notesR, [] as NoteAvecAuteur[])
   const journalActivite = valeur('getJournalActivite', journalActiviteR, {
     entrees: [],
@@ -139,7 +134,6 @@ export default async function AccueilPage() {
   const patientsCnoOk = patientsCnoR.status === 'fulfilled'
   const suggestionsOk = suggestionsR.status === 'fulfilled'
   const rupturesOk = rupturesStockR.status === 'fulfilled' && produitsARecommanderR.status === 'fulfilled'
-  const pleinsRayonOk = pleinsRayonR.status === 'fulfilled'
   const notesOk = notesR.status === 'fulfilled'
   const journalActiviteOk = journalActiviteR.status === 'fulfilled'
 
@@ -342,20 +336,6 @@ export default async function AccueilPage() {
             <div className="text-[13.5px] font-semibold text-ink">Ruptures de stock</div>
             <div className="mt-0.5 text-[11px] text-muted">
               {rupturesOk ? `${rupturesStock.length + produitsARecommander.length} en cours` : '—'}
-            </div>
-          </div>
-        </Link>
-        <Link
-          href="/pleins-rayon"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-brun-soft text-brun">
-            <IconPleinsRayon className="h-[18px] w-[18px]" />
-          </div>
-          <div>
-            <div className="text-[13.5px] font-semibold text-ink">Pleins de rayon</div>
-            <div className="mt-0.5 text-[11px] text-muted">
-              {pleinsRayonOk ? `${pleinsRayon.length} en cours` : '—'}
             </div>
           </div>
         </Link>

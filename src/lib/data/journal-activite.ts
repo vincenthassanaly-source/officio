@@ -8,7 +8,6 @@ export type ModuleJournal =
   | 'suggestions'
   | 'ruptures_stock'
   | 'produits_a_recommander'
-  | 'pleins_rayon'
   | 'huiles_essentielles'
   | 'fournisseurs'
   | 'documents'
@@ -104,7 +103,6 @@ const LIBELLES_MODULES: { value: ModuleJournal; label: string }[] = [
   { value: 'suggestions', label: 'Suggestions' },
   { value: 'ruptures_stock', label: 'Ruptures de stock' },
   { value: 'produits_a_recommander', label: 'Produits à recommander' },
-  { value: 'pleins_rayon', label: 'Pleins de rayon' },
   { value: 'huiles_essentielles', label: 'Huiles essentielles' },
   { value: 'fournisseurs', label: 'Fournisseurs' },
   { value: 'documents', label: 'Documents' },
