@@ -21,6 +21,7 @@ type CategorieNotification =
   | 'taches_non_assignees'
   | 'taches_echeance'
   | 'agenda_rappel'
+  | 'notes'
 
 const CATEGORIES_VALIDES: CategorieNotification[] = [
   'messages',
@@ -28,6 +29,7 @@ const CATEGORIES_VALIDES: CategorieNotification[] = [
   'taches_non_assignees',
   'taches_echeance',
   'agenda_rappel',
+  'notes',
 ]
 
 type SendPushRequest = {
