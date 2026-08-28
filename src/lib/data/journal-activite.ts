@@ -65,11 +65,31 @@ export async function getJournalActivite(
   if (options?.profilId) requete = requete.eq('profil_id', options.profilId)
   if (options?.curseurAvant) requete = requete.lt('created_at', options.curseurAvant)
 
-  const { data, error } = await requete
+  let { data, error } = await requete
+
+  // Une seule tentative de retry après ~300ms avant de throw ci-dessous :
+  // laisse le temps à une rotation concurrente du refresh token Supabase de
+  // se terminer avant d'abandonner (même logique que getMesAdhesions()/
+  // getCurrentProfil(), voir src/lib/data/adhesions.ts et
+  // src/lib/data/profils.ts).
+  if (error) {
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    ;({ data, error } = await requete)
+  }
 
   if (error) {
     console.error('getJournalActivite', error)
-    return { entrees: [], curseurSuivant: null }
+    // Un `return { entrees: [], curseurSuivant: null }` ici serait
+    // indiscernable d'un journal réellement vide : l'appelant SSR
+    // (app/(app)/activite/page.tsx) afficherait "Aucune activité pour le
+    // moment." à la place d'un échec technique — même classe de bug que
+    // scripts/RAPPORT-fix-session-bienvenue-2026-08-21.md et
+    // scripts/RAPPORT-fix-profil-null-messages-non-lus-2026-08-25.md. On
+    // lève donc l'erreur : elle remonte jusqu'à (app)/error.tsx (écran
+    // "Réessayer" déjà existant). Sur l'accueil, src/app/(app)/page.tsx
+    // l'attend déjà via Promise.allSettled pour dégrader la carte
+    // "Activité" à "—" au lieu d'un chiffre trompeur.
+    throw new Error('Impossible de récupérer le journal d’activité', { cause: error })
   }
 
   const entrees: EntreeJournal[] = (data ?? []).map((e) => {
