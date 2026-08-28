@@ -8,6 +8,7 @@ import { NotificationsCloche } from '@/components/notifications-cloche'
 import { NotificationsProvider } from '@/components/notifications-provider'
 import { EcouteurSession } from '@/components/ecouteur-session'
 import { EcouteurRepriseApp } from '@/components/ecouteur-reprise-app'
+import { FenetreAujourdhui } from '@/components/fenetre-aujourdhui'
 import { getMesAdhesions } from '@/lib/data/adhesions'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getCurrentProfil } from '@/lib/data/profils'
@@ -40,6 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="flex w-full flex-1 flex-col overflow-x-hidden lg:flex-row lg:overflow-x-visible">
         <EcouteurSession />
         <EcouteurRepriseApp />
+        <FenetreAujourdhui />
         <SidebarNav
           adhesions={adhesions}
           officineActiveId={officineActive!.officine_id}
