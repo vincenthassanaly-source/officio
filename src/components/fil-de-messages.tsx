@@ -385,7 +385,7 @@ export function FilDeMessages({
               e.target.style.height = `${e.target.scrollHeight}px`
             }}
             rows={1}
-            placeholder="Écrire une consigne à l'équipe…"
+            placeholder="Écrire un message…"
             className="min-w-0 max-h-40 flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-bg px-4 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
           <ChampAudio onChange={setAudio} />
