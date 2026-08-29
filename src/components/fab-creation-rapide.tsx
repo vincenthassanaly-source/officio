@@ -187,12 +187,14 @@ function FormulaireTache({
   onCree: () => void
 }) {
   const [photo, setPhoto] = useState<File | null>(null)
+  const [audio, setAudio] = useState<File | null>(null)
   const [isPending, startTransition] = useTransition()
 
   return (
     <form
       action={(formData) => {
         if (photo) formData.set('photo', photo)
+        if (audio) formData.set('audio', audio)
         startTransition(async () => {
           await creerTache(formData)
           onCree()
@@ -234,7 +236,10 @@ function FormulaireTache({
           className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
       </div>
-      <ChampPhoto onChange={setPhoto} />
+      <div className="flex flex-wrap items-center gap-2">
+        <ChampPhoto onChange={setPhoto} />
+        <ChampAudio onChange={setAudio} />
+      </div>
       <button
         type="submit"
         disabled={isPending}

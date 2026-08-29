@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
 import { creerTache, toggleTache, supprimerTache, modifierTache, togglePouceTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
+import { ChampAudio } from '@/components/champ-audio'
 import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
@@ -98,6 +99,7 @@ export function TachesList({
   const [filtre, setFiltre] = useState('tous')
   const [formOuvert, setFormOuvert] = useState(false)
   const [photo, setPhoto] = useState<File | null>(null)
+  const [audio, setAudio] = useState<File | null>(null)
   const [isPending, startTransition] = useTransition()
   // Tâche ciblée par une notification (?tache=<id>) : mise en évidence
   // temporairement le temps que l'utilisateur la repère dans la liste.
@@ -231,11 +233,13 @@ export function TachesList({
         <form
           action={(formData) => {
             if (photo) formData.set('photo', photo)
+            if (audio) formData.set('audio', audio)
             startTransition(async () => {
               try {
                 await creerTache(formData)
                 setFormOuvert(false)
                 setPhoto(null)
+                setAudio(null)
                 toast({ type: 'succes', message: 'Tâche ajoutée.' })
               } catch (err) {
                 toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de l'ajout de la tâche." })
@@ -277,7 +281,10 @@ export function TachesList({
               className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
             />
           </div>
-          <ChampPhoto onChange={setPhoto} />
+          <div className="flex flex-wrap items-center gap-2">
+            <ChampPhoto onChange={setPhoto} />
+            <ChampAudio onChange={setAudio} />
+          </div>
           <button
             type="submit"
             disabled={isPending}
@@ -658,6 +665,11 @@ export function ModaleEditionTache({
             setPhotoSupprimee(fichier === null)
           }}
         />
+        {/* Lecture seule : l'enregistrement d'un vocal n'est pour l'instant
+            possible qu'à la création (voir le formulaire plus haut dans ce
+            fichier) — pas de remplacement/retrait ici, contrairement à la
+            photo. */}
+        {tache.audioUrl && <audio controls src={tache.audioUrl} className="h-9 w-full" />}
         <button
           type="submit"
           disabled={isPending}
