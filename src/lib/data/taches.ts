@@ -11,6 +11,7 @@ export type Tache = {
   assigne: { id: string; nom_complet: string; initiales: string } | null
   createur: { id: string; nom_complet: string; initiales: string } | null
   photoUrl: string | null
+  audioUrl: string | null
   pouces: { profil_id: string; initiales: string }[]
 }
 
@@ -21,7 +22,7 @@ export type Tache = {
 const DUREE_SIGNED_URL_PHOTO = 60 * 60
 
 const SELECT_TACHE =
-  `id, titre, statut, echeance, echeance_heure, photo_chemin_stockage,
+  `id, titre, statut, echeance, echeance_heure, photo_chemin_stockage, audio_chemin_stockage,
    assigne:profils!taches_assigne_id_fkey ( id, nom_complet, initiales ),
    createur:profils!taches_created_by_fkey ( id, nom_complet, initiales ),
    taches_pouces ( profil_id, profils!taches_pouces_profil_id_fkey ( initiales ) )`
@@ -33,6 +34,7 @@ type LigneTache = {
   echeance: string | null
   echeance_heure: string | null
   photo_chemin_stockage: string | null
+  audio_chemin_stockage: string | null
   assigne: { id: string; nom_complet: string; initiales: string }[] | { id: string; nom_complet: string; initiales: string } | null
   createur: { id: string; nom_complet: string; initiales: string }[] | { id: string; nom_complet: string; initiales: string } | null
   taches_pouces: { profil_id: string; profils: { initiales: string }[] | { initiales: string } | null }[] | null
@@ -50,6 +52,14 @@ async function mapperLigneTache(
     photoUrl = signee?.signedUrl ?? null
   }
 
+  let audioUrl: string | null = null
+  if (t.audio_chemin_stockage) {
+    const { data: signee } = await supabase.storage
+      .from('taches-audio')
+      .createSignedUrl(t.audio_chemin_stockage, DUREE_SIGNED_URL_PHOTO)
+    audioUrl = signee?.signedUrl ?? null
+  }
+
   return {
     id: t.id,
     titre: t.titre,
@@ -59,6 +69,7 @@ async function mapperLigneTache(
     assigne: Array.isArray(t.assigne) ? t.assigne[0] ?? null : t.assigne,
     createur: Array.isArray(t.createur) ? t.createur[0] ?? null : t.createur,
     photoUrl,
+    audioUrl,
     pouces: (t.taches_pouces ?? []).map((p) => ({
       profil_id: p.profil_id,
       initiales: Array.isArray(p.profils) ? p.profils[0]?.initiales ?? '?' : p.profils?.initiales ?? '?',
