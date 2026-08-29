@@ -11,6 +11,7 @@ import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cibl
 import { ajouterEnAttente, listerEnAttente, retirerEnAttente } from '@/lib/messages-lus-en-attente'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { ChampAudio } from '@/components/champ-audio'
 
 const FILTRE_TOUTES = 'toutes'
 
@@ -39,6 +40,7 @@ export function FilDeMessages({
   const searchParams = useSearchParams()
   const [categorie, setCategorie] = useState<Categorie>('info')
   const [contenu, setContenu] = useState('')
+  const [audio, setAudio] = useState<File | null>(null)
   const [recherche, setRecherche] = useState('')
   const [filtreCategorie, setFiltreCategorie] = useState<string>(FILTRE_TOUTES)
   const [isPending, startTransition] = useTransition()
@@ -269,7 +271,10 @@ export function FilDeMessages({
                   )}
                 </div>
 
-                <p className="text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>
+                {m.contenu && <p className="text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>}
+                {m.audioUrl && (
+                  <audio controls src={m.audioUrl} className={`h-9 w-full max-w-xs ${m.contenu ? 'mt-2' : ''}`} />
+                )}
 
                 <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5">
                   <div className="flex items-center gap-2">
@@ -339,10 +344,12 @@ export function FilDeMessages({
 
       <form
         action={(formData) => {
+          if (audio) formData.set('audio', audio)
           startTransition(async () => {
             try {
               await envoyerMessage(formData)
               setContenu('')
+              setAudio(null)
               if (textareaRef.current) textareaRef.current.style.height = 'auto'
               toast({ type: 'succes', message: 'Message envoyé.' })
             } catch (err) {
@@ -383,12 +390,13 @@ export function FilDeMessages({
           />
           <button
             type="submit"
-            disabled={isPending || !contenu.trim()}
+            disabled={isPending || (!contenu.trim() && !audio)}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-lg text-white disabled:opacity-50"
           >
             ↑
           </button>
         </div>
+        <ChampAudio onChange={setAudio} />
       </form>
 
       <ModaleConfirmation
