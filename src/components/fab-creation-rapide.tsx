@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { IconLiaison, IconRegularisation, IconNote } from '@/components/nav-icons'
 import { ChampPhoto } from '@/components/champ-photo'
+import { ChampAudio } from '@/components/champ-audio'
 import { envoyerMessage } from '@/app/actions/liaison'
 import { creerTache } from '@/app/actions/taches'
 import { ajouterRegularisation } from '@/app/actions/regularisations'
@@ -123,14 +124,17 @@ function MenuChoix({
 function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
   const [categorie, setCategorie] = useState<Categorie>('info')
   const [contenu, setContenu] = useState('')
+  const [audio, setAudio] = useState<File | null>(null)
   const [isPending, startTransition] = useTransition()
 
   return (
     <form
       action={(formData) => {
+        if (audio) formData.set('audio', audio)
         startTransition(async () => {
           await envoyerMessage(formData)
           setContenu('')
+          setAudio(null)
           onEnvoye()
         })
       }}
@@ -152,16 +156,19 @@ function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
         ))}
       </div>
       <input type="hidden" name="categorie" value={categorie} />
-      <input
-        name="contenu"
-        value={contenu}
-        onChange={(e) => setContenu(e.target.value)}
-        placeholder="Écrire une consigne à l'équipe…"
-        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
-      />
+      <div className="flex items-center gap-2">
+        <input
+          name="contenu"
+          value={contenu}
+          onChange={(e) => setContenu(e.target.value)}
+          placeholder="Écrire un message…"
+          className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+        />
+        <ChampAudio onChange={setAudio} />
+      </div>
       <button
         type="submit"
-        disabled={isPending || !contenu.trim()}
+        disabled={isPending || (!contenu.trim() && !audio)}
         className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
       >
         Envoyer
