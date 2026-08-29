@@ -5,17 +5,45 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
 
+// Type MIME reçu -> extension de stockage. Seuls les deux formats produits
+// par MediaRecorder côté navigateur (ChampAudio) sont acceptés — on ne fait
+// confiance qu'au type réellement reçu, jamais à ce que le client prétend
+// avoir enregistré.
+const EXTENSION_PAR_TYPE_MIME_AUDIO: Record<string, string> = {
+  'audio/webm': 'webm',
+  'audio/mp4': 'mp4',
+}
+
 export async function envoyerMessage(formData: FormData) {
   const contenu = String(formData.get('contenu') ?? '').trim()
   const categorie = String(formData.get('categorie') ?? 'info')
+  const audio = formData.get('audio')
 
-  if (!contenu) return
+  const aUnAudio = audio instanceof File && audio.size > 0
+  if (!contenu && !aUnAudio) return
 
   const profil = await getCurrentProfil()
   const officine = await getOfficineActive()
   if (!profil || !officine) throw new Error('Non connecté')
 
   const supabase = await createClient()
+
+  let audioCheminStockage: string | null = null
+  if (aUnAudio) {
+    const extension = EXTENSION_PAR_TYPE_MIME_AUDIO[audio.type]
+    if (!extension) {
+      throw new Error('Format audio non accepté.')
+    }
+
+    const chemin = `${officine.officine_id}/${crypto.randomUUID()}.${extension}`
+    const { error: erreurUpload } = await supabase.storage
+      .from('messages-audio')
+      .upload(chemin, audio, { contentType: audio.type })
+
+    if (erreurUpload) throw new Error(erreurUpload.message)
+    audioCheminStockage = chemin
+  }
+
   const { data: message, error } = await supabase
     .from('messages')
     .insert({
@@ -23,11 +51,17 @@ export async function envoyerMessage(formData: FormData) {
       auteur_id: profil.id,
       contenu,
       categorie,
+      audio_chemin_stockage: audioCheminStockage,
     })
     .select('id')
     .single()
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    if (audioCheminStockage) {
+      await supabase.storage.from('messages-audio').remove([audioCheminStockage])
+    }
+    throw new Error(error.message)
+  }
 
   await supabase
     .from('messages_lus')
