@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useSyncExternalStore, useTransition } from 'react'
+import { useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { creerNote, modifierNote, supprimerNote } from '@/app/actions/notes'
 import type { NoteAvecAuteur } from '@/lib/data/notes'
@@ -37,6 +37,7 @@ export function Notes({
   const [contenu, setContenu] = useState('')
   const [recherche, setRecherche] = useState('')
   const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
+  const [noteEnEdition, setNoteEnEdition] = useState<NoteAvecAuteur | null>(null)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
 
@@ -116,39 +117,17 @@ export function Notes({
           </p>
         )}
 
-        {notesFiltrees.map((n) => {
-          const couleurAuteur = (n.auteur ? couleurs.get(n.auteur.id) : null) ?? COULEUR_PAR_DEFAUT
-          return (
-            <div key={n.id} className="rounded-[20px] bg-surface shadow-card p-4">
-              <div className="mb-2 flex items-center gap-2.5">
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
-                >
-                  {n.auteur?.initiales ?? '?'}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-[13.5px] font-semibold text-ink">
-                    {n.auteur?.nom_complet ?? 'Ancien collègue'}
-                  </div>
-                  <div className="text-[11px] text-muted">{formatDate(n.created_at)}</div>
-                </div>
-                {n.auteur?.id === profilActuelId && (
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => setIdASupprimer(n.id)}
-                    aria-label="Supprimer la note"
-                    className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-              <div className="mb-1 text-[14.5px] font-semibold text-ink">{n.titre}</div>
-              <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{n.contenu}</p>
-            </div>
-          )
-        })}
+        {notesFiltrees.map((n) => (
+          <CarteNote
+            key={n.id}
+            note={n}
+            profilActuelId={profilActuelId}
+            couleurAuteur={(n.auteur ? couleurs.get(n.auteur.id) : null) ?? COULEUR_PAR_DEFAUT}
+            isPending={isPending}
+            onSupprimer={setIdASupprimer}
+            onEditer={setNoteEnEdition}
+          />
+        ))}
       </div>
 
       <ModaleConfirmation
@@ -172,6 +151,98 @@ export function Notes({
         }}
         onAnnuler={() => setIdASupprimer(null)}
       />
+
+      {noteEnEdition && (
+        <ModaleEditionNote key={noteEnEdition.id} note={noteEnEdition} onFerme={() => setNoteEnEdition(null)} />
+      )}
+    </div>
+  )
+}
+
+const DELAI_APPUI_LONG_MS = 500
+
+// Carte individuelle plutôt qu'inline dans le .map ci-dessus : chaque carte a
+// besoin de son propre minuteur d'appui long (démarré/annulé indépendamment
+// des autres cartes) et de son propre état de retour visuel pendant le
+// maintien. Même découpage que CarteTache dans src/components/taches-list.tsx.
+function CarteNote({
+  note,
+  profilActuelId,
+  couleurAuteur,
+  isPending,
+  onSupprimer,
+  onEditer,
+}: {
+  note: NoteAvecAuteur
+  profilActuelId: string
+  couleurAuteur: CouleurAvatar
+  isPending: boolean
+  onSupprimer: (id: string) => void
+  onEditer: (note: NoteAvecAuteur) => void
+}) {
+  const estAuteur = note.auteur?.id === profilActuelId
+  const [enMaintien, setEnMaintien] = useState(false)
+  const minuterieRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function demarrerAppuiLong() {
+    if (!estAuteur) return
+    setEnMaintien(true)
+    minuterieRef.current = setTimeout(() => {
+      minuterieRef.current = null
+      setEnMaintien(false)
+      onEditer(note)
+    }, DELAI_APPUI_LONG_MS)
+  }
+
+  function annulerAppuiLong() {
+    if (minuterieRef.current) {
+      clearTimeout(minuterieRef.current)
+      minuterieRef.current = null
+    }
+    setEnMaintien(false)
+  }
+
+  return (
+    <div
+      className={`select-none rounded-[20px] bg-surface shadow-card p-4 transition-transform duration-150 ${
+        enMaintien ? 'scale-[0.98] opacity-80' : ''
+      } ${estAuteur ? 'cursor-pointer' : ''}`}
+      onTouchStart={demarrerAppuiLong}
+      onTouchMove={annulerAppuiLong}
+      onTouchEnd={annulerAppuiLong}
+      onMouseDown={demarrerAppuiLong}
+      onMouseUp={annulerAppuiLong}
+      onMouseLeave={annulerAppuiLong}
+      onContextMenu={(e) => {
+        if (estAuteur) e.preventDefault()
+      }}
+    >
+      <div className="mb-2 flex items-center gap-2.5">
+        <div
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
+        >
+          {note.auteur?.initiales ?? '?'}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13.5px] font-semibold text-ink">
+            {note.auteur?.nom_complet ?? 'Ancien collègue'}
+          </div>
+          <div className="text-[11px] text-muted">{formatDate(note.created_at)}</div>
+        </div>
+        {estAuteur && (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => onSupprimer(note.id)}
+            aria-label="Supprimer la note"
+            className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+          >
+            ×
+          </button>
+        )}
+      </div>
+      <div className="mb-1 text-[14.5px] font-semibold text-ink">{note.titre}</div>
+      <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{note.contenu}</p>
     </div>
   )
 }
