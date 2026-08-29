@@ -4,6 +4,27 @@ import { useRef, useState } from 'react'
 import { comprimerImage } from '@/lib/image'
 import { LightboxImage } from '@/components/lightbox-image'
 
+// Glyphe "appareil photo", même convention (trait, viewBox 24x24) que les
+// icônes de nav-icons.tsx : boîtier avec bosse de viseur/flash + objectif
+// rond.
+function IconAppareilPhoto({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 8a2 2 0 0 1 2-2h2l1.5-2h5L16 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </svg>
+  )
+}
+
 // Sélecteur de photo réutilisé par les formulaires de création de tâche
 // (taches-list.tsx, fab-creation-rapide.tsx) et par la modale d'édition de
 // tâche (taches-list.tsx) : compression client-side avant de remonter le
@@ -76,9 +97,10 @@ export function ChampPhoto({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="self-start text-xs font-semibold text-primary"
+          aria-label="Ajouter une photo"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white"
         >
-          + Ajouter une photo
+          <IconAppareilPhoto className="h-[18px] w-[18px]" />
         </button>
       )}
     </div>
