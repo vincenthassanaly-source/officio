@@ -1,13 +1,15 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
-import { creerNote, supprimerNote } from '@/app/actions/notes'
+import { useMemo, useState, useSyncExternalStore, useTransition } from 'react'
+import { createPortal } from 'react-dom'
+import { creerNote, modifierNote, supprimerNote } from '@/app/actions/notes'
 import type { NoteAvecAuteur } from '@/lib/data/notes'
 import { normaliser } from '@/lib/recherche-texte'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -171,5 +173,93 @@ export function Notes({
         onAnnuler={() => setIdASupprimer(null)}
       />
     </div>
+  )
+}
+
+// Abonnement vide : rien à écouter, sert seulement de moyen idiomatique
+// (useSyncExternalStore) pour détecter le montage côté client sans
+// déclencher de setState synchrone dans un effet (interdit par le lint
+// react-hooks/set-state-in-effect). getServerSnapshot renvoie false — rien
+// n'est rendu côté serveur — et getSnapshot renvoie true dès l'hydratation.
+// Utilisé par ModaleEditionNote ci-dessous pour ne monter son portail
+// (createPortal) qu'après hydratation. Même pattern que ModaleEditionTache
+// dans src/components/taches-list.tsx (dupliqué ici plutôt que factorisé
+// pour ne pas coupler ces deux fichiers sur un détail d'implémentation).
+function sabonnerSansChangement() {
+  return () => {}
+}
+
+export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onFerme: () => void }) {
+  const [isPending, startTransition] = useTransition()
+  const toast = useToast()
+  // Rendu via un portail vers document.body : échappe systématiquement à un
+  // ancêtre CSS avec transform actif, qui sinon deviendrait le référentiel
+  // de positionnement de ce `fixed inset-0` au lieu du viewport. document.body
+  // n'existe pas côté serveur : monté seulement après hydratation pour éviter
+  // un mismatch SSR/hydratation (voir sabonnerSansChangement plus haut).
+  const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
+
+  // Toujours montée seulement quand ouverte (voir {noteEnEdition && <ModaleEditionNote .../>}
+  // chez l'appelant) : `ouvert` vaut donc toujours true tant que ce composant
+  // existe, et le démontage déclenche le nettoyage du hook.
+  useFermerAvecRetour(true, onFerme)
+
+  if (!monte) return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      onClick={onFerme}
+    >
+      <form
+        onClick={(e) => e.stopPropagation()}
+        action={(formData) => {
+          startTransition(async () => {
+            try {
+              await modifierNote(note.id, formData)
+              onFerme()
+              toast({ type: 'succes', message: 'Note modifiée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la modification de la note.',
+              })
+            }
+          })
+        }}
+        className="flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+      >
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-ink">Modifier la note</h2>
+          <button type="button" onClick={onFerme} aria-label="Fermer sans enregistrer" className="text-muted">
+            ×
+          </button>
+        </div>
+        <input
+          type="text"
+          name="titre"
+          required
+          defaultValue={note.titre}
+          placeholder="Titre de la note"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
+        />
+        <textarea
+          name="contenu"
+          required
+          defaultValue={note.contenu}
+          placeholder="Contenu de la note"
+          rows={5}
+          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+        />
+        <button
+          type="submit"
+          disabled={isPending}
+          className="mt-1 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+        >
+          Enregistrer
+        </button>
+      </form>
+    </div>,
+    document.body
   )
 }
