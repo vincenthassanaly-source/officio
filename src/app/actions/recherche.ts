@@ -67,6 +67,8 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
     huilesRes,
     chaussuresRes,
     regularisationsRes,
+    notesRes,
+    activiteRes,
   ] = await Promise.all([
     supabase.from('messages').select('id, contenu').eq('officine_id', officineId),
     supabase.from('taches').select('id, titre').eq('officine_id', officineId),
@@ -86,6 +88,8 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
       .from('regularisations_ordonnances')
       .select('id, patient_nom, patient_prenom, note')
       .eq('officine_id', officineId),
+    supabase.from('notes').select('id, titre, contenu').eq('officine_id', officineId),
+    supabase.from('journal_activite').select('id, titre, url').eq('officine_id', officineId),
   ])
 
   const messages = chargerCategorie('messages', messagesRes)
@@ -100,6 +104,8 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
   const huiles = chargerCategorie('huiles_essentielles', huilesRes)
   const chaussures = chargerCategorie('chaussures_orthopediques', chaussuresRes)
   const regularisations = chargerCategorie('regularisations_ordonnances', regularisationsRes)
+  const notes = chargerCategorie('notes', notesRes)
+  const activite = chargerCategorie('journal_activite', activiteRes)
 
   // Liens vers les messages/tâches ciblés : mêmes paramètres que ceux déjà
   // utilisés par les notifications (cf. src/app/api/cron/rappels-taches/
@@ -195,6 +201,20 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
           label: `${r.patient_prenom} ${r.patient_nom}`.trim(),
           url: '/regularisations',
         }))
+    ),
+    grouper(
+      'notes',
+      'Notes',
+      notes
+        .filter((n) => correspond([n.titre, n.contenu], q))
+        .map((n) => ({ id: n.id, label: n.titre, url: '/notes' }))
+    ),
+    grouper(
+      'activite',
+      'Activité',
+      activite
+        .filter((a) => correspond([a.titre], q))
+        .map((a) => ({ id: a.id, label: a.titre, url: a.url ?? '/activite' }))
     ),
   ]
 
