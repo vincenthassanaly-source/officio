@@ -9,6 +9,7 @@ import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { formatDateLongue, formatHeure, formatJourCourt, getMonthGridDates, getWeekDates, toISODate } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { formatDureeHeures, heureEnDecimal } from '@/lib/duree-creneaux'
 
 const LIBELLE_TYPE: Record<Creneau['type'], string> = {
   travail: 'Travail',
@@ -64,6 +65,17 @@ export function PlanningEquipeMois({
 
   const creneauxJourSelectionne = jourSelectionne ? (creneauxParJour.get(jourSelectionne) ?? []) : []
 
+  const heuresParMembre = useMemo(() => {
+    const totaux = new Map<string, number>()
+    creneaux.forEach((c) => {
+      if (c.type === 'travail' && c.heure_debut && c.heure_fin) {
+        const duree = heureEnDecimal(c.heure_fin) - heureEnDecimal(c.heure_debut)
+        totaux.set(c.profil_id, (totaux.get(c.profil_id) ?? 0) + duree)
+      }
+    })
+    return totaux
+  }, [creneaux])
+
   function voirCetteSemaine(iso: string) {
     const lundi = toISODate(getWeekDates(new Date(`${iso}T00:00:00`))[0])
     router.replace(`/agenda?vue=semaine&semaine=${lundi}`)
@@ -76,6 +88,7 @@ export function PlanningEquipeMois({
           <span key={m.id} className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
+            <span className="text-[10px] font-normal text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
           </span>
         ))}
       </div>

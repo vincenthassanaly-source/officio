@@ -9,6 +9,7 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { formatDureeHeures, heureEnDecimal } from '@/lib/duree-creneaux'
 
 const LIBELLE_TYPE: Record<TypeCreneau, string> = {
   travail: 'Travail',
@@ -19,16 +20,6 @@ const LIBELLE_TYPE: Record<TypeCreneau, string> = {
 const HEURE_DEBUT_DEFAUT = 8
 const HEURE_FIN_DEFAUT = 20
 const PX_PAR_HEURE = 34
-
-function heureEnDecimal(heure: string): number {
-  const [h, m] = heure.split(':').map(Number)
-  return h + m / 60
-}
-
-function formatDureeHeures(heures: number): string {
-  const arrondi = Math.round(heures * 10) / 10
-  return Number.isInteger(arrondi) ? `${arrondi}h` : `${arrondi.toFixed(1).replace('.', ',')}h`
-}
 
 export function PlanningEquipe({
   creneaux,
