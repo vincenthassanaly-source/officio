@@ -6,12 +6,22 @@ import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import type { StatutTache } from '@/lib/data/taches'
 
+// Type MIME reçu -> extension de stockage. Dupliqué depuis
+// src/app/actions/liaison.ts (non exportée) : même besoin pour le vocal
+// optionnel joint à une tâche, seuls les deux formats produits par
+// MediaRecorder côté navigateur (ChampAudio) sont acceptés.
+const EXTENSION_PAR_TYPE_MIME_AUDIO: Record<string, string> = {
+  'audio/webm': 'webm',
+  'audio/mp4': 'mp4',
+}
+
 export async function creerTache(formData: FormData) {
   const titre = String(formData.get('titre') ?? '').trim()
   const assigneId = String(formData.get('assigne_id') ?? '') || null
   const echeance = String(formData.get('echeance') ?? '') || null
   const echeanceHeure = String(formData.get('echeance_heure') ?? '') || null
   const photo = formData.get('photo')
+  const audio = formData.get('audio')
 
   if (!titre) return
 
@@ -38,6 +48,30 @@ export async function creerTache(formData: FormData) {
     photoCheminStockage = chemin
   }
 
+  // Même vérification stricte du type MIME reçu que pour la photo — pas de
+  // confiance dans ce que prétend le client (voir aussi envoyerMessage,
+  // src/app/actions/liaison.ts).
+  let audioCheminStockage: string | null = null
+  if (audio instanceof File && audio.size > 0) {
+    const extension = EXTENSION_PAR_TYPE_MIME_AUDIO[audio.type]
+    if (!extension) {
+      throw new Error('Format audio non accepté.')
+    }
+
+    const chemin = `${officine.officine_id}/${crypto.randomUUID()}.${extension}`
+    const { error: erreurUpload } = await supabase.storage
+      .from('taches-audio')
+      .upload(chemin, audio, { contentType: audio.type })
+
+    if (erreurUpload) {
+      if (photoCheminStockage) {
+        await supabase.storage.from('taches-photos').remove([photoCheminStockage])
+      }
+      throw new Error(erreurUpload.message)
+    }
+    audioCheminStockage = chemin
+  }
+
   const { error } = await supabase.from('taches').insert({
     officine_id: officine.officine_id,
     titre,
@@ -46,11 +80,15 @@ export async function creerTache(formData: FormData) {
     echeance_heure: echeanceHeure,
     created_by: profil.id,
     photo_chemin_stockage: photoCheminStockage,
+    audio_chemin_stockage: audioCheminStockage,
   })
 
   if (error) {
     if (photoCheminStockage) {
       await supabase.storage.from('taches-photos').remove([photoCheminStockage])
+    }
+    if (audioCheminStockage) {
+      await supabase.storage.from('taches-audio').remove([audioCheminStockage])
     }
     throw new Error(error.message)
   }
@@ -145,13 +183,16 @@ export async function supprimerTache(id: string) {
     .from('taches')
     .delete()
     .eq('id', id)
-    .select('photo_chemin_stockage')
+    .select('photo_chemin_stockage, audio_chemin_stockage')
     .single()
 
   if (error) throw new Error(error.message)
 
   if (data?.photo_chemin_stockage) {
     await supabase.storage.from('taches-photos').remove([data.photo_chemin_stockage])
+  }
+  if (data?.audio_chemin_stockage) {
+    await supabase.storage.from('taches-audio').remove([data.audio_chemin_stockage])
   }
 
   revalidatePath('/')
