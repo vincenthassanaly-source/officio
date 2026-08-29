@@ -27,6 +27,22 @@ function formatCompteur(ms: number): string {
   return `${minutes}:${String(secondes).padStart(2, '0')}`
 }
 
+// Glyphe "micro" classique (Material Design), en trait plein sur viewBox
+// 24x24 : évite une dépendance à une librairie d'icônes pour un seul
+// pictogramme.
+function IconeMicro({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3Z" />
+      <path d="M19 11a1 1 0 1 0-2 0 5 5 0 0 1-10 0 1 1 0 1 0-2 0 7 7 0 0 0 6 6.93V20H9a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2h-2v-2.07A7 7 0 0 0 19 11Z" />
+    </svg>
+  )
+}
+
+// Placé à droite de la barre de saisie du message (fil-de-messages.tsx),
+// juste avant le bouton d'envoi : le bouton rond reste à taille fixe (h-9
+// w-9, comme le bouton d'envoi) dans les trois états (repos/enregistrement/
+// aperçu prêt) pour ne pas faire sauter la mise en page de la barre.
 export function ChampAudio({ onChange }: { onChange: (fichier: File | null) => void }) {
   const [enregistrement, setEnregistrement] = useState(false)
   const [ecoule, setEcoule] = useState(0)
@@ -131,8 +147,8 @@ export function ChampAudio({ onChange }: { onChange: (fichier: File | null) => v
 
   if (apercu) {
     return (
-      <div className="flex items-center gap-2">
-        <audio controls src={apercu} className="h-9 max-w-[220px] flex-1" />
+      <div className="flex shrink-0 items-center gap-1.5">
+        <audio controls src={apercu} className="h-9 w-32" />
         <button
           type="button"
           onClick={retirer}
@@ -145,26 +161,27 @@ export function ChampAudio({ onChange }: { onChange: (fichier: File | null) => v
     )
   }
 
-  if (enregistrement) {
-    return (
-      <div className="flex items-center gap-2">
-        <span className="flex items-center gap-1.5 text-xs font-semibold text-rec">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-rec" />
-          {formatCompteur(ecoule)} / {formatCompteur(DUREE_MAX_MS)}
-        </span>
-        <button type="button" onClick={arreter} className="text-xs font-semibold text-primary">
-          Arrêter
-        </button>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex flex-col items-start gap-1">
-      <button type="button" onClick={demarrer} className="self-start text-xs font-semibold text-primary">
-        🎤 Enregistrer un vocal
+    <div className="relative shrink-0">
+      {enregistrement && (
+        <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-rec">
+          {formatCompteur(ecoule)}
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={enregistrement ? arreter : demarrer}
+        aria-label={enregistrement ? 'Arrêter l’enregistrement' : 'Enregistrer un vocal'}
+        aria-pressed={enregistrement}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white ${
+          enregistrement ? 'animate-pulse bg-rec' : 'bg-primary'
+        }`}
+      >
+        <IconeMicro className="h-[18px] w-[18px]" />
       </button>
-      {erreur && <p className="text-[11px] text-rec">{erreur}</p>}
+      {erreur && (
+        <p className="absolute right-0 top-full mt-1 w-44 text-right text-[10px] text-rec">{erreur}</p>
+      )}
     </div>
   )
 }
