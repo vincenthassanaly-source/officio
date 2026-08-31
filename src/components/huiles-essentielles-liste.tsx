@@ -1,13 +1,22 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition, type TransitionStartFunction } from 'react'
 import {
   ajouterHuile,
   changerStatutHuile,
   modifierHuile,
   modifierVolumeACommander,
+  supprimerHuile,
 } from '@/app/actions/huiles-essentielles'
 import type { HuileEssentielle, StatutHuile } from '@/lib/data/huiles-essentielles'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { useToast } from '@/components/ui/toast-provider'
+
+const DELAI_APPUI_LONG_MS = 500
+
+function estElementInteractif(cible: EventTarget | null) {
+  return cible instanceof HTMLElement && !!cible.closest('select, input, button, label')
+}
 
 const STATUTS: { value: StatutHuile; label: string }[] = [
   { value: 'en_stock', label: 'Huile essentielle' },
@@ -258,92 +267,217 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
             )
           }
 
-          const enTransition = idsEnTransition.has(h.id)
-
           return (
-            <div
+            <CarteHuile
               key={h.id}
-              className={`flex items-center gap-2.5 rounded-[20px] bg-surface shadow-card p-3 transition-all duration-200 ${
-                enTransition ? 'scale-[0.98] opacity-40' : 'opacity-100'
-              }`}
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <div className="truncate text-[13px] font-semibold text-ink">{h.nom}</div>
-                  {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') && (
-                    <div className="flex shrink-0 items-center gap-1">
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        defaultValue={h.volume_a_commander_ml ?? ''}
-                        onBlur={(e) => sauvegarderVolumeACommander(h.id, e.target.value)}
-                        disabled={idsVolumeEnSauvegarde.has(h.id)}
-                        placeholder="Vol."
-                        aria-label="Volume à commander"
-                        className={CHAMP_VOLUME_COMMANDE_CLASS}
-                      />
-                      <span className="text-[11px] text-muted">mL</span>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-0.5 font-mono text-[11px] text-muted">
-                  {formatPrix(h.prix_reference, h.volume_reference_ml)}
-                  {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') &&
-                    h.volume_a_commander_ml != null &&
-                    ` · Commande : ${formatVolume(h.volume_a_commander_ml)} mL`}
-                </div>
-              </div>
-              {ongletStatut === 'en_stock' ? (
-                <select
-                  value={h.statut}
-                  disabled={isPending}
-                  onChange={(e) => {
-                    const nouveauStatut = e.target.value as StatutHuile
-                    marquerTransition(h.id, () => changerStatutHuile(h.id, nouveauStatut))
-                  }}
-                  className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[16px] font-semibold text-ink outline-none focus:border-primary disabled:opacity-60"
-                >
-                  {OPTIONS_STATUT.map((statut) => (
-                    <option key={statut} value={statut}>
-                      {LABELS_STATUT[statut]}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <label className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-ink">
-                  <input
-                    type="checkbox"
-                    checked={false}
-                    disabled={isPending || enTransition}
-                    onChange={() => {
-                      const nouveauStatut: StatutHuile =
-                        ongletStatut === 'a_commander' ? 'en_commande' : 'en_stock'
-                      marquerTransition(h.id, () => changerStatutHuile(h.id, nouveauStatut))
-                    }}
-                    className="h-4 w-4 accent-[var(--color-primary)] disabled:opacity-60"
-                  />
-                  {ongletStatut === 'a_commander' ? 'Commandée' : 'Reçue'}
-                </label>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setEnEdition(h.id)
-                  setFormOuvert(false)
-                }}
-                aria-label="Modifier"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-muted"
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </button>
-            </div>
+              huile={h}
+              ongletStatut={ongletStatut}
+              isPending={isPending}
+              enTransition={idsEnTransition.has(h.id)}
+              volumeEnSauvegarde={idsVolumeEnSauvegarde.has(h.id)}
+              startTransition={startTransition}
+              onChangerStatut={(id, nouveauStatut) =>
+                marquerTransition(id, () => changerStatutHuile(id, nouveauStatut))
+              }
+              onSauvegarderVolume={sauvegarderVolumeACommander}
+              onEditer={(id) => {
+                setEnEdition(id)
+                setFormOuvert(false)
+              }}
+            />
           )
         })}
       </div>
+    </div>
+  )
+}
+
+function CarteHuile({
+  huile,
+  ongletStatut,
+  isPending,
+  enTransition,
+  volumeEnSauvegarde,
+  startTransition,
+  onChangerStatut,
+  onSauvegarderVolume,
+  onEditer,
+}: {
+  huile: HuileEssentielle
+  ongletStatut: StatutHuile
+  isPending: boolean
+  enTransition: boolean
+  volumeEnSauvegarde: boolean
+  startTransition: TransitionStartFunction
+  onChangerStatut: (id: string, nouveauStatut: StatutHuile) => void
+  onSauvegarderVolume: (id: string, valeurSaisie: string) => void
+  onEditer: (id: string) => void
+}) {
+  const [enMaintien, setEnMaintien] = useState(false)
+  const [selectionneePourSuppression, setSelectionneePourSuppression] = useState(false)
+  const [confirmationOuverte, setConfirmationOuverte] = useState(false)
+  const minuterieRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const carteRef = useRef<HTMLDivElement>(null)
+  const toast = useToast()
+
+  function demarrerAppuiLong(e: { target: EventTarget | null }) {
+    if (estElementInteractif(e.target)) return
+    setEnMaintien(true)
+    minuterieRef.current = setTimeout(() => {
+      minuterieRef.current = null
+      setEnMaintien(false)
+      setSelectionneePourSuppression(true)
+    }, DELAI_APPUI_LONG_MS)
+  }
+
+  function annulerAppuiLong() {
+    if (minuterieRef.current) {
+      clearTimeout(minuterieRef.current)
+      minuterieRef.current = null
+    }
+    setEnMaintien(false)
+  }
+
+  // Reste affichée tant que l'utilisateur ne tape/clique pas ailleurs sur
+  // l'écran (pas seulement pendant le maintien) : écouteur global fermé dès
+  // que la sélection n'est plus active, pour ne pas laisser traîner un
+  // listener par carte.
+  useEffect(() => {
+    if (!selectionneePourSuppression) return
+    function fermerSiExterieur(e: Event) {
+      if (carteRef.current && !carteRef.current.contains(e.target as Node)) {
+        setSelectionneePourSuppression(false)
+      }
+    }
+    document.addEventListener('click', fermerSiExterieur)
+    document.addEventListener('touchstart', fermerSiExterieur)
+    return () => {
+      document.removeEventListener('click', fermerSiExterieur)
+      document.removeEventListener('touchstart', fermerSiExterieur)
+    }
+  }, [selectionneePourSuppression])
+
+  return (
+    <div
+      ref={carteRef}
+      className={`relative flex select-none items-center gap-2.5 rounded-[20px] bg-surface shadow-card p-3 transition-all duration-200 ${
+        enTransition ? 'scale-[0.98] opacity-40' : 'opacity-100'
+      } ${enMaintien ? 'scale-[0.98] opacity-80' : ''}`}
+      onTouchStart={demarrerAppuiLong}
+      onTouchMove={annulerAppuiLong}
+      onTouchEnd={annulerAppuiLong}
+      onMouseDown={demarrerAppuiLong}
+      onMouseUp={annulerAppuiLong}
+      onMouseLeave={annulerAppuiLong}
+      onContextMenu={(e) => {
+        if (!estElementInteractif(e.target)) e.preventDefault()
+      }}
+    >
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <div className="truncate text-[13px] font-semibold text-ink">{huile.nom}</div>
+          {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') && (
+            <div className="flex shrink-0 items-center gap-1">
+              <input
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={huile.volume_a_commander_ml ?? ''}
+                onBlur={(e) => onSauvegarderVolume(huile.id, e.target.value)}
+                disabled={volumeEnSauvegarde}
+                placeholder="Vol."
+                aria-label="Volume à commander"
+                className={CHAMP_VOLUME_COMMANDE_CLASS}
+              />
+              <span className="text-[11px] text-muted">mL</span>
+            </div>
+          )}
+        </div>
+        <div className="mt-0.5 font-mono text-[11px] text-muted">
+          {formatPrix(huile.prix_reference, huile.volume_reference_ml)}
+          {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') &&
+            huile.volume_a_commander_ml != null &&
+            ` · Commande : ${formatVolume(huile.volume_a_commander_ml)} mL`}
+        </div>
+      </div>
+      {ongletStatut === 'en_stock' ? (
+        <select
+          value={huile.statut}
+          disabled={isPending}
+          onChange={(e) => onChangerStatut(huile.id, e.target.value as StatutHuile)}
+          className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[16px] font-semibold text-ink outline-none focus:border-primary disabled:opacity-60"
+        >
+          {OPTIONS_STATUT.map((statut) => (
+            <option key={statut} value={statut}>
+              {LABELS_STATUT[statut]}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <label className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-ink">
+          <input
+            type="checkbox"
+            checked={false}
+            disabled={isPending || enTransition}
+            onChange={() => {
+              const nouveauStatut: StatutHuile = ongletStatut === 'a_commander' ? 'en_commande' : 'en_stock'
+              onChangerStatut(huile.id, nouveauStatut)
+            }}
+            className="h-4 w-4 accent-[var(--color-primary)] disabled:opacity-60"
+          />
+          {ongletStatut === 'a_commander' ? 'Commandée' : 'Reçue'}
+        </label>
+      )}
+      {selectionneePourSuppression ? (
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() => setConfirmationOuverte(true)}
+          aria-label="Supprimer l'huile"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 6h18" />
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+          </svg>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onEditer(huile.id)}
+          aria-label="Modifier"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-muted"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+        </button>
+      )}
+
+      <ModaleConfirmation
+        ouvert={confirmationOuverte}
+        titre={`Supprimer l'huile essentielle « ${huile.nom} » ?`}
+        onConfirmer={() => {
+          startTransition(async () => {
+            try {
+              await supprimerHuile(huile.id)
+              toast({ type: 'succes', message: 'Huile essentielle supprimée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : "Échec de la suppression de l'huile essentielle.",
+              })
+            }
+          })
+          setConfirmationOuverte(false)
+          setSelectionneePourSuppression(false)
+        }}
+        onAnnuler={() => {
+          setConfirmationOuverte(false)
+          setSelectionneePourSuppression(false)
+        }}
+      />
     </div>
   )
 }
