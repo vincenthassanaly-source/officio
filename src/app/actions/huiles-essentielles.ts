@@ -55,6 +55,16 @@ export async function ajouterHuile(formData: FormData) {
   revalidatePath('/')
 }
 
+export async function supprimerHuile(id: string) {
+  const supabase = await createClient()
+  const { error } = await supabase.from('huiles_essentielles').delete().eq('id', id)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/huiles-essentielles')
+  revalidatePath('/')
+}
+
 export async function modifierHuile(id: string, formData: FormData) {
   const nom = String(formData.get('nom') ?? '').trim()
   const prixReference = Number(formData.get('prix_reference') ?? 0)
