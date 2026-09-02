@@ -1,12 +1,14 @@
 'use client'
 
-import { useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { createPortal } from 'react-dom'
+import { useSearchParams } from 'next/navigation'
 import { creerNote, modifierNote, supprimerNote } from '@/app/actions/notes'
 import type { NoteAvecAuteur } from '@/lib/data/notes'
 import { normaliser } from '@/lib/recherche-texte'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
@@ -33,13 +35,50 @@ export function Notes({
   profilActuelId: string
   couleurs: Map<string, CouleurAvatar>
 }) {
+  const searchParams = useSearchParams()
   const [titre, setTitre] = useState('')
   const [contenu, setContenu] = useState('')
   const [recherche, setRecherche] = useState('')
   const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
   const [noteEnEdition, setNoteEnEdition] = useState<NoteAvecAuteur | null>(null)
   const [isPending, startTransition] = useTransition()
+  // Note ciblée par une notification (?note=<id>) : mise en évidence
+  // temporairement le temps que l'utilisateur la repère dans la liste.
+  const [idSurligne, setIdSurligne] = useState<string | null>(() => searchParams.get('note'))
   const toast = useToast()
+
+  // Cible initiale (arrivée depuis une notification ou un lien direct) :
+  // défile jusqu'à la note au montage. Un nouveau montage a lieu à chaque
+  // nouvelle cible grâce à la `key` posée sur <Notes> (voir notes/page.tsx)
+  // — pas besoin de resynchroniser sur un changement d'URL.
+  useEffect(() => {
+    if (!idSurligne) return
+    document.getElementById(`note-${idSurligne}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Notification cliquée alors qu'on est déjà sur la bonne note : le routeur
+  // ne se déclenche pas (même URL), notifications-cloche.tsx (ou le service
+  // worker via ecouteur-reprise-app.tsx) émet cet évènement pour forcer
+  // quand même le scroll + la mise en évidence.
+  useEffect(() => {
+    function ecouteur(e: Event) {
+      const url = (e as CustomEvent<{ url: string }>).detail?.url
+      const noteId = url && new URL(url, window.location.origin).searchParams.get('note')
+      if (!noteId) return
+      document.getElementById(`note-${noteId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      setIdSurligne(noteId)
+    }
+    window.addEventListener(EVENEMENT_NOTIFICATION_CIBLE, ecouteur)
+    return () => window.removeEventListener(EVENEMENT_NOTIFICATION_CIBLE, ecouteur)
+  }, [])
+
+  // Disparition en fondu de la mise en évidence après ~2s.
+  useEffect(() => {
+    if (!idSurligne) return
+    const minuteur = setTimeout(() => setIdSurligne(null), 2000)
+    return () => clearTimeout(minuteur)
+  }, [idSurligne])
 
   const rechercheNormalisee = normaliser(recherche.trim())
   const notesFiltrees = useMemo(() => {
@@ -124,6 +163,7 @@ export function Notes({
             profilActuelId={profilActuelId}
             couleurAuteur={(n.auteur ? couleurs.get(n.auteur.id) : null) ?? COULEUR_PAR_DEFAUT}
             isPending={isPending}
+            idSurligne={idSurligne}
             onSupprimer={setIdASupprimer}
             onEditer={setNoteEnEdition}
           />
@@ -170,6 +210,7 @@ function CarteNote({
   profilActuelId,
   couleurAuteur,
   isPending,
+  idSurligne,
   onSupprimer,
   onEditer,
 }: {
@@ -177,6 +218,7 @@ function CarteNote({
   profilActuelId: string
   couleurAuteur: CouleurAvatar
   isPending: boolean
+  idSurligne: string | null
   onSupprimer: (id: string) => void
   onEditer: (note: NoteAvecAuteur) => void
 }) {
@@ -204,9 +246,10 @@ function CarteNote({
 
   return (
     <div
-      className={`select-none rounded-[20px] bg-surface shadow-card p-4 transition-transform duration-150 ${
+      id={`note-${note.id}`}
+      className={`select-none rounded-[20px] bg-surface shadow-card p-4 transition duration-300 ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
-      } ${estAuteur ? 'cursor-pointer' : ''}`}
+      } ${estAuteur ? 'cursor-pointer' : ''} ${idSurligne === note.id ? 'ring-2 ring-primary' : ''}`}
       onTouchStart={demarrerAppuiLong}
       onTouchMove={annulerAppuiLong}
       onTouchEnd={annulerAppuiLong}
