@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useNotificationsInApp } from '@/components/notifications-provider'
+import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 
 // Sur mobile (PWA installée), fermer complètement l'app (swipe dans les
 // apps récentes) puis la rouvrir peut restaurer un instantané de page mis
@@ -34,6 +35,26 @@ export function EcouteurRepriseApp() {
     window.addEventListener('pageshow', gererPageshow)
     return () => window.removeEventListener('pageshow', gererPageshow)
   }, [rafraichir])
+
+  // Tap sur une notification système alors qu'un onglet est déjà affiché
+  // exactement sur la cible visée (public/sw.js, notificationclick) :
+  // router.push n'aurait aucun effet (même URL), donc pas de remontage React
+  // pour rejouer le scroll + la mise en évidence. Le service worker relaie
+  // l'info via postMessage (type 'notification-cible' — garder synchronisé
+  // avec public/sw.js) ; on la retransforme ici en l'évènement custom déjà
+  // écouté par fil-de-messages.tsx / taches-list.tsx / notes.tsx pour ne pas
+  // dupliquer la logique de scroll/surlignage.
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+
+    function gererMessage(event: MessageEvent) {
+      if (event.data?.type !== 'notification-cible' || typeof event.data.url !== 'string') return
+      window.dispatchEvent(new CustomEvent(EVENEMENT_NOTIFICATION_CIBLE, { detail: { url: event.data.url } }))
+    }
+
+    navigator.serviceWorker.addEventListener('message', gererMessage)
+    return () => navigator.serviceWorker.removeEventListener('message', gererMessage)
+  }, [])
 
   return null
 }
