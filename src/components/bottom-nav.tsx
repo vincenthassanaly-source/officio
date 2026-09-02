@@ -27,7 +27,7 @@ export function BottomNav() {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-20 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-20 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden print:hidden">
         {LIENS_DIRECTS.map((item) => {
           const actif = estLienActif(item.href, pathname)
           const Icone = ICONES[item.href]

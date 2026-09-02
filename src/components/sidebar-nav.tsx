@@ -42,7 +42,7 @@ export function SidebarNav({
   const pathname = usePathname()
 
   return (
-    <aside className="hidden shrink-0 flex-col border-r border-border bg-surface px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-60 lg:overflow-y-auto">
+    <aside className="hidden shrink-0 flex-col border-r border-border bg-surface px-4 py-6 lg:sticky lg:top-0 lg:flex lg:h-screen lg:w-60 lg:overflow-y-auto print:hidden">
       <div className="flex items-start gap-2">
         <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActiveId} />
         <NotificationsCloche />

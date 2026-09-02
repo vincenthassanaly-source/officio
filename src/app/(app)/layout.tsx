@@ -50,7 +50,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         />
 
         <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col lg:mx-0 lg:max-w-none">
-          <header className="relative flex items-center justify-between gap-2.5 bg-bg px-4 pb-3 pt-4 sm:px-8 lg:hidden">
+          <header className="relative flex items-center justify-between gap-2.5 bg-bg px-4 pb-3 pt-4 sm:px-8 lg:hidden print:hidden">
             <OfficineSwitcher adhesions={adhesions} officineActiveId={officineActive!.officine_id} avecLogo />
             <div className="flex shrink-0 items-center gap-2">
               <NotificationsCloche avecFond />
@@ -97,7 +97,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               ex: le swipe semaine/mois de l'agenda, ne déclenche aussi cette
               transition de page). */}
           <PageViewTransition>
-            <div className="flex flex-1 flex-col px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8">
+            <div className="flex flex-1 flex-col px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8 print:p-0">
               {children}
             </div>
           </PageViewTransition>

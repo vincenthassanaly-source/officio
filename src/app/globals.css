@@ -234,3 +234,28 @@ button,
     animation-delay: 0s !important;
   }
 }
+
+/* Aperçu imprimable du plan de posologie (voir components/plan-posologie.tsx)
+   — la chrome de l'app (header, sidebar, bottom nav, formulaire) est masquée
+   via des classes print:hidden posées directement sur ces éléments ; ne
+   reste donc dans le flux qu'à imprimer que .plan-posologie-impression,
+   forcé ici en noir et blanc sobre indépendamment du thème de l'app (les
+   tokens de couleur de globals.css ne sont pas conçus pour un rendu papier). */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 16mm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .plan-posologie-impression,
+  .plan-posologie-impression * {
+    color: #000 !important;
+    background: #fff !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+  }
+}
