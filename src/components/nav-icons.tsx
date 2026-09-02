@@ -243,6 +243,25 @@ export function IconNote({ className }: IconProps) {
   )
 }
 
+// Cadran d'horloge : représente les moments de prise (matin/midi/soir/coucher)
+// du module /plan-posologie.
+export function IconPosologie({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 3" />
+    </svg>
+  )
+}
+
 // Grille 2x2 : symbole générique "plus de modules", utilisé par le bouton
 // "Plus" de la bottom nav mobile pour ouvrir le panneau des modules
 // secondaires (voir menu-plus-panel.tsx).
