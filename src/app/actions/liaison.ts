@@ -95,6 +95,35 @@ export async function supprimerMessage(messageId: string) {
   revalidatePath('/')
 }
 
+export async function modifierMessage(id: string, formData: FormData) {
+  const contenu = String(formData.get('contenu') ?? '').trim()
+
+  const profil = await getCurrentProfil()
+  if (!profil) throw new Error('Non connecté')
+
+  const supabase = await createClient()
+
+  const { data: message } = await supabase
+    .from('messages')
+    .select('auteur_id, audio_chemin_stockage')
+    .eq('id', id)
+    .single()
+
+  if (!message || message.auteur_id !== profil.id) {
+    throw new Error('Tu ne peux modifier que tes propres messages.')
+  }
+
+  // Un message audio peut ne pas avoir de texte : ne bloque un contenu vide
+  // que si le message n'a pas d'audio pour le rattraper (même exigence
+  // qu'envoyerMessage).
+  if (!contenu && !message.audio_chemin_stockage) return
+
+  const { error } = await supabase.from('messages').update({ contenu }).eq('id', id)
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/')
+}
+
 export async function marquerPlusieursLus(messageIds: string[]) {
   if (messageIds.length === 0) return
 
