@@ -47,8 +47,14 @@ export function JournalActivite({
   const [modulesSelectionnes, setModulesSelectionnes] = useState<Set<ModuleJournal>>(new Set())
   const [membreSelectionne, setMembreSelectionne] = useState(MEMBRE_TOUS)
   const [isPending, startTransition] = useTransition()
+  const [rechargementFiltres, setRechargementFiltres] = useState(false)
 
+  // `rechargementFiltres` distingue un changement de filtre (la liste
+  // affichée devient périmée, il faut le montrer) d'un « Charger plus » (la
+  // liste reste valide, seul le bouton attend). Sans ça, le même isPending
+  // aurait grisé toute la liste dans les deux cas.
   function recharger(modulesActifs: Set<ModuleJournal>, membreActif: string) {
+    setRechargementFiltres(true)
     startTransition(async () => {
       const page = await chargerPageJournal({
         module: modulesActifs.size > 0 ? Array.from(modulesActifs) : undefined,
@@ -56,6 +62,7 @@ export function JournalActivite({
       })
       setEntrees(page.entrees)
       setCurseurSuivant(page.curseurSuivant)
+      setRechargementFiltres(false)
     })
   }
 
@@ -125,7 +132,12 @@ export function JournalActivite({
       {entrees.length === 0 ? (
         <p className="py-8 text-center text-[13px] text-muted">Aucune activité pour le moment.</p>
       ) : (
-        <div className="flex flex-col gap-5">
+        <div
+          aria-busy={rechargementFiltres}
+          className={`flex flex-col gap-5 transition-opacity duration-200 ${
+            rechargementFiltres ? 'opacity-40' : 'opacity-100'
+          }`}
+        >
           {groupes.map((groupe) => (
             <div key={groupe.cle} className="flex flex-col gap-2">
               <span className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">{groupe.label}</span>
