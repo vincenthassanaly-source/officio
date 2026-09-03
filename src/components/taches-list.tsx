@@ -109,26 +109,55 @@ export function TachesList({
   // une tâche active qu'une tâche archivée.
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
   const toast = useToast()
-  // Pouce optimiste : bascule immédiatement le pouce du profil courant dans
-  // le tableau `pouces` de la tâche ciblée (ajout si absent, retrait si
-  // présent), avant même la réponse du serveur — même pattern que
-  // basculerOptimiste dans suggestions.tsx. L'initiale utilisée pour l'ajout
-  // vient de `equipe` (toujours à jour, contrairement à un état séparé).
-  const [tachesOptimistes, basculerPouceOptimiste] = useOptimistic(taches, (etat, id: string) =>
-    etat.map((t) => {
-      if (t.id !== id) return t
-      const dejaPouce = t.pouces.some((p) => p.profil_id === profilActuelId)
-      if (dejaPouce) return { ...t, pouces: t.pouces.filter((p) => p.profil_id !== profilActuelId) }
-      const mesInitiales = equipe.find((m) => m.id === profilActuelId)?.initiales ?? '?'
-      return { ...t, pouces: [...t.pouces, { profil_id: profilActuelId, initiales: mesInitiales }] }
-    })
+  // Deux mises à jour optimistes sur la même liste, distinguées par le champ
+  // `type` de l'action plutôt que par deux useOptimistic concurrents (un seul
+  // état optimiste par liste, sinon le second écraserait le premier) :
+  //
+  // - 'pouce'  : bascule le pouce du profil courant dans le tableau `pouces`
+  //   de la tâche ciblée (ajout si absent, retrait si présent). L'initiale
+  //   utilisée pour l'ajout vient de `equipe` (toujours à jour, contrairement
+  //   à un état séparé).
+  // - 'statut' : bascule a_faire <-> fait. La tâche change alors de section
+  //   (liste active <-> accordéon "Tâches archivées") immédiatement, puisque
+  //   `actives`/`archivees` plus bas dérivent de cet état optimiste.
+  const [tachesOptimistes, appliquerOptimiste] = useOptimistic(
+    taches,
+    (etat, action: { type: 'pouce' | 'statut'; id: string }) =>
+      etat.map((t) => {
+        if (t.id !== action.id) return t
+        if (action.type === 'statut') {
+          return { ...t, statut: t.statut === 'fait' ? ('a_faire' as const) : ('fait' as const) }
+        }
+        const dejaPouce = t.pouces.some((p) => p.profil_id === profilActuelId)
+        if (dejaPouce) return { ...t, pouces: t.pouces.filter((p) => p.profil_id !== profilActuelId) }
+        const mesInitiales = equipe.find((m) => m.id === profilActuelId)?.initiales ?? '?'
+        return { ...t, pouces: [...t.pouces, { profil_id: profilActuelId, initiales: mesInitiales }] }
+      })
   )
   // Bascule le pouce en optimiste puis appelle le serveur : passée à
   // CarteTache, qui l'appelle déjà dans son propre startTransition (gestion
   // d'erreur/toast inchangée là-bas).
   function basculerPouce(id: string) {
-    basculerPouceOptimiste(id)
+    appliquerOptimiste({ type: 'pouce', id })
     return togglePouceTache(id)
+  }
+  // Cochage/décochage. Contrairement au pouce, la transition est ouverte ici
+  // et non chez l'appelant : ModaleEditionTache appelle aussi cette fonction
+  // puis se ferme aussitôt, et une transition ouverte dans un composant qui
+  // se démonte dans la foulée n'aurait plus de propriétaire monté pour porter
+  // l'état optimiste.
+  function basculerStatut(tache: Tache) {
+    startTransition(async () => {
+      appliquerOptimiste({ type: 'statut', id: tache.id })
+      try {
+        await toggleTache(tache.id, tache.statut)
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
+        })
+      }
+    })
   }
   // Accordéon "Tâches archivées". Fermé par défaut, sauf si la tâche visée
   // par ?tache=<id> au chargement est elle-même archivée (calculé ici plutôt
@@ -310,6 +339,7 @@ export function TachesList({
             startTransition={startTransition}
             onEditer={setTacheEnEdition}
             onBasculerPouce={basculerPouce}
+            onBasculerStatut={basculerStatut}
           />
         ))}
       </div>
@@ -347,6 +377,7 @@ export function TachesList({
                     startTransition={startTransition}
                     onEditer={setTacheEnEdition}
                     onBasculerPouce={basculerPouce}
+                    onBasculerStatut={basculerStatut}
                   />
                 ))}
               </div>
@@ -362,6 +393,7 @@ export function TachesList({
           equipe={equipe}
           profilActuelId={profilActuelId}
           onFerme={() => setTacheEnEdition(null)}
+          onBasculerStatut={basculerStatut}
         />
       )}
     </div>
@@ -380,6 +412,7 @@ function CarteTache({
   startTransition,
   onEditer,
   onBasculerPouce,
+  onBasculerStatut,
 }: {
   tache: Tache
   couleurs: Map<string, CouleurAvatar>
@@ -389,6 +422,7 @@ function CarteTache({
   startTransition: TransitionStartFunction
   onEditer: (tache: Tache) => void
   onBasculerPouce: (id: string) => Promise<void>
+  onBasculerStatut: (tache: Tache) => void
 }) {
   const due = dueInfo(tache)
   const couleurAssigne = (tache.assigne ? couleurs.get(tache.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
@@ -417,23 +451,15 @@ function CarteTache({
       {photoAgrandie && tache.photoUrl && (
         <LightboxImage src={tache.photoUrl} onFerme={() => setPhotoAgrandie(false)} />
       )}
+      {/* Ni `disabled` ni attente : la bascule est optimiste côté TachesList,
+          la case reflète le nouvel état au clic. Désactiver le bouton pendant
+          la transition figerait toutes les cartes de la liste (un seul
+          isPending partagé) pour une action déjà affichée comme terminée. */}
       <button
         type="button"
-        onClick={() =>
-          startTransition(async () => {
-            try {
-              await toggleTache(tache.id, tache.statut)
-            } catch (err) {
-              toast({
-                type: 'erreur',
-                message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
-              })
-            }
-          })
-        }
-        disabled={isPending}
+        onClick={() => onBasculerStatut(tache)}
         aria-label={tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-        className="flex h-8 w-8 shrink-0 items-center justify-center disabled:opacity-70"
+        className="flex h-8 w-8 shrink-0 items-center justify-center"
       >
         <div
           className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
@@ -485,9 +511,10 @@ function CarteTache({
             })}
           </div>
         )}
+        {/* Déjà optimiste (onBasculerPouce) : plus de `disabled` ici non plus,
+            pour la même raison que la case à cocher ci-dessus. */}
         <button
           type="button"
-          disabled={isPending}
           onClick={() =>
             startTransition(async () => {
               try {
@@ -502,7 +529,7 @@ function CarteTache({
           }
           aria-label={monPouce ? 'Retirer mon pouce' : 'Mettre un pouce'}
           aria-pressed={monPouce}
-          className={`text-base leading-none transition-transform active:scale-90 disabled:opacity-50 ${
+          className={`text-base leading-none transition-transform active:scale-90 ${
             monPouce ? 'opacity-100' : 'opacity-35 grayscale hover:opacity-70 hover:grayscale-0'
           }`}
         >
@@ -559,11 +586,18 @@ export function ModaleEditionTache({
   equipe,
   profilActuelId,
   onFerme,
+  onBasculerStatut,
 }: {
   tache: Tache
   equipe: MembreEquipe[]
   profilActuelId: string
   onFerme: () => void
+  // Fourni par l'appelant, qui détient l'état optimiste de sa propre liste de
+  // tâches (TachesList, AccueilDashboard, les deux vues globales d'agenda) :
+  // la modale se contente de déléguer puis de se fermer, sans attendre le
+  // serveur. Requis plutôt qu'optionnel pour qu'un futur appelant ne puisse
+  // pas retomber silencieusement sur une bascule non optimiste.
+  onBasculerStatut: (tache: Tache) => void
 }) {
   const [photo, setPhoto] = useState<File | null>(null)
   // Distinct de `photo === null` au repos (aucun changement) : mis à true
@@ -677,26 +711,18 @@ export function ModaleEditionTache({
         >
           Enregistrer
         </button>
+        {/* Fermeture immédiate, sans attendre le serveur : l'appelant applique
+            la bascule en optimiste sur sa liste, la tâche est donc déjà dans
+            son nouvel état derrière la modale. Le toast de succès disparaît
+            avec l'attente qu'il confirmait ; seule une erreur reste signalée,
+            par l'appelant. */}
         <button
           type="button"
           disabled={isPending}
-          onClick={() =>
-            startTransition(async () => {
-              try {
-                await toggleTache(tache.id, tache.statut)
-                onFerme()
-                toast({
-                  type: 'succes',
-                  message: tache.statut === 'fait' ? 'Tâche remise à faire.' : 'Tâche marquée comme faite.',
-                })
-              } catch (err) {
-                toast({
-                  type: 'erreur',
-                  message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
-                })
-              }
-            })
-          }
+          onClick={() => {
+            onBasculerStatut(tache)
+            onFerme()
+          }}
           className="rounded-xl border border-border py-2.5 text-[13.5px] font-semibold text-muted disabled:opacity-60"
         >
           {tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme faite'}

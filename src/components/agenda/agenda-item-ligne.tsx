@@ -68,7 +68,6 @@ export function ItemLigne({
   aujourdhuiIso,
   isPending,
   onSupprimerRdv,
-  isPendingToggle,
   onToggleTache,
   onEditerTache,
   couleurs,
@@ -78,7 +77,9 @@ export function ItemLigne({
   aujourdhuiIso: string
   isPending: boolean
   onSupprimerRdv: (id: string) => void
-  isPendingToggle: boolean
+  // Pas de `isPendingToggle` associé : la bascule est optimiste chez les
+  // deux vues appelantes, la case reflète donc le nouvel état dès le clic et
+  // n'a aucune raison d'être désactivée le temps de l'aller-retour serveur.
   onToggleTache: (tache: Tache) => void
   onEditerTache: (tache: Tache) => void
   couleurs: Map<string, CouleurAvatar>
@@ -132,9 +133,8 @@ export function ItemLigne({
           <button
             type="button"
             onClick={() => onToggleTache(t)}
-            disabled={isPendingToggle}
             aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-            className="flex h-8 w-8 shrink-0 items-center justify-center disabled:opacity-70"
+            className="flex h-8 w-8 shrink-0 items-center justify-center"
           >
             <div
               className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
@@ -147,8 +147,7 @@ export function ItemLigne({
           <button
             type="button"
             onClick={() => onEditerTache(t)}
-            disabled={isPendingToggle}
-            className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left disabled:opacity-70"
+            className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
           >
             <div
               className={`min-w-0 flex-1 text-sm font-semibold ${

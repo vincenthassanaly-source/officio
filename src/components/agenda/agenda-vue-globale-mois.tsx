@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useSyncExternalStore, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useSyncExternalStore, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { supprimerRendezVous } from '@/app/actions/agenda'
 import { toggleTache } from '@/app/actions/taches'
@@ -36,21 +36,30 @@ export function AgendaVueGlobaleMois({
   const [isPending, startTransition] = useTransition()
   // Transition dédiée au cochage des tâches, découplée de celle de la
   // suppression des RDV — même pattern que AgendaVueGlobale.
-  const [isPendingTache, startTransitionTache] = useTransition()
+  const [, startTransitionTache] = useTransition()
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
   const toast = useToast()
   const aujourdhuiIso = toISODate(new Date())
 
+  // Bascule optimiste du statut — même pattern que AgendaVueGlobale. Ici la
+  // tâche cochée reste affichée (cette vue ne filtre pas les tâches faites,
+  // contrairement à la vue semaine) : c'est son badge "Fait" et sa case
+  // cochée qui basculent immédiatement.
+  const [tachesOptimistes, basculerStatutOptimiste] = useOptimistic(taches, (etat, id: string) =>
+    etat.map((t) => (t.id === id ? { ...t, statut: t.statut === 'fait' ? ('a_faire' as const) : ('fait' as const) } : t))
+  )
+
   const grille = useMemo(() => getMonthGridDates(moisAffiche), [moisAffiche])
   const itemsParJour = useMemo(
-    () => regrouperItemsParJour(rendezVous, taches, regularisations),
-    [rendezVous, taches, regularisations]
+    () => regrouperItemsParJour(rendezVous, tachesOptimistes, regularisations),
+    [rendezVous, tachesOptimistes, regularisations]
   )
 
   const itemsJourSelectionne = jourSelectionne ? (itemsParJour.get(jourSelectionne) ?? []) : []
 
   function onToggleTache(tache: Tache) {
     startTransitionTache(async () => {
+      basculerStatutOptimiste(tache.id)
       try {
         await toggleTache(tache.id, tache.statut)
       } catch (err) {
@@ -110,7 +119,6 @@ export function AgendaVueGlobaleMois({
           items={itemsJourSelectionne}
           aujourdhuiIso={aujourdhuiIso}
           isPending={isPending}
-          isPendingTache={isPendingTache}
           onSupprimerRdv={(id) => startTransition(() => supprimerRendezVous(id))}
           onToggleTache={onToggleTache}
           onEditerTache={setTacheEnEdition}
@@ -126,6 +134,7 @@ export function AgendaVueGlobaleMois({
           equipe={equipe}
           profilActuelId={profilActuelId}
           onFerme={() => setTacheEnEdition(null)}
+          onBasculerStatut={onToggleTache}
         />
       )}
     </div>
@@ -150,7 +159,6 @@ function ModaleDetailJour({
   items,
   aujourdhuiIso,
   isPending,
-  isPendingTache,
   onSupprimerRdv,
   onToggleTache,
   onEditerTache,
@@ -161,7 +169,6 @@ function ModaleDetailJour({
   items: ItemAgenda[]
   aujourdhuiIso: string
   isPending: boolean
-  isPendingTache: boolean
   onSupprimerRdv: (id: string) => void
   onToggleTache: (tache: Tache) => void
   onEditerTache: (tache: Tache) => void
@@ -226,7 +233,6 @@ function ModaleDetailJour({
                   aujourdhuiIso={aujourdhuiIso}
                   isPending={isPending}
                   onSupprimerRdv={onSupprimerRdv}
-                  isPendingToggle={isPendingTache}
                   onToggleTache={onToggleTache}
                   onEditerTache={onEditerTache}
                   couleurs={couleurs}

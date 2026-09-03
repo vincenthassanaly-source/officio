@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { toggleTache } from '@/app/actions/taches'
+import { useToast } from '@/components/ui/toast-provider'
 import type { Tache } from '@/lib/data/taches'
 import type { MessageAvecDetails } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -44,11 +45,39 @@ export function AccueilDashboard({
   couleurs: Map<string, CouleurAvatar>
   profilActuelId: string
 }) {
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
+  const toast = useToast()
   const aujourdhuiIso = toISODate(new Date())
+  // `tachesDuJour` ne contient que des tâches à faire (filtrées côté serveur,
+  // voir (app)/page.tsx) : cocher une tâche la fait donc sortir de l'encart.
+  // Le retrait optimiste reproduit ça immédiatement, plutôt que d'attendre le
+  // revalidatePath de toggleTache.
+  const [tachesOptimistes, retirerOptimiste] = useOptimistic(tachesDuJour, (etat, id: string) =>
+    etat.filter((t) => t.id !== id)
+  )
 
-  const toutEstAJour = totalTachesAFaire === 0 && totalMessagesNonLus === 0
+  function basculerStatut(tache: Tache) {
+    startTransition(async () => {
+      retirerOptimiste(tache.id)
+      try {
+        await toggleTache(tache.id, tache.statut)
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
+        })
+      }
+    })
+  }
+
+  // Compté à partir du retrait optimiste plutôt que du seul total serveur,
+  // sinon cocher la dernière tâche viderait la liste sans faire apparaître
+  // l'état « Tout est à jour ». Exprimé en delta (et non `tachesOptimistes
+  // .length`) pour rester juste si l'accueil se remet un jour à tronquer la
+  // liste qu'il affiche.
+  const tachesRetirees = tachesDuJour.length - tachesOptimistes.length
+  const toutEstAJour = totalTachesAFaire - tachesRetirees === 0 && totalMessagesNonLus === 0
 
   if (toutEstAJour) {
     return (
@@ -67,21 +96,23 @@ export function AccueilDashboard({
         <div className="mb-2 flex items-center justify-between">
           <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Tâches</span>
         </div>
-        {tachesDuJour.length === 0 ? (
+        {tachesOptimistes.length === 0 ? (
           <p className="py-2 text-center text-[12.5px] text-muted">Aucune tâche en attente</p>
         ) : (
           <div className="flex max-h-[320px] flex-col gap-2 overflow-y-auto">
-            {tachesDuJour.map((t) => {
+            {tachesOptimistes.map((t) => {
               const badge = badgeEcheance(t.echeance, aujourdhuiIso)
               const couleurAssigne = (t.assigne ? couleurs.get(t.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
               return (
                 <div key={t.id} className="flex items-center gap-2.5">
+                  {/* Plus de `disabled` : la bascule est optimiste, et le
+                      isPending partagé figeait tout l'encart le temps d'un
+                      aller-retour serveur déjà reflété à l'écran. */}
                   <button
                     type="button"
-                    onClick={() => startTransition(() => toggleTache(t.id, t.statut))}
-                    disabled={isPending}
+                    onClick={() => basculerStatut(t)}
                     aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-                    className="flex shrink-0 items-center justify-center disabled:opacity-60"
+                    className="flex shrink-0 items-center justify-center"
                   >
                     <span
                       className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 ${
@@ -94,8 +125,7 @@ export function AccueilDashboard({
                   <button
                     type="button"
                     onClick={() => setTacheEnEdition(t)}
-                    disabled={isPending}
-                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left disabled:opacity-60"
+                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
                   >
                     {t.assigne && (
                       <span
@@ -122,6 +152,7 @@ export function AccueilDashboard({
           equipe={equipe}
           profilActuelId={profilActuelId}
           onFerme={() => setTacheEnEdition(null)}
+          onBasculerStatut={basculerStatut}
         />
       )}
 

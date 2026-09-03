@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { supprimerRendezVous } from '@/app/actions/agenda'
 import { toggleTache } from '@/app/actions/taches'
 import type { RendezVous } from '@/lib/data/rendez-vous'
@@ -39,7 +39,7 @@ export function AgendaVueGlobale({
   // Transition dédiée au cochage des tâches (toggleTache) : découplée de
   // celle utilisée par la suppression des RDV ci-dessus pour que les deux
   // actions n'entrent jamais en compétition sur le même isPending.
-  const [isPendingTache, startTransitionTache] = useTransition()
+  const [, startTransitionTache] = useTransition()
   // Tâche ouverte dans ModaleEditionTache (clic sur le corps de la carte
   // compacte dans ItemLigne) — même pattern que TachesList (taches-list.tsx).
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
@@ -47,8 +47,16 @@ export function AgendaVueGlobale({
   const sectionsRef = useRef<Record<string, HTMLDivElement | null>>({})
   const aujourdhuiIso = toISODate(new Date())
 
+  // Bascule optimiste du statut, même pattern que TachesList
+  // (taches-list.tsx) : la tâche prend son nouveau statut avant la réponse
+  // serveur, et disparaît donc immédiatement de itemsParJour ci-dessous.
+  const [tachesOptimistes, basculerStatutOptimiste] = useOptimistic(taches, (etat, id: string) =>
+    etat.map((t) => (t.id === id ? { ...t, statut: t.statut === 'fait' ? ('a_faire' as const) : ('fait' as const) } : t))
+  )
+
   function onToggleTache(tache: Tache) {
     startTransitionTache(async () => {
+      basculerStatutOptimiste(tache.id)
       try {
         await toggleTache(tache.id, tache.statut)
       } catch (err) {
@@ -64,9 +72,9 @@ export function AgendaVueGlobale({
   // cochage — elle reste consultable dans la section archive de la page
   // Tâches (comportement existant, non modifié ici).
   const itemsParJour = useMemo(() => {
-    const tachesActives = taches.filter((t) => t.statut !== 'fait')
+    const tachesActives = tachesOptimistes.filter((t) => t.statut !== 'fait')
     return regrouperItemsParJour(rendezVous, tachesActives, regularisations)
-  }, [rendezVous, taches, regularisations])
+  }, [rendezVous, tachesOptimistes, regularisations])
 
   const joursCharges = useMemo(() => {
     const set = new Set<string>()
@@ -156,7 +164,6 @@ export function AgendaVueGlobale({
                         aujourdhuiIso={aujourdhuiIso}
                         isPending={isPending}
                         onSupprimerRdv={(id) => startTransition(() => supprimerRendezVous(id))}
-                        isPendingToggle={isPendingTache}
                         onToggleTache={onToggleTache}
                         onEditerTache={setTacheEnEdition}
                         couleurs={couleurs}
@@ -177,6 +184,7 @@ export function AgendaVueGlobale({
           equipe={equipe}
           profilActuelId={profilActuelId}
           onFerme={() => setTacheEnEdition(null)}
+          onBasculerStatut={onToggleTache}
         />
       )}
     </div>
