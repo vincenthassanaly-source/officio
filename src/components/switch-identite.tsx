@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { listerComptes, retirerCompte, ajouterOuMettreAJourCompte, type CompteAppareil } from '@/lib/comptes-appareil'
@@ -106,8 +106,21 @@ export function SwitchIdentite({
   const [comptes, setComptes] = useState<CompteAppareil[]>([])
   const [comptesExpires, setComptesExpires] = useState<Record<string, true>>({})
   const [enCoursId, setEnCoursId] = useState<string | null>(null)
+  // Rechargement complet requis après un changement de compte (voir
+  // node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md :
+  // "For logout flows, using window.location.href instead of router.push
+  // triggers a full page reload, clearing all client-side state.") — un
+  // router.push conserverait le cache RSC et l'état client de l'ancienne
+  // identité. La mutation elle-même doit vivre dans un effet : l'assigner
+  // directement dans basculer() (un gestionnaire d'évènement) est rejeté par
+  // la règle react-hooks/immutability.
+  const [bascule, setBascule] = useState(false)
 
   useFermerAvecRetour(panelOuvert, () => setPanelOuvert(false))
+
+  useEffect(() => {
+    if (bascule) window.location.href = '/'
+  }, [bascule])
 
   function togglePanel() {
     if (!panelOuvert) {
@@ -144,7 +157,7 @@ export function SwitchIdentite({
       return
     }
 
-    window.location.href = '/'
+    setBascule(true)
   }
 
   function supprimer(profilId: string) {
