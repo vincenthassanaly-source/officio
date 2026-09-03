@@ -60,7 +60,12 @@ export function CahierDeLiaison({
       </div>
 
       {onglet === 'fil' ? (
-        <FilDeMessages messages={messages} profilActuelId={profilActuelId} couleurs={couleurs} />
+        <FilDeMessages
+          messages={messages}
+          equipe={equipe}
+          profilActuelId={profilActuelId}
+          couleurs={couleurs}
+        />
       ) : (
         <TachesList taches={taches} equipe={equipe} profilActuelId={profilActuelId} couleurs={couleurs} />
       )}

@@ -4,6 +4,7 @@ import {
   Fragment,
   useEffect,
   useMemo,
+  useOptimistic,
   useRef,
   useState,
   useSyncExternalStore,
@@ -23,6 +24,7 @@ import type { Categorie, MessageAvecDetails } from '@/lib/data/messages'
 import { formatDateRelative, formatSeparateurJour } from '@/lib/dates'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
+import type { MembreEquipe } from '@/lib/data/equipe'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ajouterEnAttente, listerEnAttente, retirerEnAttente } from '@/lib/messages-lus-en-attente'
 import { useToast, type TypeToast } from '@/components/ui/toast-provider'
@@ -47,10 +49,14 @@ function normaliser(texte: string): string {
 
 export function FilDeMessages({
   messages,
+  equipe,
   profilActuelId,
   couleurs,
 }: {
   messages: MessageAvecDetails[]
+  // Utilisée uniquement pour retrouver les initiales du profil courant lors
+  // de l'ajout optimiste d'un pouce — même usage que dans TachesList.
+  equipe: MembreEquipe[]
   profilActuelId: string
   couleurs: Map<string, CouleurAvatar>
 }) {
@@ -70,6 +76,23 @@ export function FilDeMessages({
   const [idIconesVisibles, setIdIconesVisibles] = useState<string | null>(null)
   const [messageEnEdition, setMessageEnEdition] = useState<MessageAvecDetails | null>(null)
   const toast = useToast()
+  // Pouce optimiste, transposition exacte de celui des tâches
+  // (taches-list.tsx) : le pouce sur un message était la seule des deux
+  // interactions jumelles à attendre le serveur.
+  const [messagesOptimistes, basculerPouceOptimiste] = useOptimistic(messages, (etat, id: string) =>
+    etat.map((m) => {
+      if (m.id !== id) return m
+      const dejaPouce = m.pouces.some((p) => p.profil_id === profilActuelId)
+      if (dejaPouce) return { ...m, pouces: m.pouces.filter((p) => p.profil_id !== profilActuelId) }
+      const mesInitiales = equipe.find((membre) => membre.id === profilActuelId)?.initiales ?? '?'
+      return { ...m, pouces: [...m.pouces, { profil_id: profilActuelId, initiales: mesInitiales }] }
+    })
+  )
+
+  function basculerPouce(id: string) {
+    basculerPouceOptimiste(id)
+    return togglePouceMessage(id)
+  }
 
   const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
 
@@ -161,12 +184,12 @@ export function FilDeMessages({
 
   const messagesFiltres = useMemo(() => {
     const rechercheNormalisee = normaliser(recherche.trim())
-    return messages.filter((m) => {
+    return messagesOptimistes.filter((m) => {
       if (filtreCategorie !== FILTRE_TOUTES && m.categorie !== filtreCategorie) return false
       if (rechercheNormalisee && !normaliser(m.contenu).includes(rechercheNormalisee)) return false
       return true
     })
-  }, [messages, recherche, filtreCategorie])
+  }, [messagesOptimistes, recherche, filtreCategorie])
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -276,6 +299,7 @@ export function FilDeMessages({
                 isPending={isPending}
                 startTransition={startTransition}
                 toast={toast}
+                onBasculerPouce={basculerPouce}
                 onAppuiLong={setIdIconesVisibles}
                 onEditer={(message) => {
                   setMessageEnEdition(message)
@@ -398,6 +422,7 @@ function MessageItem({
   isPending,
   startTransition,
   toast,
+  onBasculerPouce,
   onAppuiLong,
   onEditer,
   onIconesFermees,
@@ -415,6 +440,7 @@ function MessageItem({
   isPending: boolean
   startTransition: TransitionStartFunction
   toast: (parametres: { type: TypeToast; message: string }) => void
+  onBasculerPouce: (id: string) => Promise<void>
   onAppuiLong: (id: string) => void
   onEditer: (message: MessageAvecDetails) => void
   onIconesFermees: () => void
@@ -553,13 +579,15 @@ function MessageItem({
         </div>
         <div className="flex items-center gap-2.5">
           {dejaLu && <span className="text-[11px] font-semibold text-muted">Lu</span>}
+          {/* Plus de `disabled` : la bascule est optimiste, et le isPending du
+              fil est partagé par tous les messages — un pouce y désactivait
+              les boutons de toutes les autres cartes. */}
           <button
             type="button"
-            disabled={isPending}
             onClick={() =>
               startTransition(async () => {
                 try {
-                  await togglePouceMessage(m.id)
+                  await onBasculerPouce(m.id)
                 } catch (err) {
                   toast({
                     type: 'erreur',
@@ -570,7 +598,7 @@ function MessageItem({
             }
             aria-label={monPouce ? 'Retirer mon pouce' : 'Mettre un pouce'}
             aria-pressed={monPouce}
-            className={`shrink-0 text-base leading-none transition-transform active:scale-90 disabled:opacity-50 ${
+            className={`shrink-0 text-base leading-none transition-transform active:scale-90 ${
               monPouce ? 'opacity-100' : 'opacity-35 grayscale hover:opacity-70 hover:grayscale-0'
             }`}
           >

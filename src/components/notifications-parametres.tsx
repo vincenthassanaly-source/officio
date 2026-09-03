@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useOptimistic, useState, useTransition } from 'react'
 import { definirPreferenceNotification } from '@/app/actions/notifications'
 import {
   activerNotificationsPush,
@@ -11,18 +11,29 @@ import {
 } from '@/lib/notifications/client'
 import { CATEGORIES_NOTIFICATION, type CategorieNotification } from '@/lib/notifications/types'
 import type { PreferenceNotification } from '@/lib/data/notifications'
+import { useToast } from '@/components/ui/toast-provider'
 
 export function NotificationsParametres({
   preferences: preferencesInitiales,
 }: {
   preferences: PreferenceNotification[]
 }) {
-  const [preferences, setPreferences] = useState(preferencesInitiales)
+  // useOptimistic plutôt qu'un useState recopiant les props : la bascule
+  // était déjà appliquée avant l'await, mais sans jamais revenir en arrière
+  // si l'action échouait — l'interrupteur restait alors dans un état que la
+  // base ne reflétait pas. useOptimistic restaure l'état serveur de lui-même
+  // à la fin de la transition (definirPreferenceNotification revalide
+  // /profil, la prop est donc à jour à ce moment-là).
+  const [preferences, appliquerPreferenceOptimiste] = useOptimistic(
+    preferencesInitiales,
+    (etat, { categorie, active }: { categorie: CategorieNotification; active: boolean }) =>
+      etat.map((p) => (p.categorie === categorie ? { ...p, active } : p))
+  )
   const [actif, setActif] = useState<boolean | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [iosSansStandalone, setIosSansStandalone] = useState(false)
-  const [pendingCategorie, setPendingCategorie] = useState<CategorieNotification | null>(null)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   useEffect(() => {
     // Détection côté client uniquement (navigator/window indisponibles côté
@@ -51,13 +62,20 @@ export function NotificationsParametres({
   }
 
   function togglePreference(categorie: CategorieNotification, valeurActuelle: boolean) {
-    setPendingCategorie(categorie)
-    setPreferences((p) =>
-      p.map((pref) => (pref.categorie === categorie ? { ...pref, active: !valeurActuelle } : pref))
-    )
     startTransition(async () => {
-      await definirPreferenceNotification(categorie, !valeurActuelle)
-      setPendingCategorie(null)
+      appliquerPreferenceOptimiste({ categorie, active: !valeurActuelle })
+      try {
+        await definirPreferenceNotification(categorie, !valeurActuelle)
+      } catch (err) {
+        // L'interrupteur revient tout seul à sa valeur serveur en sortie de
+        // transition ; reste à dire pourquoi, sinon l'aller-retour visuel
+        // passerait pour un bug.
+        toast({
+          type: 'erreur',
+          message:
+            err instanceof Error ? err.message : 'Échec de la mise à jour de la préférence de notification.',
+        })
+      }
     })
   }
 
@@ -108,9 +126,8 @@ export function NotificationsParametres({
                 role="switch"
                 aria-checked={active}
                 aria-label={cat.label}
-                disabled={pendingCategorie === cat.value}
                 onClick={() => togglePreference(cat.value, active)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${
+                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
                   active ? 'bg-primary' : 'bg-neutral-soft'
                 }`}
               >

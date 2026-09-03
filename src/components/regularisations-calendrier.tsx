@@ -1,9 +1,9 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { ajouterRegularisation, marquerAFaire, marquerFacture } from '@/app/actions/regularisations'
 import { ChampsFormulaire } from '@/components/regularisations-liste'
-import type { Regularisation } from '@/lib/data/regularisations'
+import type { Regularisation, StatutRegularisation } from '@/lib/data/regularisations'
 import { formatDateLongue, formatJourCourt, formatMoisAnnee, getMonthGridDates, toISODate } from '@/lib/dates'
 
 export function RegularisationsCalendrier({
@@ -25,18 +25,28 @@ export function RegularisationsCalendrier({
   const [formOuvert, setFormOuvert] = useState(false)
   const [isPending, startTransition] = useTransition()
 
+  // Bascule facturé/à faire en optimiste — strictement le même reducer que
+  // changerStatutOptimiste dans regularisations-liste.tsx. Cette vue
+  // calendrier appelait jusqu'ici les mêmes actions sans optimiste : passer
+  // d'un onglet à l'autre changeait le ressenti d'un geste identique.
+  const [regularisationsOptimistes, changerStatutOptimiste] = useOptimistic(
+    regularisations,
+    (etat, { id, statut }: { id: string; statut: StatutRegularisation }) =>
+      etat.map((r) => (r.id === id ? { ...r, statut } : r))
+  )
+
   const aujourdhui = toISODate(new Date())
   const grille = useMemo(() => getMonthGridDates(moisAffiche), [moisAffiche])
 
   const parJour = useMemo(() => {
     const map = new Map<string, Regularisation[]>()
-    for (const r of regularisations) {
+    for (const r of regularisationsOptimistes) {
       const liste = map.get(r.date_regularisation)
       if (liste) liste.push(r)
       else map.set(r.date_regularisation, [r])
     }
     return map
-  }, [regularisations])
+  }, [regularisationsOptimistes])
 
   const entreesJourSelectionne = jourSelectionne ? (parJour.get(jourSelectionne) ?? []) : []
 
@@ -145,13 +155,18 @@ export function RegularisationsCalendrier({
                     </div>
                     {r.note && <div className="truncate text-[11px] text-muted">{r.note}</div>}
                   </div>
+                  {/* Optimiste : plus de `disabled`, le libellé du bouton
+                      bascule dès le clic. */}
                   <button
                     type="button"
-                    disabled={isPending}
                     onClick={() =>
-                      startTransition(() => (facture ? marquerAFaire(r.id) : marquerFacture(r.id)))
+                      startTransition(async () => {
+                        const nouveauStatut: StatutRegularisation = facture ? 'a_faire' : 'facture'
+                        changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
+                        await (facture ? marquerAFaire(r.id) : marquerFacture(r.id))
+                      })
                     }
-                    className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold disabled:opacity-60 ${
+                    className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold ${
                       facture ? 'border border-border text-muted' : 'bg-primary text-white'
                     }`}
                   >
