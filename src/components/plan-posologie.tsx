@@ -1,6 +1,8 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { reinitialiserPlanPosologie } from '@/app/actions/plan-posologie'
+import type { LigneMedicament } from '@/lib/data/plan-posologie'
 
 const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
@@ -9,17 +11,6 @@ const CHAMP_MOMENT_CLASS =
   'w-full rounded-lg border border-border bg-bg px-2 py-2 text-center text-[15px] text-ink outline-none focus:border-primary'
 
 type MomentPrise = 'matin' | 'midi' | 'soir' | 'coucher'
-
-type LigneMedicament = {
-  id: string
-  nom: string
-  matin: string
-  midi: string
-  soir: string
-  coucher: string
-  instructions: string
-  duree: string
-}
 
 const MOMENTS: [MomentPrise, string][] = [
   ['matin', 'Matin'],
@@ -45,12 +36,16 @@ function dateDuJour(): string {
   return new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-// Aucune donnée saisie ici n'est envoyée au serveur ni persistée : tout vit
-// dans ce useState et disparaît à la fermeture ou au rafraîchissement de la
-// page (voir AGENTS.md / consigne du module — outil d'impression éphémère).
-export function PlanPosologie({ nomOfficine }: { nomOfficine: string }) {
-  const [nomPatient, setNomPatient] = useState('')
-  const [lignes, setLignes] = useState<LigneMedicament[]>(() => [nouvelleLigne()])
+export function PlanPosologie({
+  nomOfficine,
+  lignesInitiales,
+}: {
+  nomOfficine: string
+  lignesInitiales: LigneMedicament[]
+}) {
+  const [lignes, setLignes] = useState<LigneMedicament[]>(() =>
+    lignesInitiales.length > 0 ? lignesInitiales : [nouvelleLigne()]
+  )
 
   function ajouterLigne() {
     setLignes((l) => [...l, nouvelleLigne()])
@@ -66,22 +61,14 @@ export function PlanPosologie({ nomOfficine }: { nomOfficine: string }) {
 
   const lignesRenseignees = useMemo(() => lignes.filter((l) => l.nom.trim() !== ''), [lignes])
 
+  async function reinitialiser() {
+    setLignes([nouvelleLigne()])
+    await reinitialiserPlanPosologie()
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-col gap-3 print:hidden">
-        <div className="rounded-[20px] bg-surface shadow-card p-3.5">
-          <label className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-wide text-muted">
-            Nom du patient (optionnel)
-          </label>
-          <input
-            type="text"
-            value={nomPatient}
-            onChange={(e) => setNomPatient(e.target.value)}
-            placeholder="Prénom Nom"
-            className={`w-full ${CHAMP_CLASS}`}
-          />
-        </div>
-
         <div className="flex flex-col gap-2">
           {lignes.map((ligne, index) => (
             <div key={ligne.id} className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
@@ -144,23 +131,29 @@ export function PlanPosologie({ nomOfficine }: { nomOfficine: string }) {
           + Ajouter un médicament
         </button>
 
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="self-start rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-white"
-        >
-          Imprimer le plan
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="self-start rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-white"
+          >
+            Imprimer le plan
+          </button>
+          <button
+            type="button"
+            onClick={reinitialiser}
+            className="self-start rounded-xl border border-border px-4 py-2.5 text-[13px] font-semibold text-ink"
+          >
+            Réinitialiser
+          </button>
+        </div>
       </div>
 
       {/* Aperçu imprimable : rendu en temps réel à l'écran, et seul élément
           visible à l'impression (voir globals.css, règle .plan-posologie-impression). */}
       <div className="plan-posologie-impression rounded-[20px] bg-surface shadow-card p-4 print:rounded-none print:p-0 print:shadow-none">
         <div className="mb-4 flex items-start justify-between gap-3 print:mb-6">
-          <div>
-            <h2 className="font-heading text-lg font-bold text-ink">Plan de posologie</h2>
-            {nomPatient.trim() !== '' && <p className="text-[13px] text-muted">Patient : {nomPatient.trim()}</p>}
-          </div>
+          <h2 className="font-heading text-lg font-bold text-ink">Plan de posologie</h2>
           <p className="shrink-0 text-[12.5px] text-muted">{dateDuJour()}</p>
         </div>
 
