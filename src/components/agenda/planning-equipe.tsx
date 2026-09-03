@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { creerCreneau, modifierCreneau, supprimerCreneau, type RecurrenceCreneau } from '@/app/actions/agenda'
 import type { Creneau, TypeCreneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -10,6 +10,7 @@ import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { formatDureeHeures, heureEnDecimal } from '@/lib/duree-creneaux'
+import { useToast } from '@/components/ui/toast-provider'
 
 const LIBELLE_TYPE: Record<TypeCreneau, string> = {
   travail: 'Travail',
@@ -22,7 +23,7 @@ const HEURE_FIN_DEFAUT = 20
 const PX_PAR_HEURE = 34
 
 export function PlanningEquipe({
-  creneaux,
+  creneaux: creneauxServeur,
   equipe,
   weekDates,
   couleurs,
@@ -39,6 +40,36 @@ export function PlanningEquipe({
   const [typeForm, setTypeForm] = useState<TypeCreneau>('travail')
   const [recurrenceForm, setRecurrenceForm] = useState<RecurrenceCreneau>('aucune')
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
+
+  // Suppression optimiste d'un créneau. Deux portées possibles, comme côté
+  // serveur : l'occurrence seule, ou toute la série récurrente qui partage
+  // le même serie_id. L'état optimiste est nommé `creneaux` pour que tous
+  // les calculs dérivés plus bas (bornes horaires, regroupements, badges)
+  // en profitent sans distinction.
+  const [creneaux, retirerOptimiste] = useOptimistic(
+    creneauxServeur,
+    (etat, action: { portee: 'occurrence'; id: string } | { portee: 'serie'; serieId: string }) =>
+      action.portee === 'occurrence'
+        ? etat.filter((c) => c.id !== action.id)
+        : etat.filter((c) => c.serie_id !== action.serieId)
+  )
+
+  function supprimer(c: Creneau, portee: 'occurrence' | 'serie') {
+    startTransition(async () => {
+      retirerOptimiste(
+        portee === 'serie' && c.serie_id ? { portee: 'serie', serieId: c.serie_id } : { portee: 'occurrence', id: c.id }
+      )
+      try {
+        await supprimerCreneau(c.id, c.serie_id, portee)
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la suppression du créneau.',
+        })
+      }
+    })
+  }
 
   const [creneauDetail, setCreneauDetail] = useState<Creneau | null>(null)
   const [edition, setEdition] = useState(false)
@@ -84,7 +115,7 @@ export function PlanningEquipe({
     if (c.serie_id) {
       setCreneauPortee(c)
     } else {
-      startTransition(() => supprimerCreneau(c.id, c.serie_id, 'occurrence'))
+      supprimer(c, 'occurrence')
       fermerDetail()
     }
   }
@@ -93,7 +124,7 @@ export function PlanningEquipe({
     const c = creneauPortee
     setCreneauPortee(null)
     if (!c) return
-    startTransition(() => supprimerCreneau(c.id, c.serie_id, valeurChoix === 'serie' ? 'serie' : 'occurrence'))
+    supprimer(c, valeurChoix === 'serie' ? 'serie' : 'occurrence')
     fermerDetail()
   }
 

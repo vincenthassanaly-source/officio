@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { ajouterPatientCno, modifierQuantiteCno, supprimerPatientCno } from '@/app/actions/cno'
 import type { PatientCno } from '@/lib/data/cno'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
@@ -17,11 +17,15 @@ function formatDate(dateIso: string) {
   })
 }
 
-function QuantiteEditable({ patient }: { patient: PatientCno }) {
+function QuantiteEditable({
+  patient,
+  onEnregistrerQuantite,
+}: {
+  patient: PatientCno
+  onEnregistrerQuantite: (id: string, quantite: number) => void
+}) {
   const [enEdition, setEnEdition] = useState(false)
   const [valeur, setValeur] = useState(String(patient.quantite_restante))
-  const [isPending, startTransition] = useTransition()
-  const toast = useToast()
 
   function enregistrer() {
     const nombre = Math.round(Number(valeur.replace(',', '.')))
@@ -32,15 +36,10 @@ function QuantiteEditable({ patient }: { patient: PatientCno }) {
     }
     setEnEdition(false)
     if (nombre === patient.quantite_restante) return
-    startTransition(async () => {
-      try {
-        await modifierQuantiteCno(patient.id, nombre)
-        toast({ type: 'succes', message: 'Quantité mise à jour.' })
-      } catch (err) {
-        setValeur(String(patient.quantite_restante))
-        toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de la mise à jour de la quantité.' })
-      }
-    })
+    // La quantité affichée au repos vient désormais de l'état optimiste du
+    // parent : plus besoin de remettre `valeur` à la main en cas d'échec, le
+    // retour à la valeur serveur est porté par useOptimistic.
+    onEnregistrerQuantite(patient.id, nombre)
   }
 
   if (enEdition) {
@@ -50,7 +49,6 @@ function QuantiteEditable({ patient }: { patient: PatientCno }) {
         step="1"
         min="0"
         autoFocus
-        disabled={isPending}
         value={valeur}
         onChange={(e) => setValeur(e.target.value)}
         onFocus={(e) => e.currentTarget.select()}
@@ -62,7 +60,7 @@ function QuantiteEditable({ patient }: { patient: PatientCno }) {
             setEnEdition(false)
           }
         }}
-        className="w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold text-ink outline-none disabled:opacity-60"
+        className="w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold text-ink outline-none"
       />
     )
   }
@@ -71,8 +69,7 @@ function QuantiteEditable({ patient }: { patient: PatientCno }) {
     <button
       type="button"
       onClick={() => setEnEdition(true)}
-      disabled={isPending}
-      className="flex h-8 min-w-10 items-center justify-center rounded-lg bg-primary-soft px-2 text-[15px] font-bold text-primary disabled:opacity-60"
+      className="flex h-8 min-w-10 items-center justify-center rounded-lg bg-primary-soft px-2 text-[15px] font-bold text-primary"
     >
       {patient.quantite_restante}
     </button>
@@ -103,11 +100,50 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
 
+  // Deux mutations optimistes sur la même liste, distinguées par `type` —
+  // même forme que le reducer de taches-list.tsx.
+  const [patientsOptimistes, appliquerOptimiste] = useOptimistic(
+    patients,
+    (etat, action: { type: 'quantite'; id: string; quantite: number } | { type: 'suppression'; id: string }) => {
+      if (action.type === 'suppression') return etat.filter((p) => p.id !== action.id)
+      return etat.map((p) => (p.id === action.id ? { ...p, quantite_restante: action.quantite } : p))
+    }
+  )
+
+  function enregistrerQuantite(id: string, quantite: number) {
+    startTransition(async () => {
+      appliquerOptimiste({ type: 'quantite', id, quantite })
+      try {
+        await modifierQuantiteCno(id, quantite)
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la mise à jour de la quantité.',
+        })
+      }
+    })
+  }
+
+  function supprimerPatient(id: string) {
+    startTransition(async () => {
+      appliquerOptimiste({ type: 'suppression', id })
+      try {
+        await supprimerPatientCno(id)
+        toast({ type: 'succes', message: 'Fiche CNO supprimée.' })
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la suppression de la fiche.',
+        })
+      }
+    })
+  }
+
   const visibles = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
-    if (!rechercheNormalisee) return patients
-    return patients.filter((p) => p.nom_patient.toLowerCase().includes(rechercheNormalisee))
-  }, [patients, recherche])
+    if (!rechercheNormalisee) return patientsOptimistes
+    return patientsOptimistes.filter((p) => p.nom_patient.toLowerCase().includes(rechercheNormalisee))
+  }, [patientsOptimistes, recherche])
 
   function demanderSuppression(id: string, nom: string) {
     setASupprimer({ id, nom })
@@ -159,7 +195,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
 
       {visibles.length === 0 && (
         <p className="py-10 text-center text-sm text-muted">
-          {patients.length === 0
+          {patientsOptimistes.length === 0
             ? 'Aucune fiche pour l’instant — crée la première avec le bouton +.'
             : 'Aucun patient ne correspond.'}
         </p>
@@ -175,7 +211,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
               <div className="truncate text-[13.5px] font-semibold text-ink">{p.nom_patient}</div>
               <div className="mt-0.5 text-[11px] text-muted">Mis à jour le {formatDate(p.derniere_maj)}</div>
             </div>
-            <QuantiteEditable patient={p} />
+            <QuantiteEditable patient={p} onEnregistrerQuantite={enregistrerQuantite} />
             <button
               type="button"
               onClick={() => demanderSuppression(p.id, p.nom_patient)}
@@ -196,14 +232,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
         titre={`Supprimer la fiche de « ${aSupprimer?.nom} » ?`}
         onConfirmer={() => {
           if (!aSupprimer) return
-          startTransition(async () => {
-            try {
-              await supprimerPatientCno(aSupprimer.id)
-              toast({ type: 'succes', message: 'Fiche CNO supprimée.' })
-            } catch (err) {
-              toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de la suppression de la fiche.' })
-            }
-          })
+          supprimerPatient(aSupprimer.id)
           setASupprimer(null)
         }}
         onAnnuler={() => setASupprimer(null)}

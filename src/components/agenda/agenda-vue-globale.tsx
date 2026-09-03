@@ -35,10 +35,10 @@ export function AgendaVueGlobale({
     const semaineContientAujourdhui = weekDates.some((d) => toISODate(d) === aujourdhui)
     return semaineContientAujourdhui ? aujourdhui : toISODate(weekDates[0])
   })
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   // Transition dédiée au cochage des tâches (toggleTache) : découplée de
   // celle utilisée par la suppression des RDV ci-dessus pour que les deux
-  // actions n'entrent jamais en compétition sur le même isPending.
+  // actions n'entrent jamais en compétition.
   const [, startTransitionTache] = useTransition()
   // Tâche ouverte dans ModaleEditionTache (clic sur le corps de la carte
   // compacte dans ItemLigne) — même pattern que TachesList (taches-list.tsx).
@@ -46,6 +46,26 @@ export function AgendaVueGlobale({
   const toast = useToast()
   const sectionsRef = useRef<Record<string, HTMLDivElement | null>>({})
   const aujourdhuiIso = toISODate(new Date())
+
+  // Retrait optimiste d'un rendez-vous supprimé : la carte quitte la liste
+  // du jour au clic, sans attendre le revalidatePath de supprimerRendezVous.
+  const [rendezVousOptimistes, retirerRdvOptimiste] = useOptimistic(rendezVous, (etat, id: string) =>
+    etat.filter((r) => r.id !== id)
+  )
+
+  function onSupprimerRdv(id: string) {
+    startTransition(async () => {
+      retirerRdvOptimiste(id)
+      try {
+        await supprimerRendezVous(id)
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la suppression du rendez-vous.',
+        })
+      }
+    })
+  }
 
   // Bascule optimiste du statut, même pattern que TachesList
   // (taches-list.tsx) : la tâche prend son nouveau statut avant la réponse
@@ -73,8 +93,8 @@ export function AgendaVueGlobale({
   // Tâches (comportement existant, non modifié ici).
   const itemsParJour = useMemo(() => {
     const tachesActives = tachesOptimistes.filter((t) => t.statut !== 'fait')
-    return regrouperItemsParJour(rendezVous, tachesActives, regularisations)
-  }, [rendezVous, tachesOptimistes, regularisations])
+    return regrouperItemsParJour(rendezVousOptimistes, tachesActives, regularisations)
+  }, [rendezVousOptimistes, tachesOptimistes, regularisations])
 
   const joursCharges = useMemo(() => {
     const set = new Set<string>()
@@ -162,8 +182,7 @@ export function AgendaVueGlobale({
                         key={cle}
                         item={item}
                         aujourdhuiIso={aujourdhuiIso}
-                        isPending={isPending}
-                        onSupprimerRdv={(id) => startTransition(() => supprimerRendezVous(id))}
+                        onSupprimerRdv={onSupprimerRdv}
                         onToggleTache={onToggleTache}
                         onEditerTache={setTacheEnEdition}
                         couleurs={couleurs}

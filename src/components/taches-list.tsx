@@ -120,10 +120,12 @@ export function TachesList({
   // - 'statut' : bascule a_faire <-> fait. La tâche change alors de section
   //   (liste active <-> accordéon "Tâches archivées") immédiatement, puisque
   //   `actives`/`archivees` plus bas dérivent de cet état optimiste.
+  // - 'suppression' : retire la tâche de la liste dès la confirmation.
   const [tachesOptimistes, appliquerOptimiste] = useOptimistic(
     taches,
-    (etat, action: { type: 'pouce' | 'statut'; id: string }) =>
-      etat.map((t) => {
+    (etat, action: { type: 'pouce' | 'statut' | 'suppression'; id: string }) => {
+      if (action.type === 'suppression') return etat.filter((t) => t.id !== action.id)
+      return etat.map((t) => {
         if (t.id !== action.id) return t
         if (action.type === 'statut') {
           return { ...t, statut: t.statut === 'fait' ? ('a_faire' as const) : ('fait' as const) }
@@ -133,6 +135,7 @@ export function TachesList({
         const mesInitiales = equipe.find((m) => m.id === profilActuelId)?.initiales ?? '?'
         return { ...t, pouces: [...t.pouces, { profil_id: profilActuelId, initiales: mesInitiales }] }
       })
+    }
   )
   // Bascule le pouce en optimiste puis appelle le serveur : passée à
   // CarteTache, qui l'appelle déjà dans son propre startTransition (gestion
@@ -146,6 +149,23 @@ export function TachesList({
   // puis se ferme aussitôt, et une transition ouverte dans un composant qui
   // se démonte dans la foulée n'aurait plus de propriétaire monté pour porter
   // l'état optimiste.
+  // Même raison que basculerStatut d'ouvrir la transition ici : la carte qui
+  // porte la ModaleConfirmation disparaît avec la tâche supprimée.
+  function supprimer(id: string) {
+    startTransition(async () => {
+      appliquerOptimiste({ type: 'suppression', id })
+      try {
+        await supprimerTache(id)
+        toast({ type: 'succes', message: 'Tâche supprimée.' })
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la suppression de la tâche.',
+        })
+      }
+    })
+  }
+
   function basculerStatut(tache: Tache) {
     startTransition(async () => {
       appliquerOptimiste({ type: 'statut', id: tache.id })
@@ -340,6 +360,7 @@ export function TachesList({
             onEditer={setTacheEnEdition}
             onBasculerPouce={basculerPouce}
             onBasculerStatut={basculerStatut}
+            onSupprimer={supprimer}
           />
         ))}
       </div>
@@ -378,6 +399,7 @@ export function TachesList({
                     onEditer={setTacheEnEdition}
                     onBasculerPouce={basculerPouce}
                     onBasculerStatut={basculerStatut}
+                    onSupprimer={supprimer}
                   />
                 ))}
               </div>
@@ -413,6 +435,7 @@ function CarteTache({
   onEditer,
   onBasculerPouce,
   onBasculerStatut,
+  onSupprimer,
 }: {
   tache: Tache
   couleurs: Map<string, CouleurAvatar>
@@ -423,6 +446,7 @@ function CarteTache({
   onEditer: (tache: Tache) => void
   onBasculerPouce: (id: string) => Promise<void>
   onBasculerStatut: (tache: Tache) => void
+  onSupprimer: (id: string) => void
 }) {
   const due = dueInfo(tache)
   const couleurAssigne = (tache.assigne ? couleurs.get(tache.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
@@ -551,17 +575,7 @@ function CarteTache({
         ouvert={confirmationOuverte}
         titre={`Supprimer la tâche « ${tache.titre} » ?`}
         onConfirmer={() => {
-          startTransition(async () => {
-            try {
-              await supprimerTache(tache.id)
-              toast({ type: 'succes', message: 'Tâche supprimée.' })
-            } catch (err) {
-              toast({
-                type: 'erreur',
-                message: err instanceof Error ? err.message : 'Échec de la suppression de la tâche.',
-              })
-            }
-          })
+          onSupprimer(tache.id)
           setConfirmationOuverte(false)
         }}
         onAnnuler={() => setConfirmationOuverte(false)}

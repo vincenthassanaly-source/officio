@@ -66,7 +66,6 @@ export function regrouperItemsParJour(
 export function ItemLigne({
   item,
   aujourdhuiIso,
-  isPending,
   onSupprimerRdv,
   onToggleTache,
   onEditerTache,
@@ -75,11 +74,11 @@ export function ItemLigne({
 }: {
   item: ItemAgenda
   aujourdhuiIso: string
-  isPending: boolean
+  // Aucun `isPending` associé : suppression de RDV comme cochage de tâche
+  // sont optimistes chez les deux vues appelantes. L'item reflète donc le
+  // nouvel état dès le clic et n'a aucune raison d'être désactivé le temps
+  // de l'aller-retour serveur.
   onSupprimerRdv: (id: string) => void
-  // Pas de `isPendingToggle` associé : la bascule est optimiste chez les
-  // deux vues appelantes, la case reflète donc le nouvel état dès le clic et
-  // n'a aucune raison d'être désactivée le temps de l'aller-retour serveur.
   onToggleTache: (tache: Tache) => void
   onEditerTache: (tache: Tache) => void
   couleurs: Map<string, CouleurAvatar>
@@ -106,7 +105,6 @@ export function ItemLigne({
               <button
                 type="button"
                 onClick={() => onSupprimerRdv(r.id)}
-                disabled={isPending}
                 className="text-muted hover:text-rec"
                 aria-label="Supprimer"
               >

@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useTransition, type TransitionStartFunction } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+  type TransitionStartFunction,
+} from 'react'
 import {
   ajouterHuile,
   changerStatutHuile,
@@ -86,19 +94,42 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
   const [recherche, setRecherche] = useState('')
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
-  const [idsEnTransition, setIdsEnTransition] = useState<Set<string>>(new Set())
-  const [idsVolumeEnSauvegarde, setIdsVolumeEnSauvegarde] = useState<Set<string>>(new Set())
   const [isPending, startTransition] = useTransition()
+  const toastListe = useToast()
 
-  function marquerTransition(id: string, action: () => Promise<void>) {
-    setIdsEnTransition((prev) => new Set(prev).add(id))
-    startTransition(async () => {
-      await action()
-      setIdsEnTransition((prev) => {
-        const suivant = new Set(prev)
-        suivant.delete(id)
-        return suivant
+  // Remplace les deux Set d'ids « en cours » (idsEnTransition /
+  // idsVolumeEnSauvegarde) qui servaient de palliatif à l'absence
+  // d'optimiste : la carte restait affichée dans le mauvais onglet, grisée
+  // à 40 % d'opacité, jusqu'au retour serveur. Avec useOptimistic elle
+  // change d'onglet immédiatement — et les compteurs des onglets, dérivés
+  // du même état, se mettent à jour en même temps.
+  const [huilesOptimistes, appliquerOptimiste] = useOptimistic(
+    huiles,
+    (
+      etat,
+      action:
+        | { type: 'statut'; id: string; statut: StatutHuile }
+        | { type: 'volume'; id: string; volumeMl: number | null }
+    ) =>
+      etat.map((h) => {
+        if (h.id !== action.id) return h
+        return action.type === 'statut'
+          ? { ...h, statut: action.statut }
+          : { ...h, volume_a_commander_ml: action.volumeMl }
       })
+  )
+
+  function changerStatut(id: string, nouveauStatut: StatutHuile) {
+    startTransition(async () => {
+      appliquerOptimiste({ type: 'statut', id, statut: nouveauStatut })
+      try {
+        await changerStatutHuile(id, nouveauStatut)
+      } catch (err) {
+        toastListe({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : "Échec du changement de statut de l'huile essentielle.",
+        })
+      }
     })
   }
 
@@ -107,14 +138,16 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
     const volumeMl = valeurBrute === '' ? null : Number(valeurBrute)
     if (volumeMl !== null && !Number.isFinite(volumeMl)) return
 
-    setIdsVolumeEnSauvegarde((prev) => new Set(prev).add(id))
     startTransition(async () => {
-      await modifierVolumeACommander(id, volumeMl)
-      setIdsVolumeEnSauvegarde((prev) => {
-        const suivant = new Set(prev)
-        suivant.delete(id)
-        return suivant
-      })
+      appliquerOptimiste({ type: 'volume', id, volumeMl })
+      try {
+        await modifierVolumeACommander(id, volumeMl)
+      } catch (err) {
+        toastListe({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la mise à jour du volume à commander.',
+        })
+      }
     })
   }
 
@@ -125,19 +158,19 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
       en_commande: 0,
       a_commander: 0,
     }
-    huiles.forEach((h) => {
+    huilesOptimistes.forEach((h) => {
       c[h.statut] += 1
     })
     return c
-  }, [huiles])
+  }, [huilesOptimistes])
 
   const visibles = useMemo(() => {
     const rechercheNormalisee = recherche.trim().toLowerCase()
     const statutFiltre = ongletStatut === 'en_stock' ? filtreDisponibilite : ongletStatut
-    return huiles
+    return huilesOptimistes
       .filter((h) => h.statut === statutFiltre)
       .filter((h) => !rechercheNormalisee || h.nom.toLowerCase().includes(rechercheNormalisee))
-  }, [huiles, ongletStatut, filtreDisponibilite, recherche])
+  }, [huilesOptimistes, ongletStatut, filtreDisponibilite, recherche])
 
   return (
     <div className="flex flex-1 flex-col gap-3">
@@ -273,12 +306,8 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
               huile={h}
               ongletStatut={ongletStatut}
               isPending={isPending}
-              enTransition={idsEnTransition.has(h.id)}
-              volumeEnSauvegarde={idsVolumeEnSauvegarde.has(h.id)}
               startTransition={startTransition}
-              onChangerStatut={(id, nouveauStatut) =>
-                marquerTransition(id, () => changerStatutHuile(id, nouveauStatut))
-              }
+              onChangerStatut={changerStatut}
               onSauvegarderVolume={sauvegarderVolumeACommander}
               onEditer={(id) => {
                 setEnEdition(id)
@@ -296,8 +325,6 @@ function CarteHuile({
   huile,
   ongletStatut,
   isPending,
-  enTransition,
-  volumeEnSauvegarde,
   startTransition,
   onChangerStatut,
   onSauvegarderVolume,
@@ -306,8 +333,6 @@ function CarteHuile({
   huile: HuileEssentielle
   ongletStatut: StatutHuile
   isPending: boolean
-  enTransition: boolean
-  volumeEnSauvegarde: boolean
   startTransition: TransitionStartFunction
   onChangerStatut: (id: string, nouveauStatut: StatutHuile) => void
   onSauvegarderVolume: (id: string, valeurSaisie: string) => void
@@ -361,8 +386,8 @@ function CarteHuile({
     <div
       ref={carteRef}
       className={`relative flex select-none items-center gap-2.5 rounded-[20px] bg-surface shadow-card p-3 transition-all duration-200 ${
-        enTransition ? 'scale-[0.98] opacity-40' : 'opacity-100'
-      } ${enMaintien ? 'scale-[0.98] opacity-80' : ''}`}
+        enMaintien ? 'scale-[0.98] opacity-80' : ''
+      }`}
       onTouchStart={demarrerAppuiLong}
       onTouchMove={annulerAppuiLong}
       onTouchEnd={annulerAppuiLong}
@@ -384,7 +409,6 @@ function CarteHuile({
                 step="1"
                 defaultValue={huile.volume_a_commander_ml ?? ''}
                 onBlur={(e) => onSauvegarderVolume(huile.id, e.target.value)}
-                disabled={volumeEnSauvegarde}
                 placeholder="Vol."
                 aria-label="Volume à commander"
                 className={CHAMP_VOLUME_COMMANDE_CLASS}
@@ -403,9 +427,8 @@ function CarteHuile({
       {ongletStatut === 'en_stock' ? (
         <select
           value={huile.statut}
-          disabled={isPending}
           onChange={(e) => onChangerStatut(huile.id, e.target.value as StatutHuile)}
-          className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[16px] font-semibold text-ink outline-none focus:border-primary disabled:opacity-60"
+          className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
         >
           {OPTIONS_STATUT.map((statut) => (
             <option key={statut} value={statut}>
@@ -418,7 +441,6 @@ function CarteHuile({
           <input
             type="checkbox"
             checked={false}
-            disabled={isPending || enTransition}
             onChange={() => {
               const nouveauStatut: StatutHuile = ongletStatut === 'a_commander' ? 'en_commande' : 'en_stock'
               onChangerStatut(huile.id, nouveauStatut)

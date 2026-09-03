@@ -33,13 +33,33 @@ export function AgendaVueGlobaleMois({
   couleurs: Map<string, CouleurAvatar>
 }) {
   const [jourSelectionne, setJourSelectionne] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   // Transition dédiée au cochage des tâches, découplée de celle de la
   // suppression des RDV — même pattern que AgendaVueGlobale.
   const [, startTransitionTache] = useTransition()
   const [tacheEnEdition, setTacheEnEdition] = useState<Tache | null>(null)
   const toast = useToast()
   const aujourdhuiIso = toISODate(new Date())
+
+  // Retrait optimiste d'un rendez-vous supprimé — même pattern que la vue
+  // semaine.
+  const [rendezVousOptimistes, retirerRdvOptimiste] = useOptimistic(rendezVous, (etat, id: string) =>
+    etat.filter((r) => r.id !== id)
+  )
+
+  function onSupprimerRdv(id: string) {
+    startTransition(async () => {
+      retirerRdvOptimiste(id)
+      try {
+        await supprimerRendezVous(id)
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la suppression du rendez-vous.',
+        })
+      }
+    })
+  }
 
   // Bascule optimiste du statut — même pattern que AgendaVueGlobale. Ici la
   // tâche cochée reste affichée (cette vue ne filtre pas les tâches faites,
@@ -51,8 +71,8 @@ export function AgendaVueGlobaleMois({
 
   const grille = useMemo(() => getMonthGridDates(moisAffiche), [moisAffiche])
   const itemsParJour = useMemo(
-    () => regrouperItemsParJour(rendezVous, tachesOptimistes, regularisations),
-    [rendezVous, tachesOptimistes, regularisations]
+    () => regrouperItemsParJour(rendezVousOptimistes, tachesOptimistes, regularisations),
+    [rendezVousOptimistes, tachesOptimistes, regularisations]
   )
 
   const itemsJourSelectionne = jourSelectionne ? (itemsParJour.get(jourSelectionne) ?? []) : []
@@ -118,8 +138,7 @@ export function AgendaVueGlobaleMois({
           iso={jourSelectionne}
           items={itemsJourSelectionne}
           aujourdhuiIso={aujourdhuiIso}
-          isPending={isPending}
-          onSupprimerRdv={(id) => startTransition(() => supprimerRendezVous(id))}
+          onSupprimerRdv={onSupprimerRdv}
           onToggleTache={onToggleTache}
           onEditerTache={setTacheEnEdition}
           couleurs={couleurs}
@@ -158,7 +177,6 @@ function ModaleDetailJour({
   iso,
   items,
   aujourdhuiIso,
-  isPending,
   onSupprimerRdv,
   onToggleTache,
   onEditerTache,
@@ -168,7 +186,6 @@ function ModaleDetailJour({
   iso: string
   items: ItemAgenda[]
   aujourdhuiIso: string
-  isPending: boolean
   onSupprimerRdv: (id: string) => void
   onToggleTache: (tache: Tache) => void
   onEditerTache: (tache: Tache) => void
@@ -231,7 +248,6 @@ function ModaleDetailJour({
                   key={cle}
                   item={item}
                   aujourdhuiIso={aujourdhuiIso}
-                  isPending={isPending}
                   onSupprimerRdv={onSupprimerRdv}
                   onToggleTache={onToggleTache}
                   onEditerTache={onEditerTache}

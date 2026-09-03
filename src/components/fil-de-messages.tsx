@@ -79,19 +79,42 @@ export function FilDeMessages({
   // Pouce optimiste, transposition exacte de celui des tâches
   // (taches-list.tsx) : le pouce sur un message était la seule des deux
   // interactions jumelles à attendre le serveur.
-  const [messagesOptimistes, basculerPouceOptimiste] = useOptimistic(messages, (etat, id: string) =>
-    etat.map((m) => {
-      if (m.id !== id) return m
-      const dejaPouce = m.pouces.some((p) => p.profil_id === profilActuelId)
-      if (dejaPouce) return { ...m, pouces: m.pouces.filter((p) => p.profil_id !== profilActuelId) }
-      const mesInitiales = equipe.find((membre) => membre.id === profilActuelId)?.initiales ?? '?'
-      return { ...m, pouces: [...m.pouces, { profil_id: profilActuelId, initiales: mesInitiales }] }
-    })
+  const [messagesOptimistes, appliquerOptimiste] = useOptimistic(
+    messages,
+    (etat, action: { type: 'pouce' | 'suppression'; id: string }) => {
+      if (action.type === 'suppression') return etat.filter((m) => m.id !== action.id)
+      return etat.map((m) => {
+        if (m.id !== action.id) return m
+        const dejaPouce = m.pouces.some((p) => p.profil_id === profilActuelId)
+        if (dejaPouce) return { ...m, pouces: m.pouces.filter((p) => p.profil_id !== profilActuelId) }
+        const mesInitiales = equipe.find((membre) => membre.id === profilActuelId)?.initiales ?? '?'
+        return { ...m, pouces: [...m.pouces, { profil_id: profilActuelId, initiales: mesInitiales }] }
+      })
+    }
   )
 
   function basculerPouce(id: string) {
-    basculerPouceOptimiste(id)
+    appliquerOptimiste({ type: 'pouce', id })
     return togglePouceMessage(id)
+  }
+
+  // Suppression optimiste : le message quitte le fil au moment du clic sur
+  // « Supprimer », pas au retour du serveur. La transition est ouverte ici
+  // (et non dans MessageItem) pour rester portée par un composant qui, lui,
+  // ne disparaît pas avec la carte supprimée.
+  function supprimerMessageOptimiste(id: string) {
+    startTransition(async () => {
+      appliquerOptimiste({ type: 'suppression', id })
+      try {
+        await supprimerMessage(id)
+        toast({ type: 'succes', message: 'Message supprimé.' })
+      } catch (err) {
+        toast({
+          type: 'erreur',
+          message: err instanceof Error ? err.message : 'Échec de la suppression du message.',
+        })
+      }
+    })
   }
 
   const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
@@ -300,6 +323,7 @@ export function FilDeMessages({
                 startTransition={startTransition}
                 toast={toast}
                 onBasculerPouce={basculerPouce}
+                onSupprimer={supprimerMessageOptimiste}
                 onAppuiLong={setIdIconesVisibles}
                 onEditer={(message) => {
                   setMessageEnEdition(message)
@@ -423,6 +447,7 @@ function MessageItem({
   startTransition,
   toast,
   onBasculerPouce,
+  onSupprimer,
   onAppuiLong,
   onEditer,
   onIconesFermees,
@@ -441,6 +466,7 @@ function MessageItem({
   startTransition: TransitionStartFunction
   toast: (parametres: { type: TypeToast; message: string }) => void
   onBasculerPouce: (id: string) => Promise<void>
+  onSupprimer: (id: string) => void
   onAppuiLong: (id: string) => void
   onEditer: (message: MessageAvecDetails) => void
   onIconesFermees: () => void
@@ -468,17 +494,7 @@ function MessageItem({
   }
 
   function supprimer() {
-    startTransition(async () => {
-      try {
-        await supprimerMessage(m.id)
-        toast({ type: 'succes', message: 'Message supprimé.' })
-      } catch (err) {
-        toast({
-          type: 'erreur',
-          message: err instanceof Error ? err.message : 'Échec de la suppression du message.',
-        })
-      }
-    })
+    onSupprimer(m.id)
     onIconesFermees()
   }
 
