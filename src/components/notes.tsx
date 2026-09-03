@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, useTransition } from 'react'
+import { useEffect, useMemo, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
 import { creerNote, modifierNote, supprimerNote } from '@/app/actions/notes'
@@ -11,6 +11,7 @@ import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cible'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 function formatDate(iso: string) {
@@ -42,6 +43,13 @@ export function Notes({
   const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
   const [noteEnEdition, setNoteEnEdition] = useState<NoteAvecAuteur | null>(null)
   const [isPending, startTransition] = useTransition()
+  // Retrait optimiste à la suppression : prérequis de l'animation de sortie
+  // plus bas, qui a besoin que la carte soit retirée dans les 180 ms — un
+  // aller-retour serveur ne le garantit pas.
+  const [notesOptimistes, retirerOptimiste] = useOptimistic(notes, (etat, id: string) =>
+    etat.filter((n) => n.id !== id)
+  )
+  const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
   // Note ciblée par une notification (?note=<id>) : mise en évidence
   // temporairement le temps que l'utilisateur la repère dans la liste.
   const [idSurligne, setIdSurligne] = useState<string | null>(() => searchParams.get('note'))
@@ -80,15 +88,32 @@ export function Notes({
     return () => clearTimeout(minuteur)
   }, [idSurligne])
 
+  function supprimer(id: string) {
+    retirerApresAnimation(id, () =>
+      startTransition(async () => {
+        retirerOptimiste(id)
+        try {
+          await supprimerNote(id)
+          toast({ type: 'succes', message: 'Note supprimée.' })
+        } catch (err) {
+          toast({
+            type: 'erreur',
+            message: err instanceof Error ? err.message : 'Échec de la suppression de la note.',
+          })
+        }
+      })
+    )
+  }
+
   const rechercheNormalisee = normaliser(recherche.trim())
   const notesFiltrees = useMemo(() => {
-    if (!rechercheNormalisee) return notes
-    return notes.filter(
+    if (!rechercheNormalisee) return notesOptimistes
+    return notesOptimistes.filter(
       (n) =>
         normaliser(n.titre).includes(rechercheNormalisee) ||
         normaliser(n.contenu).includes(rechercheNormalisee)
     )
-  }, [notes, rechercheNormalisee])
+  }, [notesOptimistes, rechercheNormalisee])
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -164,6 +189,7 @@ export function Notes({
             couleurAuteur={(n.auteur ? couleurs.get(n.auteur.id) : null) ?? COULEUR_PAR_DEFAUT}
             isPending={isPending}
             idSurligne={idSurligne}
+            enSortie={estEnSortie(n.id)}
             onSupprimer={setIdASupprimer}
             onEditer={setNoteEnEdition}
           />
@@ -176,17 +202,7 @@ export function Notes({
         texteConfirmer="Supprimer"
         onConfirmer={() => {
           if (!idASupprimer) return
-          startTransition(async () => {
-            try {
-              await supprimerNote(idASupprimer)
-              toast({ type: 'succes', message: 'Note supprimée.' })
-            } catch (err) {
-              toast({
-                type: 'erreur',
-                message: err instanceof Error ? err.message : 'Échec de la suppression de la note.',
-              })
-            }
-          })
+          supprimer(idASupprimer)
           setIdASupprimer(null)
         }}
         onAnnuler={() => setIdASupprimer(null)}
@@ -211,6 +227,7 @@ function CarteNote({
   couleurAuteur,
   isPending,
   idSurligne,
+  enSortie,
   onSupprimer,
   onEditer,
 }: {
@@ -219,6 +236,7 @@ function CarteNote({
   couleurAuteur: CouleurAvatar
   isPending: boolean
   idSurligne: string | null
+  enSortie: boolean
   onSupprimer: (id: string) => void
   onEditer: (note: NoteAvecAuteur) => void
 }) {
@@ -249,7 +267,9 @@ function CarteNote({
       id={`note-${note.id}`}
       className={`select-none rounded-[20px] bg-surface shadow-card p-4 transition duration-300 ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
-      } ${estAuteur ? 'cursor-pointer' : ''} ${idSurligne === note.id ? 'ring-2 ring-primary' : ''}`}
+      } ${estAuteur ? 'cursor-pointer' : ''} ${idSurligne === note.id ? 'ring-2 ring-primary' : ''} ${
+        enSortie ? 'item-sortie' : 'item-entree'
+      }`}
       onTouchStart={demarrerAppuiLong}
       onTouchMove={annulerAppuiLong}
       onTouchEnd={annulerAppuiLong}
@@ -322,7 +342,7 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onFerme}
     >
       <form
@@ -341,7 +361,7 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
             }
           })
         }}
-        className="flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-sm font-bold text-ink">Modifier la note</h2>

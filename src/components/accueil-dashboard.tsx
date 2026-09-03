@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { toggleTache } from '@/app/actions/taches'
 import { useToast } from '@/components/ui/toast-provider'
+import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import type { Tache } from '@/lib/data/taches'
 import type { MessageAvecDetails } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -57,18 +58,22 @@ export function AccueilDashboard({
     etat.filter((t) => t.id !== id)
   )
 
+  const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
+
   function basculerStatut(tache: Tache) {
-    startTransition(async () => {
-      retirerOptimiste(tache.id)
-      try {
-        await toggleTache(tache.id, tache.statut)
-      } catch (err) {
-        toast({
-          type: 'erreur',
-          message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
-        })
-      }
-    })
+    retirerApresAnimation(tache.id, () =>
+      startTransition(async () => {
+        retirerOptimiste(tache.id)
+        try {
+          await toggleTache(tache.id, tache.statut)
+        } catch (err) {
+          toast({
+            type: 'erreur',
+            message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
+          })
+        }
+      })
+    )
   }
 
   // Compté à partir du retrait optimiste plutôt que du seul total serveur,
@@ -104,7 +109,10 @@ export function AccueilDashboard({
               const badge = badgeEcheance(t.echeance, aujourdhuiIso)
               const couleurAssigne = (t.assigne ? couleurs.get(t.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
               return (
-                <div key={t.id} className="flex items-center gap-2.5">
+                <div
+                  key={t.id}
+                  className={`flex items-center gap-2.5 ${estEnSortie(t.id) ? 'item-sortie' : 'item-entree'}`}
+                >
                   {/* Plus de `disabled` : la bascule est optimiste, et le
                       isPending partagé figeait tout l'encart le temps d'un
                       aller-retour serveur déjà reflété à l'écran. */}

@@ -193,6 +193,121 @@ button,
   }
 }
 
+/* Panneaux modaux et bottom-sheets (modale-confirmation.tsx,
+   ModaleEditionTache, ModaleEditionNote, ModaleDetailJour,
+   fenetre-aujourdhui.tsx, lightbox-image.tsx) — mêmes durée et easing que
+   les toasts ci-dessus. Sur mobile ces panneaux montent du bas de l'écran :
+   ils apparaissaient jusqu'ici d'un coup, à pleine opacité.
+
+   `backwards` et non `both` pour le fill-mode : `both` maintiendrait
+   `transform: translateY(0)` en permanence après l'animation, et un
+   transform non-`none` fait de l'élément le référentiel de positionnement
+   de tout descendant `position: fixed` (c'est exactement le piège décrit
+   dans le commentaire de ModaleEditionTache à propos de .agenda-glisse-*).
+   Avec `backwards`, l'élément retrouve ses styles naturels dès la fin de
+   l'animation — sans saut visuel, l'état `to` étant précisément ces
+   styles-là.
+
+   Pas d'animation de sortie : ces panneaux sont démontés par leur appelant
+   au moment de la fermeture, il n'y a plus rien à animer. */
+@keyframes overlay-entree {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes panneau-entree {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* Variante des panneaux centrés (lightbox photo) : un glissement vertical
+   n'y voudrait rien dire, l'élément n'est ancré à aucun bord. */
+@keyframes panneau-entree-centre {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.overlay-entree {
+  animation: overlay-entree 180ms ease-out backwards;
+}
+.panneau-entree {
+  animation: panneau-entree 180ms ease-out backwards;
+}
+.panneau-entree-centre {
+  animation: panneau-entree-centre 180ms ease-out backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-entree,
+  .panneau-entree,
+  .panneau-entree-centre {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/* Cartes de liste (ruptures de stock, suggestions, notes, fil de liaison et
+   tâches) : jusqu'ici un élément ajouté ou retiré apparaissait/disparaissait
+   sans transition. L'entrée se joue au montage du nœud DOM — donc à
+   l'ajout d'un élément, et une seule fois au premier rendu de la liste ;
+   un re-rendu qui réutilise le même nœud (clé identique) ne la rejoue pas.
+
+   Même précaution de fill-mode que les panneaux ci-dessus. La sortie est
+   portée par useRetraitAnime (src/lib/use-retrait-anime.ts), qui garde
+   l'élément monté le temps de l'animation avant de le retirer pour de bon. */
+@keyframes item-entree {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes item-sortie {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+.item-entree {
+  animation: item-entree 180ms ease-out backwards;
+}
+/* `forwards` ici (et non `backwards`) : l'élément doit rester invisible
+   entre la fin de l'animation et son démontage effectif, sinon il
+   réapparaîtrait le temps d'une frame. Il est retiré du DOM juste après,
+   le transform résiduel ne peut donc gêner aucun descendant. */
+.item-sortie {
+  animation: item-sortie 180ms ease-out forwards;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item-entree,
+  .item-sortie {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+  }
+}
+
 /* Slide directionnel au changement de semaine dans l'agenda (voir
    components/agenda/agenda.tsx) — appliqué au conteneur remonté (key sur
    le lundi de la semaine affichée), donc rejoué automatiquement à chaque

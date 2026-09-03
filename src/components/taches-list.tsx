@@ -22,6 +22,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { LightboxImage } from '@/components/lightbox-image'
 import { useToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { useRetraitAnime } from '@/lib/use-retrait-anime'
 
 // Même format que formatHeure() dans rappels-agenda/route.ts ('HH:MM:SS' ou
 // 'HH:MM' -> 'HHhMM'). Exportée pour être réutilisée par
@@ -149,35 +150,44 @@ export function TachesList({
   // puis se ferme aussitôt, et une transition ouverte dans un composant qui
   // se démonte dans la foulée n'aurait plus de propriétaire monté pour porter
   // l'état optimiste.
+  const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
+
   // Même raison que basculerStatut d'ouvrir la transition ici : la carte qui
   // porte la ModaleConfirmation disparaît avec la tâche supprimée.
   function supprimer(id: string) {
-    startTransition(async () => {
-      appliquerOptimiste({ type: 'suppression', id })
-      try {
-        await supprimerTache(id)
-        toast({ type: 'succes', message: 'Tâche supprimée.' })
-      } catch (err) {
-        toast({
-          type: 'erreur',
-          message: err instanceof Error ? err.message : 'Échec de la suppression de la tâche.',
-        })
-      }
-    })
+    retirerApresAnimation(id, () =>
+      startTransition(async () => {
+        appliquerOptimiste({ type: 'suppression', id })
+        try {
+          await supprimerTache(id)
+          toast({ type: 'succes', message: 'Tâche supprimée.' })
+        } catch (err) {
+          toast({
+            type: 'erreur',
+            message: err instanceof Error ? err.message : 'Échec de la suppression de la tâche.',
+          })
+        }
+      })
+    )
   }
 
+  // Cocher une tâche la fait changer de section (active <-> archivée) : c'est
+  // un retrait de sa liste d'origine, animé comme tel. La carte réapparaît en
+  // fondu de l'autre côté, `item-entree` se jouant à son remontage.
   function basculerStatut(tache: Tache) {
-    startTransition(async () => {
-      appliquerOptimiste({ type: 'statut', id: tache.id })
-      try {
-        await toggleTache(tache.id, tache.statut)
-      } catch (err) {
-        toast({
-          type: 'erreur',
-          message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
-        })
-      }
-    })
+    retirerApresAnimation(tache.id, () =>
+      startTransition(async () => {
+        appliquerOptimiste({ type: 'statut', id: tache.id })
+        try {
+          await toggleTache(tache.id, tache.statut)
+        } catch (err) {
+          toast({
+            type: 'erreur',
+            message: err instanceof Error ? err.message : 'Échec de la mise à jour du statut de la tâche.',
+          })
+        }
+      })
+    )
   }
   // Accordéon "Tâches archivées". Fermé par défaut, sauf si la tâche visée
   // par ?tache=<id> au chargement est elle-même archivée (calculé ici plutôt
@@ -361,6 +371,7 @@ export function TachesList({
             onBasculerPouce={basculerPouce}
             onBasculerStatut={basculerStatut}
             onSupprimer={supprimer}
+            enSortie={estEnSortie(t.id)}
           />
         ))}
       </div>
@@ -400,6 +411,7 @@ export function TachesList({
                     onBasculerPouce={basculerPouce}
                     onBasculerStatut={basculerStatut}
                     onSupprimer={supprimer}
+                    enSortie={estEnSortie(t.id)}
                   />
                 ))}
               </div>
@@ -436,6 +448,7 @@ function CarteTache({
   onBasculerPouce,
   onBasculerStatut,
   onSupprimer,
+  enSortie,
 }: {
   tache: Tache
   couleurs: Map<string, CouleurAvatar>
@@ -447,6 +460,7 @@ function CarteTache({
   onBasculerPouce: (id: string) => Promise<void>
   onBasculerStatut: (tache: Tache) => void
   onSupprimer: (id: string) => void
+  enSortie: boolean
 }) {
   const due = dueInfo(tache)
   const couleurAssigne = (tache.assigne ? couleurs.get(tache.assigne.id) : null) ?? COULEUR_PAR_DEFAUT
@@ -464,7 +478,7 @@ function CarteTache({
         id={`tache-${tache.id}`}
         className={`flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5 transition-shadow duration-700 ${
           idSurligne === tache.id ? 'ring-2 ring-primary' : ''
-        }`}
+        } ${enSortie ? 'item-sortie' : 'item-entree'}`}
       >
       {tache.photoUrl && (
         <button type="button" onClick={() => setPhotoAgrandie(true)} aria-label="Agrandir la photo" className="shrink-0">
@@ -639,7 +653,7 @@ export function ModaleEditionTache({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onFerme}
     >
       <form
@@ -660,7 +674,7 @@ export function ModaleEditionTache({
             }
           })
         }}
-        className="flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-sm font-bold text-ink">Modifier la tâche</h2>

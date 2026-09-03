@@ -69,7 +69,7 @@ export function ModaleConfirmation({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onAnnuler}
     >
       <div
@@ -77,7 +77,7 @@ export function ModaleConfirmation({
         aria-modal="true"
         aria-labelledby="modale-confirmation-titre"
         onClick={(e) => e.stopPropagation()}
-        className="flex w-full flex-col gap-3 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex w-full flex-col gap-3 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div>
           <h2 id="modale-confirmation-titre" className="text-sm font-bold text-ink">

@@ -7,6 +7,7 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { useRetraitAnime } from '@/lib/use-retrait-anime'
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -34,10 +35,35 @@ export function Suggestions({
   const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
-  const [suggestionsOptimistes, basculerOptimiste] = useOptimistic(
+  // La suppression rejoint la bascule dans le même reducer : l'animation de
+  // sortie ci-dessous suppose un retrait garanti dans les 180 ms, ce qu'un
+  // aller-retour serveur ne peut pas promettre (la carte resterait invisible
+  // sans jamais être retirée si l'appel échouait).
+  const [suggestionsOptimistes, appliquerOptimiste] = useOptimistic(
     suggestions,
-    (etat, id: string) => etat.map((s) => (s.id === id ? { ...s, fait: !s.fait } : s))
+    (etat, action: { type: 'bascule' | 'suppression'; id: string }) =>
+      action.type === 'suppression'
+        ? etat.filter((s) => s.id !== action.id)
+        : etat.map((s) => (s.id === action.id ? { ...s, fait: !s.fait } : s))
   )
+  const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
+
+  function supprimer(id: string) {
+    retirerApresAnimation(id, () =>
+      startTransition(async () => {
+        appliquerOptimiste({ type: 'suppression', id })
+        try {
+          await supprimerSuggestion(id)
+          toast({ type: 'succes', message: 'Suggestion retirée.' })
+        } catch (err) {
+          toast({
+            type: 'erreur',
+            message: err instanceof Error ? err.message : 'Échec de la suppression de la suggestion.',
+          })
+        }
+      })
+    )
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -87,7 +113,9 @@ export function Suggestions({
           return (
           <div
             key={s.id}
-            className={`rounded-[20px] bg-surface shadow-card p-4 ${s.fait ? 'opacity-60' : ''}`}
+            className={`rounded-[20px] bg-surface shadow-card p-4 ${s.fait ? 'opacity-60' : ''} ${
+              estEnSortie(s.id) ? 'item-sortie' : 'item-entree'
+            }`}
           >
             <div className="mb-2 flex items-center gap-2.5">
               <input
@@ -96,7 +124,7 @@ export function Suggestions({
                 disabled={isPending}
                 onChange={() => {
                   startTransition(async () => {
-                    basculerOptimiste(s.id)
+                    appliquerOptimiste({ type: 'bascule', id: s.id })
                     try {
                       await basculerSuggestionFaite(s.id, !s.fait)
                     } catch (err) {
@@ -151,17 +179,7 @@ export function Suggestions({
         texteConfirmer="Retirer"
         onConfirmer={() => {
           if (!idASupprimer) return
-          startTransition(async () => {
-            try {
-              await supprimerSuggestion(idASupprimer)
-              toast({ type: 'succes', message: 'Suggestion retirée.' })
-            } catch (err) {
-              toast({
-                type: 'erreur',
-                message: err instanceof Error ? err.message : 'Échec de la suppression de la suggestion.',
-              })
-            }
-          })
+          supprimer(idASupprimer)
           setIdASupprimer(null)
         }}
         onAnnuler={() => setIdASupprimer(null)}

@@ -3,6 +3,7 @@
 import { useOptimistic, useState, useTransition } from 'react'
 import { ajouterProduitARecommander, supprimerProduitARecommander } from '@/app/actions/produits-a-recommander'
 import type { ProduitARecommander } from '@/lib/data/produits-a-recommander'
+import { useRetraitAnime } from '@/lib/use-retrait-anime'
 
 export function ProduitsARecommanderListe({ produits }: { produits: ProduitARecommander[] }) {
   const [nomProduit, setNomProduit] = useState('')
@@ -10,6 +11,7 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
   const [produitsOptimistes, retirerOptimiste] = useOptimistic(produits, (etat, id: string) =>
     etat.filter((p) => p.id !== id)
   )
+  const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
 
   return (
     <div className="flex flex-1 flex-col gap-3">
@@ -45,19 +47,25 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
       {produitsOptimistes.length > 0 && (
         <div className="flex flex-col gap-2">
           {produitsOptimistes.map((p) => (
-            <label key={p.id} className="flex items-center gap-3 rounded-2xl bg-surface shadow-card p-3.5">
+            <label
+              key={p.id}
+              className={`flex items-center gap-3 rounded-2xl bg-surface shadow-card p-3.5 ${
+                estEnSortie(p.id) ? 'item-sortie' : 'item-entree'
+              }`}
+            >
               <input
                 type="checkbox"
-                disabled={isPending}
                 onChange={() => {
-                  startTransition(async () => {
-                    retirerOptimiste(p.id)
-                    try {
-                      await supprimerProduitARecommander(p.id)
-                    } catch (err) {
-                      console.error('[produits-a-recommander] Échec de la suppression :', err)
-                    }
-                  })
+                  retirerApresAnimation(p.id, () =>
+                    startTransition(async () => {
+                      retirerOptimiste(p.id)
+                      try {
+                        await supprimerProduitARecommander(p.id)
+                      } catch (err) {
+                        console.error('[produits-a-recommander] Échec de la suppression :', err)
+                      }
+                    })
+                  )
                 }}
                 aria-label={`${p.nom_produit} recommandé/reçu`}
                 className="h-5 w-5 shrink-0 accent-[var(--color-primary)]"

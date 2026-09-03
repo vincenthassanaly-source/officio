@@ -29,6 +29,7 @@ import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cibl
 import { ajouterEnAttente, listerEnAttente, retirerEnAttente } from '@/lib/messages-lus-en-attente'
 import { useToast, type TypeToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { ChampAudio } from '@/components/champ-audio'
 
 const FILTRE_TOUTES = 'toutes'
@@ -93,6 +94,8 @@ export function FilDeMessages({
     }
   )
 
+  const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
+
   function basculerPouce(id: string) {
     appliquerOptimiste({ type: 'pouce', id })
     return togglePouceMessage(id)
@@ -103,18 +106,20 @@ export function FilDeMessages({
   // (et non dans MessageItem) pour rester portée par un composant qui, lui,
   // ne disparaît pas avec la carte supprimée.
   function supprimerMessageOptimiste(id: string) {
-    startTransition(async () => {
-      appliquerOptimiste({ type: 'suppression', id })
-      try {
-        await supprimerMessage(id)
-        toast({ type: 'succes', message: 'Message supprimé.' })
-      } catch (err) {
-        toast({
-          type: 'erreur',
-          message: err instanceof Error ? err.message : 'Échec de la suppression du message.',
-        })
-      }
-    })
+    retirerApresAnimation(id, () =>
+      startTransition(async () => {
+        appliquerOptimiste({ type: 'suppression', id })
+        try {
+          await supprimerMessage(id)
+          toast({ type: 'succes', message: 'Message supprimé.' })
+        } catch (err) {
+          toast({
+            type: 'erreur',
+            message: err instanceof Error ? err.message : 'Échec de la suppression du message.',
+          })
+        }
+      })
+    )
   }
 
   const filtresActifs = recherche.trim() !== '' || filtreCategorie !== FILTRE_TOUTES
@@ -324,6 +329,7 @@ export function FilDeMessages({
                 toast={toast}
                 onBasculerPouce={basculerPouce}
                 onSupprimer={supprimerMessageOptimiste}
+                enSortie={estEnSortie(m.id)}
                 onAppuiLong={setIdIconesVisibles}
                 onEditer={(message) => {
                   setMessageEnEdition(message)
@@ -448,6 +454,7 @@ function MessageItem({
   toast,
   onBasculerPouce,
   onSupprimer,
+  enSortie,
   onAppuiLong,
   onEditer,
   onIconesFermees,
@@ -467,6 +474,7 @@ function MessageItem({
   toast: (parametres: { type: TypeToast; message: string }) => void
   onBasculerPouce: (id: string) => Promise<void>
   onSupprimer: (id: string) => void
+  enSortie: boolean
   onAppuiLong: (id: string) => void
   onEditer: (message: MessageAvecDetails) => void
   onIconesFermees: () => void
@@ -505,7 +513,7 @@ function MessageItem({
         urgent ? 'border-rec bg-rec-soft' : 'border-border bg-surface'
       } ${idSurligne === m.id ? 'ring-2 ring-primary' : ''} ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
-      } ${iconesVisibles ? 'relative z-50' : ''}`}
+      } ${iconesVisibles ? 'relative z-50' : ''} ${enSortie ? 'item-sortie' : 'item-entree'}`}
       onTouchStart={demarrerAppuiLong}
       onTouchMove={annulerAppuiLong}
       onTouchEnd={annulerAppuiLong}

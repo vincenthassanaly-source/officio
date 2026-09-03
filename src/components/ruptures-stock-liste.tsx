@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import { ajouterRuptureStock, supprimerRuptureStock } from '@/app/actions/ruptures-stock'
 import type { RuptureStock } from '@/lib/data/ruptures-stock'
 import { useToast } from '@/components/ui/toast-provider'
+import { useRetraitAnime } from '@/lib/use-retrait-anime'
 
 export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
   const [nomProduit, setNomProduit] = useState('')
@@ -12,6 +13,7 @@ export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
   const [rupturesOptimistes, retirerOptimiste] = useOptimistic(ruptures, (etat, id: string) =>
     etat.filter((r) => r.id !== id)
   )
+  const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
 
   return (
     <div className="flex flex-1 flex-col gap-3">
@@ -55,22 +57,29 @@ export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
       {rupturesOptimistes.length > 0 && (
         <div className="flex flex-col gap-2">
           {rupturesOptimistes.map((r) => (
-            <label key={r.id} className="flex items-center gap-3 rounded-2xl bg-surface shadow-card p-3.5">
+            <label
+              key={r.id}
+              className={`flex items-center gap-3 rounded-2xl bg-surface shadow-card p-3.5 ${
+                estEnSortie(r.id) ? 'item-sortie' : 'item-entree'
+              }`}
+            >
               <input
                 type="checkbox"
-                disabled={isPending}
                 onChange={() => {
-                  startTransition(async () => {
-                    retirerOptimiste(r.id)
-                    try {
-                      await supprimerRuptureStock(r.id)
-                    } catch (err) {
-                      toast({
-                        type: 'erreur',
-                        message: err instanceof Error ? err.message : 'Échec de la mise à jour de la rupture de stock.',
-                      })
-                    }
-                  })
+                  retirerApresAnimation(r.id, () =>
+                    startTransition(async () => {
+                      retirerOptimiste(r.id)
+                      try {
+                        await supprimerRuptureStock(r.id)
+                      } catch (err) {
+                        toast({
+                          type: 'erreur',
+                          message:
+                            err instanceof Error ? err.message : 'Échec de la mise à jour de la rupture de stock.',
+                        })
+                      }
+                    })
+                  )
                 }}
                 aria-label={`${r.nom_produit} de nouveau disponible`}
                 className="h-5 w-5 shrink-0 accent-[var(--color-primary)]"

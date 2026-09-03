@@ -39,7 +39,7 @@ export function LightboxImage({ src, onFerme }: { src: string; onFerme: () => vo
   if (!monte) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onFerme}>
+    <div className="overlay-entree fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onFerme}>
       <button
         type="button"
         onClick={onFerme}
@@ -53,7 +53,7 @@ export function LightboxImage({ src, onFerme }: { src: string; onFerme: () => vo
         src={src}
         alt=""
         onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
+        className="panneau-entree-centre max-h-[90vh] max-w-[90vw] rounded-xl object-contain"
       />
     </div>,
     document.body
