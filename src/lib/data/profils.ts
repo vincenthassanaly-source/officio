@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
+import { avecRetrySession } from '@/lib/supabase/avec-retry-session'
 
 export type Role = 'titulaire' | 'adjoint' | 'preparateur'
 
@@ -29,52 +30,29 @@ export type Profil = {
 // scripts/RAPPORT-fix-profil-null-messages-non-lus-2026-08-25.md.
 export const getCurrentProfil = cache(async (): Promise<Profil | null> => {
   const supabase = await createClient()
-  let {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
 
-  // Une seule tentative de retry après ~300ms : laisse le temps à une
-  // rotation concurrente du refresh token de se terminer avant d'abandonner.
-  if (authError) {
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    ;({
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser())
-  }
-
-  if (authError) {
-    console.error('getCurrentProfil: auth.getUser()', authError)
-    throw new Error('Impossible de vérifier la session utilisateur', { cause: authError })
-  }
+  // Retry avec backoff progressif : laisse le temps à une rotation
+  // concurrente du refresh token de se terminer avant d'abandonner.
+  const user = await avecRetrySession(
+    () => supabase.auth.getUser().then(({ data: { user }, error }) => ({ data: user, error })),
+    { label: 'getCurrentProfil: auth.getUser()', messageErreur: 'Impossible de vérifier la session utilisateur' }
+  )
 
   if (!user) return null
 
-  let { data, error } = await supabase
-    .from('profils')
-    .select('id, nom_complet, initiales')
-    .eq('id', user.id)
-    .single()
-
-  // Même retry unique après ~300ms, pour la même raison qu'auth.getUser()
-  // ci-dessus.
-  if (error && error.code !== 'PGRST116') {
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    ;({ data, error } = await supabase
-      .from('profils')
-      .select('id, nom_complet, initiales')
-      .eq('id', user.id)
-      .single())
-  }
-
-  // PGRST116 : .single() n'a trouvé aucune ligne (ou plusieurs). C'est le
-  // cas légitime d'un profil pas encore propagé juste après la création du
-  // compte, pas un échec Supabase — ne pas le transformer en erreur.
-  if (error && error.code !== 'PGRST116') {
-    console.error('getCurrentProfil: select profils', error)
-    throw new Error('Impossible de récupérer le profil', { cause: error })
-  }
+  // Même retry avec backoff progressif, pour la même raison qu'auth.getUser()
+  // ci-dessus. PGRST116 : .single() n'a trouvé aucune ligne (ou plusieurs).
+  // C'est le cas légitime d'un profil pas encore propagé juste après la
+  // création du compte, pas un échec Supabase — ne pas le retenter ni le
+  // transformer en erreur.
+  const data = await avecRetrySession(
+    () => supabase.from('profils').select('id, nom_complet, initiales').eq('id', user.id).single(),
+    {
+      label: 'getCurrentProfil: select profils',
+      messageErreur: 'Impossible de récupérer le profil',
+      ignorerErreur: (error) => error.code === 'PGRST116',
+    }
+  )
 
   return data
 })

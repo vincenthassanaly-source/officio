@@ -1,5 +1,6 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
+import { avecRetrySession } from '@/lib/supabase/avec-retry-session'
 import type { Role } from './profils'
 
 export type Adhesion = {
@@ -15,36 +16,26 @@ export const getMesAdhesions = cache(async (): Promise<Adhesion[]> => {
   } = await supabase.auth.getUser()
   if (!user) return []
 
-  let { data, error } = await supabase
-    .from('adhesions')
-    .select('officine_id, role, officines ( nom )')
-    .eq('profil_id', user.id)
-    .order('created_at', { ascending: true })
-
-  // Une seule tentative de retry après ~300ms avant de throw ci-dessous :
-  // laisse le temps à une rotation concurrente du refresh token Supabase de
-  // se terminer avant d'abandonner (même logique que getCurrentProfil()).
-  if (error) {
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    ;({ data, error } = await supabase
-      .from('adhesions')
-      .select('officine_id, role, officines ( nom )')
-      .eq('profil_id', user.id)
-      .order('created_at', { ascending: true }))
-  }
-
-  if (error) {
-    console.error('getMesAdhesions', error)
-    // Une erreur Supabase (ex: refresh token concurrent expiré au réveil de
-    // l'app) ne doit jamais être confondue avec une absence réelle
-    // d'adhésion : un `return []` ici ferait passer (app)/layout.tsx pour
-    // un utilisateur sans officine et le redirigerait à tort vers
-    // /bienvenue. On lève donc l'erreur : elle remonte jusqu'à
-    // src/app/error.tsx (aucun error.tsx dans le segment (app) n'intercepte
-    // les erreurs de son propre layout.tsx), qui affiche déjà un écran
-    // "Réessayer" dans le style de l'app.
-    throw new Error('Impossible de récupérer les adhésions', { cause: error })
-  }
+  // Retry avec backoff progressif avant de throw ci-dessous : laisse le
+  // temps à une rotation concurrente du refresh token Supabase de se
+  // terminer avant d'abandonner (même logique que getCurrentProfil()).
+  // Une erreur Supabase persistante (ex: refresh token concurrent expiré au
+  // réveil de l'app) ne doit jamais être confondue avec une absence réelle
+  // d'adhésion : un `return []` ici ferait passer (app)/layout.tsx pour un
+  // utilisateur sans officine et le redirigerait à tort vers /bienvenue.
+  // avecRetrySession() lève donc l'erreur : elle remonte jusqu'à
+  // src/app/error.tsx (aucun error.tsx dans le segment (app) n'intercepte
+  // les erreurs de son propre layout.tsx), qui affiche déjà un écran
+  // "Réessayer" dans le style de l'app.
+  const data = await avecRetrySession(
+    () =>
+      supabase
+        .from('adhesions')
+        .select('officine_id, role, officines ( nom )')
+        .eq('profil_id', user.id)
+        .order('created_at', { ascending: true }),
+    { label: 'getMesAdhesions', messageErreur: 'Impossible de récupérer les adhésions' }
+  )
 
   return (data ?? []).map((a) => {
     const officine = Array.isArray(a.officines) ? a.officines[0] : a.officines
