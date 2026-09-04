@@ -37,5 +37,13 @@ export async function getProgrammeDuJour(dateAujourdhuiISO: string): Promise<Pro
     getRendezVous(officine.officine_id, dateISO, dateISO),
   ])
 
-  return { taches, regularisations, rendezVous }
+  // getTachesPeriode/getRegularisationsPeriode renvoient tous les statuts
+  // (réutilisées telles quelles par l'agenda) : on filtre ici pour que la
+  // fenêtre "Aujourd'hui" n'affiche pas un élément déjà traité depuis un
+  // autre appareil dans la journée.
+  return {
+    taches: taches.filter((t) => t.statut === 'a_faire'),
+    regularisations: regularisations.filter((r) => r.statut === 'a_faire'),
+    rendezVous,
+  }
 }
