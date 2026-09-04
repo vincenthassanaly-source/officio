@@ -53,8 +53,7 @@ export function ChampsFormulaire({
           <input
             type="date"
             name="date_ordonnance"
-            defaultValue={regularisation?.date_ordonnance}
-            required
+            defaultValue={regularisation?.date_ordonnance ?? undefined}
             className={`w-full ${CHAMP_CLASS}`}
           />
         </div>
@@ -148,7 +147,9 @@ function CarteRegularisation({
           <div className="truncate text-[13.5px] font-semibold text-ink">
             {r.patient_prenom} {r.patient_nom}
           </div>
-          <div className="mt-0.5 text-[11px] text-muted">Ordonnance du {formatDateCourte(r.date_ordonnance)}</div>
+          <div className="mt-0.5 text-[11px] text-muted">
+            {r.date_ordonnance ? `Ordonnance du ${formatDateCourte(r.date_ordonnance)}` : 'Date ordonnance non renseignée'}
+          </div>
         </div>
         <div className="shrink-0 text-right">
           <div className={`font-heading text-[14px] ${enRetard ? 'text-rec' : 'text-ink'}`}>
