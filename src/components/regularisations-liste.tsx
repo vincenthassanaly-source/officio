@@ -79,6 +79,24 @@ export function ChampsFormulaire({
   )
 }
 
+// Même pattern que taches-list.tsx (icône propre à l'accordéon, dupliquée
+// plutôt que partagée).
+function IconChevron({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
+}
+
 function CarteRegularisation({
   r,
   enRetard,
@@ -194,6 +212,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [aSupprimer, setASupprimer] = useState<{ id: string; nomComplet: string } | null>(null)
+  const [archiveOuverte, setArchiveOuverte] = useState(false)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
   const [regularisationsOptimistes, changerStatutOptimiste] = useOptimistic(
@@ -214,14 +233,16 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
     )
   }, [regularisationsOptimistes, recherche])
 
-  const { enRetard, reste } = useMemo(() => {
+  const { enRetard, reste, archivees } = useMemo(() => {
     const retard: Regularisation[] = []
     const autres: Regularisation[] = []
+    const facturees: Regularisation[] = []
     for (const r of visibles) {
-      if (estEnRetard(r, aujourdhui)) retard.push(r)
+      if (r.statut === 'facture') facturees.push(r)
+      else if (estEnRetard(r, aujourdhui)) retard.push(r)
       else autres.push(r)
     }
-    return { enRetard: retard, reste: autres }
+    return { enRetard: retard, reste: autres, archivees: facturees }
   }, [visibles, aujourdhui])
 
   function demanderSuppression(id: string, nomComplet: string) {
@@ -350,6 +371,35 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
           )}
           <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
             {reste.map((r) => renderCarte(r, false))}
+          </div>
+        </div>
+      )}
+
+      {archivees.length > 0 && (
+        <div className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
+          <button
+            type="button"
+            onClick={() => setArchiveOuverte((o) => !o)}
+            aria-expanded={archiveOuverte}
+            className="flex items-center justify-between gap-2 text-left"
+          >
+            <span className="text-[13.5px] font-semibold text-ink">Régularisations archivées ({archivees.length})</span>
+            <IconChevron
+              className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
+                archiveOuverte ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          <div
+            className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+              archiveOuverte ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="flex flex-col gap-2 pt-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
+                {archivees.map((r) => renderCarte(r, false))}
+              </div>
+            </div>
           </div>
         </div>
       )}
