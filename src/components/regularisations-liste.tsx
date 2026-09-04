@@ -228,6 +228,52 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
     setASupprimer({ id, nomComplet })
   }
 
+  function renderCarte(r: Regularisation, enRetardFlag: boolean) {
+    return (
+      <CarteRegularisation
+        key={r.id}
+        r={r}
+        enRetard={enRetardFlag}
+        enEdition={enEdition === r.id}
+        isPending={isPending}
+        onModifier={() => {
+          setEnEdition(r.id)
+          setFormOuvert(false)
+        }}
+        onAnnulerEdition={() => setEnEdition(null)}
+        onEnregistrer={(formData) => {
+          startTransition(async () => {
+            try {
+              await modifierRegularisation(r.id, formData)
+              setEnEdition(null)
+              toast({ type: 'succes', message: 'Régularisation modifiée.' })
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec de la modification de la régularisation.',
+              })
+            }
+          })
+        }}
+        onSupprimer={() => demanderSuppression(r.id, `${r.patient_prenom} ${r.patient_nom}`)}
+        onBasculerFacture={() => {
+          const nouveauStatut: StatutRegularisation = r.statut === 'facture' ? 'a_faire' : 'facture'
+          startTransition(async () => {
+            changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
+            try {
+              await (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id))
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : 'Échec du changement de statut de la régularisation.',
+              })
+            }
+          })
+        }}
+      />
+    )
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex items-center gap-2">
@@ -292,49 +338,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
         <div className="flex flex-col gap-2">
           <div className="text-[11px] font-bold uppercase tracking-wide text-rec">En retard · {enRetard.length}</div>
           <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
-            {enRetard.map((r) => (
-              <CarteRegularisation
-                key={r.id}
-                r={r}
-                enRetard
-                enEdition={enEdition === r.id}
-                isPending={isPending}
-                onModifier={() => {
-                  setEnEdition(r.id)
-                  setFormOuvert(false)
-                }}
-                onAnnulerEdition={() => setEnEdition(null)}
-                onEnregistrer={(formData) => {
-                  startTransition(async () => {
-                    try {
-                      await modifierRegularisation(r.id, formData)
-                      setEnEdition(null)
-                      toast({ type: 'succes', message: 'Régularisation modifiée.' })
-                    } catch (err) {
-                      toast({
-                        type: 'erreur',
-                        message: err instanceof Error ? err.message : 'Échec de la modification de la régularisation.',
-                      })
-                    }
-                  })
-                }}
-                onSupprimer={() => demanderSuppression(r.id, `${r.patient_prenom} ${r.patient_nom}`)}
-                onBasculerFacture={() => {
-                  const nouveauStatut: StatutRegularisation = r.statut === 'facture' ? 'a_faire' : 'facture'
-                  startTransition(async () => {
-                    changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
-                    try {
-                      await (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id))
-                    } catch (err) {
-                      toast({
-                        type: 'erreur',
-                        message: err instanceof Error ? err.message : 'Échec du changement de statut de la régularisation.',
-                      })
-                    }
-                  })
-                }}
-              />
-            ))}
+            {enRetard.map((r) => renderCarte(r, true))}
           </div>
         </div>
       )}
@@ -345,49 +349,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
             <div className="text-[11px] font-bold uppercase tracking-wide text-muted">À venir</div>
           )}
           <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
-            {reste.map((r) => (
-              <CarteRegularisation
-                key={r.id}
-                r={r}
-                enRetard={false}
-                enEdition={enEdition === r.id}
-                isPending={isPending}
-                onModifier={() => {
-                  setEnEdition(r.id)
-                  setFormOuvert(false)
-                }}
-                onAnnulerEdition={() => setEnEdition(null)}
-                onEnregistrer={(formData) => {
-                  startTransition(async () => {
-                    try {
-                      await modifierRegularisation(r.id, formData)
-                      setEnEdition(null)
-                      toast({ type: 'succes', message: 'Régularisation modifiée.' })
-                    } catch (err) {
-                      toast({
-                        type: 'erreur',
-                        message: err instanceof Error ? err.message : 'Échec de la modification de la régularisation.',
-                      })
-                    }
-                  })
-                }}
-                onSupprimer={() => demanderSuppression(r.id, `${r.patient_prenom} ${r.patient_nom}`)}
-                onBasculerFacture={() => {
-                  const nouveauStatut: StatutRegularisation = r.statut === 'facture' ? 'a_faire' : 'facture'
-                  startTransition(async () => {
-                    changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
-                    try {
-                      await (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id))
-                    } catch (err) {
-                      toast({
-                        type: 'erreur',
-                        message: err instanceof Error ? err.message : 'Échec du changement de statut de la régularisation.',
-                      })
-                    }
-                  })
-                }}
-              />
-            ))}
+            {reste.map((r) => renderCarte(r, false))}
           </div>
         </div>
       )}
