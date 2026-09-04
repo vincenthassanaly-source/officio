@@ -6,7 +6,7 @@ export type Regularisation = {
   id: string
   patient_nom: string
   patient_prenom: string
-  date_ordonnance: string
+  date_ordonnance: string | null
   date_regularisation: string
   statut: StatutRegularisation
   note: string | null

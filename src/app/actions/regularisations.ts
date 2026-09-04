@@ -9,16 +9,14 @@ function champsRegularisation(formData: FormData) {
   return {
     patient_nom: String(formData.get('patient_nom') ?? '').trim(),
     patient_prenom: String(formData.get('patient_prenom') ?? '').trim(),
-    date_ordonnance: String(formData.get('date_ordonnance') ?? ''),
+    date_ordonnance: String(formData.get('date_ordonnance') ?? '').trim() || null,
     date_regularisation: String(formData.get('date_regularisation') ?? ''),
     note: String(formData.get('note') ?? '').trim() || null,
   }
 }
 
 function champsValides(champs: ReturnType<typeof champsRegularisation>) {
-  return Boolean(
-    champs.patient_nom && champs.patient_prenom && champs.date_ordonnance && champs.date_regularisation
-  )
+  return Boolean(champs.patient_nom && champs.patient_prenom && champs.date_regularisation)
 }
 
 export async function ajouterRegularisation(formData: FormData) {
