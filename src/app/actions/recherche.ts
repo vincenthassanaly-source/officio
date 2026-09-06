@@ -108,8 +108,8 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
   const activite = chargerCategorie('journal_activite', activiteRes)
 
   // Liens vers les messages/tâches ciblés : mêmes paramètres que ceux déjà
-  // utilisés par les notifications (cf. src/app/api/cron/rappels-taches/
-  // route.ts et src/components/fil-de-messages.tsx / taches-list.tsx), qui
+  // utilisés par les notifications (cf. supabase/functions/envoyer-rappels-
+  // taches et src/components/fil-de-messages.tsx / taches-list.tsx), qui
   // mettent en évidence l'élément visé une fois sur /liaison. Les autres
   // modules n'ont pas ce mécanisme de ciblage par id : lien vers la page du
   // module uniquement.

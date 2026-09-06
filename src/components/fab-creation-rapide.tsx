@@ -227,9 +227,10 @@ function FormulaireTache({
           name="echeance"
           className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
-        {/* Facultative : si renseignée, le rappel quotidien de 7h mentionne
-            cette heure dans son message — voir
-            src/app/api/cron/rappels-taches/route.ts. */}
+        {/* Facultative : si renseignée, un rappel push + in-app arrive pile
+            à cette heure (au lieu du rappel générique "Échéance
+            aujourd'hui") — voir supabase/functions/envoyer-rappels-taches
+            et scripts/migration-cron-rappels-taches-2026-09-06.sql. */}
         <input
           type="time"
           name="echeance_heure"

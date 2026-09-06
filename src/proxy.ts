@@ -3,9 +3,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const PUBLIC_EXACT = ['/login', '/inscription']
 // /api n'est pas protégé par la session utilisateur : chaque route sous
-// /api gère sa propre authentification (ex: /api/cron/* vérifie un header
-// Authorization dédié, cf. src/app/api/cron/rappels-taches/route.ts). Sans
-// ça, le cron Vercel (qui n'a pas de session Supabase) serait redirigé vers
+// /api gère sa propre authentification (ex: un header Authorization dédié,
+// comme le faisait l'ancien cron Vercel /api/cron/rappels-taches — supprimé
+// depuis, remplacé par un cron pg_cron/pg_net qui appelle directement une
+// Edge Function, voir scripts/migration-cron-rappels-taches-2026-09-06.sql
+// — mais le principe reste valable pour toute future route /api appelée
+// sans session Supabase). Sans ça, un tel appelant serait redirigé vers
 // /login avant même d'atteindre le handler.
 const PUBLIC_PREFIX = ['/rejoindre', '/api']
 
