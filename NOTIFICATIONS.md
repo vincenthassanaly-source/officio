@@ -35,6 +35,8 @@ src/lib/notifications/client.ts   src/app/actions/notifications.ts
   titre, corps, url?, profilIds?, exclureProfilIds? }`, filtre par
   préférence, envoie via Web Push (VAPID), et nettoie les abonnements
   expirés (404/410).
+- **Rappels de tâches (cron)** : `supabase/functions/envoyer-rappels-taches`
+  fait exception à ce schéma — voir section dédiée ci-dessous.
 
 ## Générer les clés VAPID
 
@@ -129,6 +131,62 @@ const reponse = await fetch(
   }
 )
 ```
+
+## Rappels de tâches — pg_cron + pg_net (plus de cron Vercel)
+
+Le rappel d'échéance de tâche (catégorie `taches_echeance`) n'est **plus**
+déclenché par un cron Vercel : le plan Hobby limite chaque cron à une seule
+exécution par jour, ce qui empêchait un rappel réellement "à l'heure" pour
+les tâches avec une heure précise (`echeance_heure`). Depuis
+`scripts/migration-cron-rappels-taches-2026-09-06.sql`, c'est **pg_cron**
+(scheduler Postgres) + **pg_net** (client HTTP async Postgres), tous deux
+côté Supabase, qui déclenchent `supabase/functions/envoyer-rappels-taches`
+**toutes les minutes** :
+
+```
+pg_cron (* * * * *)
+  └─ net.http_post → supabase/functions/envoyer-rappels-taches
+                        ├─ rpc taches_a_rappeler_heure()          (échéance + heure précise)
+                        ├─ rpc taches_a_rappeler_echeance_jour()  (échéance du jour, sans heure)
+                        ├─ insert notifications (fil in-app, exhaustif)
+                        └─ web-push direct (si préférence active)
+```
+
+Points importants :
+
+- **Fonction autonome, pas d'appel à `send-push`.** Contrairement aux autres
+  flux (messages, tâches assignées/non assignées, notes, agenda),
+  `envoyer-rappels-taches` réimplémente elle-même l'envoi Web Push (pattern
+  repris du projet Kilio de Vincent) plutôt que d'appeler `send-push` en
+  HTTP interne — un saut HTTP supplémentaire n'apporterait rien puisque
+  c'est déjà pg_cron qui appelle une Edge Function en HTTP direct. Elle
+  réutilise les **mêmes secrets VAPID** (`VAPID_PUBLIC_KEY`,
+  `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`) que `send-push`, déjà configurés sur
+  le projet — rien de plus à configurer sur ce point. Voir
+  `scripts/RAPPORT-cron-rappels-taches-2026-09-06.md` pour le détail complet
+  de cet écart.
+- **Sélection en SQL, fuseau Europe/Paris géré nativement.** Les deux
+  fonctions RPC (`taches_a_rappeler_heure`, `taches_a_rappeler_echeance_jour`,
+  définies dans la migration) font le tri en SQL via `at time zone
+  'Europe/Paris'`, qui gère le changement heure d'été/hiver nativement (base
+  de fuseaux de Postgres) — pas de logique de fuseau réimplémentée côté
+  Deno.
+- **Secrets Vault dédiés** (`project_url`, `publishable_key`) : nécessaires
+  pour que l'appel `net.http_post` passe la vérification JWT de la fonction
+  (`verify_jwt: true`). La clé stockée est la clé anon/publishable — pas
+  secrète au sens strict, déjà exposée au client via
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`. La fonction utilise ensuite en interne
+  `SUPABASE_SERVICE_ROLE_KEY` (injectée automatiquement par Supabase) pour
+  ses opérations base de données.
+- **Anti-doublon** : `taches.rappel_heure_envoye` (rappel à l'heure précise,
+  jamais remis à `false`) et `taches.rappel_echeance_envoye_le` (rappel
+  générique, une valeur par jour) — les deux colonnes existaient déjà pour
+  le second cas ; la première a été recréée par cette migration (elle avait
+  été ajoutée puis supprimée dans une itération précédente jamais déployée
+  en prod, voir `scripts/migration-taches-heure-rappel.sql` et
+  `scripts/migration-drop-taches-rappel-heure-cron.sql`).
+- **Vercel Cron n'est plus utilisé pour aucun flux** : `vercel.json` n'a
+  plus d'entrée `crons`, et `src/app/api/cron/` n'existe plus.
 
 ## Limites connues
 
