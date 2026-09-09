@@ -18,9 +18,11 @@ export async function envoyerMessage(formData: FormData) {
   const contenu = String(formData.get('contenu') ?? '').trim()
   const categorie = String(formData.get('categorie') ?? 'info')
   const audio = formData.get('audio')
+  const photos = formData.getAll('photos')
 
   const aUnAudio = audio instanceof File && audio.size > 0
-  if (!contenu && !aUnAudio) return
+  const aDesPhotos = photos.some((p) => p instanceof File && p.size > 0)
+  if (!contenu && !aUnAudio && !aDesPhotos) return
 
   const profil = await getCurrentProfil()
   const officine = await getOfficineActive()
@@ -28,10 +30,36 @@ export async function envoyerMessage(formData: FormData) {
 
   const supabase = await createClient()
 
+  // La compression client (ChampPhotos → comprimerImage) ne garantit rien
+  // côté serveur : on ne fait confiance qu'au type réellement reçu, jamais à
+  // ce que le client prétend avoir compressé.
+  const photosCheminsStockage: string[] = []
+  for (const photo of photos) {
+    if (!(photo instanceof File) || photo.size === 0) continue
+    if (photo.type !== 'image/jpeg') {
+      await supabase.storage.from('messages-photos').remove(photosCheminsStockage)
+      throw new Error('Format de photo non accepté.')
+    }
+
+    const chemin = `${officine.officine_id}/${crypto.randomUUID()}.jpg`
+    const { error: erreurUpload } = await supabase.storage
+      .from('messages-photos')
+      .upload(chemin, photo, { contentType: photo.type })
+
+    if (erreurUpload) {
+      await supabase.storage.from('messages-photos').remove(photosCheminsStockage)
+      throw new Error(erreurUpload.message)
+    }
+    photosCheminsStockage.push(chemin)
+  }
+
   let audioCheminStockage: string | null = null
   if (aUnAudio) {
     const extension = EXTENSION_PAR_TYPE_MIME_AUDIO[audio.type]
     if (!extension) {
+      if (photosCheminsStockage.length > 0) {
+        await supabase.storage.from('messages-photos').remove(photosCheminsStockage)
+      }
       throw new Error('Format audio non accepté.')
     }
 
@@ -40,7 +68,12 @@ export async function envoyerMessage(formData: FormData) {
       .from('messages-audio')
       .upload(chemin, audio, { contentType: audio.type })
 
-    if (erreurUpload) throw new Error(erreurUpload.message)
+    if (erreurUpload) {
+      if (photosCheminsStockage.length > 0) {
+        await supabase.storage.from('messages-photos').remove(photosCheminsStockage)
+      }
+      throw new Error(erreurUpload.message)
+    }
     audioCheminStockage = chemin
   }
 
@@ -52,11 +85,15 @@ export async function envoyerMessage(formData: FormData) {
       contenu,
       categorie,
       audio_chemin_stockage: audioCheminStockage,
+      photos_chemins_stockage: photosCheminsStockage,
     })
     .select('id')
     .single()
 
   if (error) {
+    if (photosCheminsStockage.length > 0) {
+      await supabase.storage.from('messages-photos').remove(photosCheminsStockage)
+    }
     if (audioCheminStockage) {
       await supabase.storage.from('messages-audio').remove([audioCheminStockage])
     }
@@ -78,7 +115,7 @@ export async function supprimerMessage(messageId: string) {
 
   const { data: message } = await supabase
     .from('messages')
-    .select('auteur_id')
+    .select('auteur_id, photos_chemins_stockage')
     .eq('id', messageId)
     .single()
 
@@ -91,6 +128,10 @@ export async function supprimerMessage(messageId: string) {
   const { error } = await supabase.from('messages').delete().eq('id', messageId)
 
   if (error) throw new Error(error.message)
+
+  if (message.photos_chemins_stockage.length > 0) {
+    await supabase.storage.from('messages-photos').remove(message.photos_chemins_stockage)
+  }
 
   revalidatePath('/')
 }

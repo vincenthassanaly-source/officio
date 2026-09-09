@@ -31,6 +31,8 @@ import { useToast, type TypeToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { ChampAudio } from '@/components/champ-audio'
+import { ChampPhotos } from '@/components/champ-photos'
+import { LightboxImage } from '@/components/lightbox-image'
 
 const FILTRE_TOUTES = 'toutes'
 const DELAI_APPUI_LONG_MS = 500
@@ -65,6 +67,7 @@ export function FilDeMessages({
   const [categorie, setCategorie] = useState<Categorie>('info')
   const [contenu, setContenu] = useState('')
   const [audio, setAudio] = useState<File | null>(null)
+  const [photos, setPhotos] = useState<File[]>([])
   const [recherche, setRecherche] = useState('')
   const [filtreCategorie, setFiltreCategorie] = useState<string>(FILTRE_TOUTES)
   const [isPending, startTransition] = useTransition()
@@ -345,11 +348,13 @@ export function FilDeMessages({
       <form
         action={(formData) => {
           if (audio) formData.set('audio', audio)
+          photos.forEach((photo) => formData.append('photos', photo))
           startTransition(async () => {
             try {
               await envoyerMessage(formData)
               setContenu('')
               setAudio(null)
+              setPhotos([])
               if (textareaRef.current) textareaRef.current.style.height = 'auto'
               toast({ type: 'succes', message: 'Message envoyé.' })
             } catch (err) {
@@ -389,9 +394,10 @@ export function FilDeMessages({
             className="min-w-0 max-h-40 flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-bg px-4 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
           <ChampAudio onChange={setAudio} />
+          <ChampPhotos onChange={setPhotos} />
           <button
             type="submit"
-            disabled={isPending || (!contenu.trim() && !audio)}
+            disabled={isPending || (!contenu.trim() && !audio && photos.length === 0)}
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-lg text-white disabled:opacity-50"
           >
             ↑
@@ -481,6 +487,7 @@ function MessageItem({
 }) {
   const estAuteur = m.auteur?.id === profilActuelId
   const [enMaintien, setEnMaintien] = useState(false)
+  const [photoAgrandie, setPhotoAgrandie] = useState<number | null>(null)
   const minuterieRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function demarrerAppuiLong() {
@@ -566,6 +573,19 @@ function MessageItem({
       {m.contenu && <p className="text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>}
       {m.audioUrl && (
         <audio controls src={m.audioUrl} className={`h-9 w-full max-w-xs ${m.contenu ? 'mt-2' : ''}`} />
+      )}
+      {m.photosUrls.length > 0 && (
+        <div className={`flex flex-wrap gap-1.5 ${m.contenu || m.audioUrl ? 'mt-2' : ''}`}>
+          {m.photosUrls.map((url, index) => (
+            <button key={url} type="button" onClick={() => setPhotoAgrandie(index)} aria-label="Agrandir la photo">
+              {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage */}
+              <img src={url} alt="" className="h-16 w-16 rounded-xl object-cover" />
+            </button>
+          ))}
+          {photoAgrandie !== null && (
+            <LightboxImage src={m.photosUrls[photoAgrandie]} onFerme={() => setPhotoAgrandie(null)} />
+          )}
+        </div>
       )}
 
       <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5">

@@ -11,6 +11,7 @@ export type MessageAvecDetails = {
   lecteurs: { profil_id: string; initiales: string }[]
   pouces: { profil_id: string; initiales: string }[]
   audioUrl: string | null
+  photosUrls: string[]
 }
 
 // Dupliquée depuis src/lib/data/taches.ts (DUREE_SIGNED_URL_PHOTO, non
@@ -25,7 +26,7 @@ export async function getMessages(officineId: string): Promise<MessageAvecDetail
     supabase
       .from('messages')
       .select(
-        `id, contenu, categorie, created_at, audio_chemin_stockage,
+        `id, contenu, categorie, created_at, audio_chemin_stockage, photos_chemins_stockage,
          auteur:profils!messages_auteur_id_fkey ( id, nom_complet, initiales ),
          messages_lus ( profil_id, profils!messages_lus_profil_id_fkey ( initiales ) ),
          messages_pouces ( profil_id, profils!messages_pouces_profil_id_fkey ( initiales ) )`
@@ -54,6 +55,16 @@ export async function getMessages(officineId: string): Promise<MessageAvecDetail
         audioUrl = signee?.signedUrl ?? null
       }
 
+      const photosUrls = (
+        await Promise.all(
+          (m.photos_chemins_stockage ?? []).map((chemin: string) =>
+            supabase.storage.from('messages-photos').createSignedUrl(chemin, DUREE_SIGNED_URL_AUDIO)
+          )
+        )
+      )
+        .map((r) => r.data?.signedUrl)
+        .filter((url): url is string => Boolean(url))
+
       return {
         id: m.id,
         contenu: m.contenu,
@@ -75,6 +86,7 @@ export async function getMessages(officineId: string): Promise<MessageAvecDetail
             : (p.profils as { initiales: string } | null)?.initiales ?? '?',
         })),
         audioUrl,
+        photosUrls,
       }
     })
   )
