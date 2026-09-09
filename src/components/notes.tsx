@@ -13,6 +13,8 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { ChampPhotos } from '@/components/champ-photos'
+import { LightboxImage } from '@/components/lightbox-image'
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -39,6 +41,7 @@ export function Notes({
   const searchParams = useSearchParams()
   const [titre, setTitre] = useState('')
   const [contenu, setContenu] = useState('')
+  const [photos, setPhotos] = useState<File[]>([])
   const [recherche, setRecherche] = useState('')
   const [idASupprimer, setIdASupprimer] = useState<string | null>(null)
   const [noteEnEdition, setNoteEnEdition] = useState<NoteAvecAuteur | null>(null)
@@ -119,11 +122,13 @@ export function Notes({
     <div className="flex flex-1 flex-col gap-4">
       <form
         action={(formData) => {
+          photos.forEach((photo) => formData.append('photos', photo))
           startTransition(async () => {
             try {
               await creerNote(formData)
               setTitre('')
               setContenu('')
+              setPhotos([])
               toast({ type: 'succes', message: 'Note ajoutée.' })
             } catch (err) {
               toast({
@@ -151,6 +156,7 @@ export function Notes({
           rows={3}
           className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
+        <ChampPhotos onChange={setPhotos} />
         <button
           type="submit"
           disabled={isPending || !titre.trim() || !contenu.trim()}
@@ -242,6 +248,7 @@ function CarteNote({
 }) {
   const estAuteur = note.auteur?.id === profilActuelId
   const [enMaintien, setEnMaintien] = useState(false)
+  const [photoAgrandie, setPhotoAgrandie] = useState<number | null>(null)
   const minuterieRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   function demarrerAppuiLong() {
@@ -306,6 +313,19 @@ function CarteNote({
       </div>
       <div className="mb-1 text-[14.5px] font-semibold text-ink">{note.titre}</div>
       <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{note.contenu}</p>
+      {note.photosUrls.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {note.photosUrls.map((url, index) => (
+            <button key={url} type="button" onClick={() => setPhotoAgrandie(index)} aria-label="Agrandir la photo">
+              {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage */}
+              <img src={url} alt="" className="h-16 w-16 rounded-xl object-cover" />
+            </button>
+          ))}
+          {photoAgrandie !== null && (
+            <LightboxImage src={note.photosUrls[photoAgrandie]} onFerme={() => setPhotoAgrandie(null)} />
+          )}
+        </div>
+      )}
     </div>
   )
 }
