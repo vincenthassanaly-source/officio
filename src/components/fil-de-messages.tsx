@@ -68,6 +68,13 @@ export function FilDeMessages({
   const [contenu, setContenu] = useState('')
   const [audio, setAudio] = useState<File | null>(null)
   const [photos, setPhotos] = useState<File[]>([])
+  // ChampAudio et ChampPhotos gèrent leur aperçu (blob local) dans un état
+  // interne non contrôlé par ce formulaire : leur remettre onChange(null)/[]
+  // ne suffit pas à faire disparaître leur vignette. Incrémentée après un
+  // envoi réussi et passée en `key`, cette valeur force React à démonter et
+  // remonter ces deux composants — la façon idiomatique de réinitialiser un
+  // état interne qu'on ne contrôle pas depuis l'extérieur.
+  const [cleFormulaire, setCleFormulaire] = useState(0)
   const [recherche, setRecherche] = useState('')
   const [filtreCategorie, setFiltreCategorie] = useState<string>(FILTRE_TOUTES)
   const [isPending, startTransition] = useTransition()
@@ -355,6 +362,7 @@ export function FilDeMessages({
               setContenu('')
               setAudio(null)
               setPhotos([])
+              setCleFormulaire((cle) => cle + 1)
               if (textareaRef.current) textareaRef.current.style.height = 'auto'
               toast({ type: 'succes', message: 'Message envoyé.' })
             } catch (err) {
@@ -393,8 +401,8 @@ export function FilDeMessages({
             placeholder="Écrire un message…"
             className="min-w-0 max-h-40 flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-bg px-4 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
-          <ChampAudio onChange={setAudio} />
-          <ChampPhotos onChange={setPhotos} />
+          <ChampAudio key={`audio-${cleFormulaire}`} onChange={setAudio} />
+          <ChampPhotos key={`photos-${cleFormulaire}`} onChange={setPhotos} />
           <button
             type="submit"
             disabled={isPending || (!contenu.trim() && !audio && photos.length === 0)}
