@@ -94,6 +94,20 @@ button,
   }
 }
 
+/* Pill de fond de l'onglet actif de la bottom nav mobile (voir
+   components/bottom-nav.tsx) : un seul élément positionné en absolu, dont la
+   position/largeur est mesurée en JS (ref + getBoundingClientRect) puis
+   appliquée en `transform`/`width` inline — cette classe ne fait qu'animer
+   ces changements de style, sans dépendance tierce (pas de framer-motion). */
+.bottom-nav-pill {
+  transition: transform 220ms ease-out, width 220ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav-pill {
+    transition-duration: 0.01ms;
+  }
+}
+
 /* Transition de page (View Transitions, activées via experimental.viewTransition
    dans next.config.ts). Seule la zone de contenu de (app)/layout.tsx est
    enrobée dans <ViewTransition default="page-transition">, ce qui lui donne
