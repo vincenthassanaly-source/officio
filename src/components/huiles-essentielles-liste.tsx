@@ -18,6 +18,7 @@ import {
 } from '@/app/actions/huiles-essentielles'
 import type { HuileEssentielle, StatutHuile } from '@/lib/data/huiles-essentielles'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
+import { ModaleAjoutDepuisStock } from '@/components/huiles-essentielles-modale-ajout-stock'
 import { useToast } from '@/components/ui/toast-provider'
 
 const DELAI_APPUI_LONG_MS = 500
@@ -47,11 +48,11 @@ const CHAMP_CLASS =
 const CHAMP_VOLUME_COMMANDE_CLASS =
   'w-16 rounded-lg border border-border bg-bg px-2 py-1.5 text-[13px] text-ink outline-none focus:border-primary disabled:opacity-60'
 
-function formatVolume(volume: number) {
+export function formatVolume(volume: number) {
   return volume % 1 === 0 ? volume : volume.toLocaleString('fr-FR')
 }
 
-function formatPrix(prix: number, volume: number) {
+export function formatPrix(prix: number, volume: number) {
   const prixFormate = prix.toLocaleString('fr-FR', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -94,6 +95,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
   const [recherche, setRecherche] = useState('')
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
+  const [modaleAjoutStockOuverte, setModaleAjoutStockOuverte] = useState(false)
   const [isPending, startTransition] = useTransition()
   const toastListe = useToast()
 
@@ -241,6 +243,16 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
         </button>
       )}
 
+      {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') && (
+        <button
+          type="button"
+          onClick={() => setModaleAjoutStockOuverte(true)}
+          className="self-start text-xs font-semibold text-primary"
+        >
+          + Ajouter une huile
+        </button>
+      )}
+
       {formOuvert && (
         <form
           action={(formData) => {
@@ -319,6 +331,15 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
           )
         })}
       </div>
+
+      {modaleAjoutStockOuverte && (ongletStatut === 'a_commander' || ongletStatut === 'en_commande') && (
+        <ModaleAjoutDepuisStock
+          huiles={huilesOptimistes}
+          ongletStatut={ongletStatut}
+          onChangerStatut={changerStatut}
+          onFerme={() => setModaleAjoutStockOuverte(false)}
+        />
+      )}
     </div>
   )
 }
