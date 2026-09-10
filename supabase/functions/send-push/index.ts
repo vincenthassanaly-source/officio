@@ -45,6 +45,16 @@ type SendPushRequest = {
   // Optionnel : exclut ces profils (ex: l'auteur d'un message ne reçoit
   // pas de notification pour son propre message).
   exclureProfilIds?: string[]
+  // Optionnel : id de la ligne `notifications` associée, quand il n'y a
+  // qu'un seul destinataire (ex: notifier_tache_assignee). Permet au clic
+  // sur la notification système (public/sw.js) de marquer cette ligne
+  // comme lue.
+  notificationId?: string
+  // Optionnel : équivalent de notificationId pour un envoi à plusieurs
+  // destinataires (fan-out) — un id de ligne `notifications` différent par
+  // profil, résolu ci-dessous par profil_id pour construire un payload par
+  // abonnement plutôt qu'un seul payload partagé.
+  notificationIds?: { profilId: string; notificationId: string }[]
 }
 
 function reponseJson(data: unknown, status = 200): Response {
@@ -143,17 +153,20 @@ Deno.serve(async (req: Request) => {
   // 3. Abonnements actifs correspondants.
   const { data: abonnements, error: erreurAbos } = await supabase
     .from('push_subscriptions')
-    .select('id, endpoint, p256dh, auth')
+    .select('id, profil_id, endpoint, p256dh, auth')
     .eq('officine_id', requete.officineId)
     .in('profil_id', profilIdsANotifier)
 
   if (erreurAbos) return reponseJson({ erreur: erreurAbos.message }, 500)
 
-  const payload = JSON.stringify({
-    titre: requete.titre,
-    corps: requete.corps,
-    url: requete.url ?? '/',
-  })
+  // Un seul destinataire (ex: notifier_tache_assignee) -> notificationId
+  // direct. Fan-out (ex: notifier_nouveau_message) -> mapping par
+  // profil_id, résolu individuellement pour chaque abonnement ci-dessous :
+  // le payload n'est donc plus partagé entre tous les abonnements, il est
+  // reconstruit par abonnement pour y inclure le bon id.
+  const notificationIdParProfil = new Map(
+    (requete.notificationIds ?? []).map((n) => [n.profilId, n.notificationId])
+  )
 
   let envoyes = 0
   let echecs = 0
@@ -161,6 +174,14 @@ Deno.serve(async (req: Request) => {
 
   await Promise.all(
     (abonnements ?? []).map(async (abo) => {
+      const payload = JSON.stringify({
+        titre: requete.titre,
+        corps: requete.corps,
+        url: requete.url ?? '/',
+        notificationId:
+          requete.notificationId ?? notificationIdParProfil.get(abo.profil_id as string) ?? null,
+      })
+
       try {
         await webpush.sendNotification(
           { endpoint: abo.endpoint, keys: { p256dh: abo.p256dh, auth: abo.auth } },
