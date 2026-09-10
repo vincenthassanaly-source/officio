@@ -27,7 +27,7 @@ export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer:
         aria-modal="true"
         aria-labelledby="menu-plus-panel-titre"
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[80vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="flex max-h-[92vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:max-h-[80vh] sm:w-96 sm:rounded-[20px]"
       >
         <h2 id="menu-plus-panel-titre" className="text-sm font-bold text-ink">
           Autres modules
