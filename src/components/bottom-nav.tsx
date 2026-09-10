@@ -76,9 +76,19 @@ export function BottomNav() {
         className="fixed bottom-0 left-0 right-0 z-20 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden print:hidden"
       >
         {pill && (
+          // `left-0` est indispensable : sans ancrage explicite, un élément
+          // absolument positionné à l'intérieur d'un conteneur flex prend sa
+          // "position statique" (déterminée par la distribution flex, ex.
+          // `justify-around`) comme origine du `translateX` ci-dessous, pas
+          // le bord gauche du nav. Résultat observé sans `left-0` : le pill
+          // s'affiche décalé d'un montant fixe (dépendant du nombre/largeur
+          // des onglets) par rapport à l'onglet réellement actif — sur TOUS
+          // les onglets, de façon reproductible — alors que le texte actif
+          // (`text-primary`, calculé indépendamment) reste correct. Voir
+          // scripts/RAPPORT-bottom-nav-fix-*.md pour la démonstration.
           <span
             aria-hidden
-            className="bottom-nav-pill pointer-events-none absolute rounded-2xl bg-primary-soft"
+            className="bottom-nav-pill pointer-events-none absolute left-0 rounded-2xl bg-primary-soft"
             style={{ transform: `translateX(${pill.gauche}px)`, top: pill.haut, width: pill.largeur, height: pill.hauteur }}
           />
         )}
