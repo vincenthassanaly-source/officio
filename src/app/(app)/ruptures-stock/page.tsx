@@ -4,6 +4,7 @@ import { getOfficineActive } from '@/lib/data/officine-active'
 import { RupturesStockListe } from '@/components/ruptures-stock-liste'
 import { ProduitsARecommanderListe } from '@/components/produits-a-recommander-liste'
 import { LienRetour } from '@/components/lien-retour'
+import { PullToRefresh } from '@/components/PullToRefresh'
 
 export default async function RupturesStockPage() {
   const officine = await getOfficineActive()
@@ -15,7 +16,7 @@ export default async function RupturesStockPage() {
   ])
 
   return (
-    <>
+    <PullToRefresh>
       <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Ruptures de stock</h1>
 
@@ -24,6 +25,6 @@ export default async function RupturesStockPage() {
 
       <h2 className="mb-2 mt-6 text-sm font-semibold text-ink">À recommander</h2>
       <ProduitsARecommanderListe produits={produitsARecommander} />
-    </>
+    </PullToRefresh>
   )
 }

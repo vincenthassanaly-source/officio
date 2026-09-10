@@ -6,6 +6,7 @@ import { getTaches } from '@/lib/data/taches'
 import { getEquipe } from '@/lib/data/equipe'
 import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { CahierDeLiaison } from '@/components/cahier-de-liaison'
+import { PullToRefresh } from '@/components/PullToRefresh'
 
 export default async function LiaisonPage({
   searchParams,
@@ -25,7 +26,7 @@ export default async function LiaisonPage({
   ])
 
   return (
-    <>
+    <PullToRefresh>
       <h1 className="mb-4 font-heading text-2xl text-ink">Cahier de liaison</h1>
       {/* useSearchParams (dans CahierDeLiaison) exige une frontière Suspense.
           `key` force un remontage propre à chaque nouvelle cible (onglet/
@@ -43,6 +44,6 @@ export default async function LiaisonPage({
           couleurs={couleurs}
         />
       </Suspense>
-    </>
+    </PullToRefresh>
   )
 }

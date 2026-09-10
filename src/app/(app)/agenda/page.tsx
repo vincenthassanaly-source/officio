@@ -7,6 +7,7 @@ import { getPlannings } from '@/lib/data/plannings'
 import { getEquipe } from '@/lib/data/equipe'
 import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { Agenda } from '@/components/agenda/agenda'
+import { PullToRefresh } from '@/components/PullToRefresh'
 import { getWeekDates, toISODate } from '@/lib/dates'
 
 // Sur mobile (PWA installée), fermer complètement l'app (swipe dans les
@@ -54,7 +55,7 @@ export default async function AgendaPage({
   ])
 
   return (
-    <>
+    <PullToRefresh>
       <h1 className="mb-4 font-heading text-2xl text-ink">Agenda</h1>
       <Agenda
         rendezVous={rendezVous}
@@ -68,6 +69,6 @@ export default async function AgendaPage({
         couleurs={couleurs}
         profilActuelId={profil?.id ?? ''}
       />
-    </>
+    </PullToRefresh>
   )
 }

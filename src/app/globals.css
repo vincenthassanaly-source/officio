@@ -67,6 +67,12 @@ body {
    rendrait mal avec le scale (aucun cas de ce type identifié à ce jour). */
 html {
   -webkit-tap-highlight-color: transparent;
+  /* Aucun conteneur dédié n'a `overflow-y: auto` dans cette app (voir
+     app/layout.tsx) : c'est le document (html, = document.scrollingElement)
+     qui défile. `contain` désactive le pull-to-refresh natif du navigateur,
+     qui entrerait en conflit visuel avec l'indicateur de
+     components/PullToRefresh.tsx sur les pages qui l'utilisent. */
+  overscroll-behavior-y: contain;
 }
 
 a,
