@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type NoteAvecAuteur = {
@@ -14,7 +15,7 @@ export type NoteAvecAuteur = {
 // note au chargement de la page, pas générée à la demande au clic.
 const DUREE_SIGNED_URL_PHOTO = 60 * 60
 
-export async function getNotes(officineId: string): Promise<NoteAvecAuteur[]> {
+export const getNotes = cache(async (officineId: string): Promise<NoteAvecAuteur[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -53,4 +54,4 @@ export async function getNotes(officineId: string): Promise<NoteAvecAuteur[]> {
       }
     })
   )
-}
+})

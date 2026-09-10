@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type ProduitARecommander = {
@@ -8,7 +9,7 @@ export type ProduitARecommander = {
 
 // Plus ancien en premier : même logique que getRupturesStock (checklist de
 // tâches à traiter plutôt qu'un fil d'actualité).
-export async function getProduitsARecommander(officineId: string): Promise<ProduitARecommander[]> {
+export const getProduitsARecommander = cache(async (officineId: string): Promise<ProduitARecommander[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -23,4 +24,4 @@ export async function getProduitsARecommander(officineId: string): Promise<Produ
   }
 
   return data ?? []
-}
+})

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type StatutRegularisation = 'a_faire' | 'facture'
@@ -19,7 +20,7 @@ export type Regularisation = {
 const COLONNES =
   'id, patient_nom, patient_prenom, date_ordonnance, date_regularisation, statut, note, cree_par, facture_par, facture_le, created_at'
 
-export async function getRegularisations(officineId: string): Promise<Regularisation[]> {
+export const getRegularisations = cache(async (officineId: string): Promise<Regularisation[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -34,12 +35,12 @@ export async function getRegularisations(officineId: string): Promise<Regularisa
   }
 
   return (data ?? []) as Regularisation[]
-}
+})
 
-export async function getRegularisationsParStatut(
+export const getRegularisationsParStatut = cache(async (
   officineId: string,
   statut: StatutRegularisation
-): Promise<Regularisation[]> {
+): Promise<Regularisation[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -55,13 +56,13 @@ export async function getRegularisationsParStatut(
   }
 
   return (data ?? []) as Regularisation[]
-}
+})
 
-export async function getRegularisationsPeriode(
+export const getRegularisationsPeriode = cache(async (
   officineId: string,
   dateDebut: string,
   dateFin: string
-): Promise<Regularisation[]> {
+): Promise<Regularisation[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -78,4 +79,4 @@ export async function getRegularisationsPeriode(
   }
 
   return (data ?? []) as Regularisation[]
-}
+})

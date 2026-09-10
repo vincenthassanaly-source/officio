@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type StatutHuile = 'en_stock' | 'non_tenu_en_stock' | 'en_commande' | 'a_commander'
@@ -11,7 +12,7 @@ export type HuileEssentielle = {
   statut: StatutHuile
 }
 
-export async function getHuilesEssentielles(officineId: string): Promise<HuileEssentielle[]> {
+export const getHuilesEssentielles = cache(async (officineId: string): Promise<HuileEssentielle[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -26,4 +27,4 @@ export async function getHuilesEssentielles(officineId: string): Promise<HuileEs
   }
 
   return (data ?? []) as HuileEssentielle[]
-}
+})

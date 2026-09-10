@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type StatutTache = 'a_faire' | 'fait'
@@ -77,7 +78,7 @@ async function mapperLigneTache(
   }
 }
 
-export async function getTaches(officineId: string): Promise<Tache[]> {
+export const getTaches = cache(async (officineId: string): Promise<Tache[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -92,7 +93,7 @@ export async function getTaches(officineId: string): Promise<Tache[]> {
   }
 
   return Promise.all((data ?? []).map((t) => mapperLigneTache(supabase, t)))
-}
+})
 
 // Pour la vue globale de l'agenda (src/components/agenda/agenda-vue-globale.tsx) :
 // filtré côté requête comme getRegularisationsPeriode (src/lib/data/
@@ -102,11 +103,11 @@ export async function getTaches(officineId: string): Promise<Tache[]> {
 // Tache complet (assigne + photoUrl signée) comme getTaches ci-dessus : la
 // vue globale de l'agenda réutilise ModaleEditionTache telle quelle, qui en
 // a besoin.
-export async function getTachesPeriode(
+export const getTachesPeriode = cache(async (
   officineId: string,
   dateDebut: string,
   dateFin: string
-): Promise<Tache[]> {
+): Promise<Tache[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -123,4 +124,4 @@ export async function getTachesPeriode(
   }
 
   return Promise.all((data ?? []).map((t) => mapperLigneTache(supabase, t)))
-}
+})

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type TypeFournisseur = 'grossiste' | 'laboratoire'
@@ -15,7 +16,7 @@ export type Fournisseur = {
   created_at: string
 }
 
-export async function getFournisseurs(officineId: string): Promise<Fournisseur[]> {
+export const getFournisseurs = cache(async (officineId: string): Promise<Fournisseur[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -32,4 +33,4 @@ export async function getFournisseurs(officineId: string): Promise<Fournisseur[]
   }
 
   return (data ?? []) as Fournisseur[]
-}
+})

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type TypeCreneau = 'travail' | 'repos' | 'conge'
@@ -13,11 +14,11 @@ export type Creneau = {
   serie_id: string | null
 }
 
-export async function getPlannings(
+export const getPlannings = cache(async (
   officineId: string,
   dateDebut: string,
   dateFin: string
-): Promise<Creneau[]> {
+): Promise<Creneau[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -34,4 +35,4 @@ export async function getPlannings(
   }
 
   return (data ?? []) as Creneau[]
-}
+})

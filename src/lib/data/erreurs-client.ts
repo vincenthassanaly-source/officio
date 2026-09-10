@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type ErreurClient = {
@@ -16,7 +17,7 @@ const MAX_ERREURS = 50
 // renvoie déjà que les lignes de l'officine dont l'appelant est titulaire —
 // officineId ne sert ici qu'à cibler l'officine active plutôt qu'à filtrer
 // pour la sécurité.
-export async function getErreursClientRecentes(officineId: string): Promise<ErreurClient[]> {
+export const getErreursClientRecentes = cache(async (officineId: string): Promise<ErreurClient[]> => {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('client_errors')
@@ -39,4 +40,4 @@ export async function getErreursClientRecentes(officineId: string): Promise<Erre
     userAgent: e.user_agent,
     createdAt: e.created_at,
   }))
-}
+})

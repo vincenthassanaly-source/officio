@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { getEquipe } from './equipe'
 import { couleurParRang, type CouleurAvatar } from '@/lib/avatar-couleur'
 
@@ -11,7 +12,7 @@ export type { CouleurAvatar }
 // ancienneté d'adhésion seule (`order('created_at', { ascending: true })`),
 // pas par rôle puis ancienneté — utilisé tel quel comme base de rang, sans
 // retri ici.
-export async function getCouleursMembres(officineId: string): Promise<Map<string, CouleurAvatar>> {
+export const getCouleursMembres = cache(async (officineId: string): Promise<Map<string, CouleurAvatar>> => {
   const equipe = await getEquipe(officineId)
   const map = new Map<string, CouleurAvatar>()
 
@@ -20,4 +21,4 @@ export async function getCouleursMembres(officineId: string): Promise<Map<string
   })
 
   return map
-}
+})

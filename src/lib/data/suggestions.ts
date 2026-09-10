@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type SuggestionAvecAuteur = {
@@ -8,7 +9,7 @@ export type SuggestionAvecAuteur = {
   auteur: { id: string; nom_complet: string; initiales: string } | null
 }
 
-export async function getSuggestions(officineId: string): Promise<SuggestionAvecAuteur[]> {
+export const getSuggestions = cache(async (officineId: string): Promise<SuggestionAvecAuteur[]> => {
   const supabase = await createClient()
 
   // Non traitées d'abord (fait = false avant true), les plus récentes en
@@ -36,4 +37,4 @@ export async function getSuggestions(officineId: string): Promise<SuggestionAvec
     fait: s.fait,
     auteur: Array.isArray(s.auteur) ? s.auteur[0] ?? null : s.auteur,
   }))
-}
+})

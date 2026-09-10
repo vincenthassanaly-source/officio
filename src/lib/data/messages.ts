@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type Categorie = 'info' | 'urgent'
@@ -19,7 +20,7 @@ export type MessageAvecDetails = {
 // chargement de la page, pas générée à la demande au clic.
 const DUREE_SIGNED_URL_AUDIO = 60 * 60
 
-export async function getMessages(officineId: string): Promise<MessageAvecDetails[]> {
+export const getMessages = cache(async (officineId: string): Promise<MessageAvecDetails[]> => {
   const supabase = await createClient()
 
   const [{ data, error }, { data: adhesionsData }] = await Promise.all([
@@ -90,4 +91,4 @@ export async function getMessages(officineId: string): Promise<MessageAvecDetail
       }
     })
   )
-}
+})

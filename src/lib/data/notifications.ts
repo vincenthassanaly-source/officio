@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { CATEGORIES_NOTIFICATION, type CategorieNotification } from '@/lib/notifications/types'
 
@@ -12,10 +13,10 @@ export type PreferenceNotification = {
  * src/lib/notifications/preferences.ts), pour que l'UI puisse afficher tous
  * les interrupteurs sans distinction.
  */
-export async function getPreferencesNotification(
+export const getPreferencesNotification = cache(async (
   profilId: string,
   officineId: string
-): Promise<PreferenceNotification[]> {
+): Promise<PreferenceNotification[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -34,9 +35,9 @@ export async function getPreferencesNotification(
     categorie: c.value,
     active: parCategorie.get(c.value) ?? true,
   }))
-}
+})
 
-export async function aUnAbonnementPush(profilId: string): Promise<boolean> {
+export const aUnAbonnementPush = cache(async (profilId: string): Promise<boolean> => {
   const supabase = await createClient()
 
   const { count, error } = await supabase
@@ -50,7 +51,7 @@ export async function aUnAbonnementPush(profilId: string): Promise<boolean> {
   }
 
   return (count ?? 0) > 0
-}
+})
 
 export type NotificationInApp = {
   id: string
@@ -68,7 +69,7 @@ const LIMITE_NOTIFICATIONS = 30
 // push, alimenté par les triggers/crons (voir scripts/migration-
 // notifications-in-app*.sql). Distinct de PreferenceNotification ci-dessus,
 // qui concerne les réglages d'opt-out, pas l'historique.
-export async function getNotifications(officineId: string, profilId: string): Promise<NotificationInApp[]> {
+export const getNotifications = cache(async (officineId: string, profilId: string): Promise<NotificationInApp[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -85,9 +86,9 @@ export async function getNotifications(officineId: string, profilId: string): Pr
   }
 
   return (data ?? []) as NotificationInApp[]
-}
+})
 
-export async function getNombreNotificationsNonLues(officineId: string, profilId: string): Promise<number> {
+export const getNombreNotificationsNonLues = cache(async (officineId: string, profilId: string): Promise<number> => {
   const supabase = await createClient()
 
   const { count, error } = await supabase
@@ -103,4 +104,4 @@ export async function getNombreNotificationsNonLues(officineId: string, profilId
   }
 
   return count ?? 0
-}
+})

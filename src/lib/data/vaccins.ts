@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type StatutVaccin = 'obligatoire' | 'recommandé'
@@ -21,7 +22,7 @@ const COLONNES =
 // Contrairement aux autres data layers du projet, aucun paramètre officineId
 // ici : la table `vaccins` n'est pas scopée par officine (calendrier vaccinal
 // identique pour toutes les officines) — voir scripts/migration-vaccins.sql.
-export async function getVaccins(): Promise<Vaccin[]> {
+export const getVaccins = cache(async (): Promise<Vaccin[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -35,4 +36,4 @@ export async function getVaccins(): Promise<Vaccin[]> {
   }
 
   return (data ?? []) as Vaccin[]
-}
+})

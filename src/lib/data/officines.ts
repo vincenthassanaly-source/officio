@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type Officine = {
@@ -6,7 +7,7 @@ export type Officine = {
   code_invitation: string
 }
 
-export async function getOfficine(officineId: string): Promise<Officine | null> {
+export const getOfficine = cache(async (officineId: string): Promise<Officine | null> => {
   const supabase = await createClient()
   const { data } = await supabase
     .from('officines')
@@ -15,4 +16,4 @@ export async function getOfficine(officineId: string): Promise<Officine | null> 
     .single()
 
   return data
-}
+})

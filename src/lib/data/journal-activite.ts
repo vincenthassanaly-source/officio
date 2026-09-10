@@ -41,6 +41,13 @@ const LIMITE_JOURNAL = 30
 // src/lib/data/notifications.ts. Pagination par curseur sur created_at
 // (plutôt que par offset) : stable même si de nouvelles entrées arrivent
 // entre deux chargements de page.
+// Non mémoïsée via cache() : `options` est un objet, recréé (référence
+// différente) à chaque appel — cache() de React clé ses appels sur
+// l'égalité de référence des arguments, donc deux appels avec un `options`
+// équivalent en valeur ne partageraient jamais le cache. Pagination par
+// curseur en plus : contrairement aux autres fonctions de ce dossier, deux
+// appels dans un même rendu visent généralement des pages différentes
+// (curseurAvant distinct), donc rien à dédupliquer ici.
 export async function getJournalActivite(
   officineId: string,
   // `module` accepte une valeur unique ou un tableau (chips de filtre en

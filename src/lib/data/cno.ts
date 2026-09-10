@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type PatientCno = {
@@ -7,7 +8,7 @@ export type PatientCno = {
   derniere_maj: string
 }
 
-export async function getCnoPatients(officineId: string): Promise<PatientCno[]> {
+export const getCnoPatients = cache(async (officineId: string): Promise<PatientCno[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -22,4 +23,4 @@ export async function getCnoPatients(officineId: string): Promise<PatientCno[]> 
   }
 
   return data ?? []
-}
+})

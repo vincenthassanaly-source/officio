@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
 export type RuptureStock = {
@@ -8,7 +9,7 @@ export type RuptureStock = {
 
 // Plus ancien en premier : "premier ajouté, premier traité" — cohérent avec
 // une checklist de tâches à traiter plutôt qu'un fil d'actualité.
-export async function getRupturesStock(officineId: string): Promise<RuptureStock[]> {
+export const getRupturesStock = cache(async (officineId: string): Promise<RuptureStock[]> => {
   const supabase = await createClient()
 
   const { data, error } = await supabase
@@ -23,4 +24,4 @@ export async function getRupturesStock(officineId: string): Promise<RuptureStock
   }
 
   return data ?? []
-}
+})
