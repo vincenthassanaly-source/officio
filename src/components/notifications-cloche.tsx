@@ -40,7 +40,7 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
   const { notifications, nombreNonLues } = useNotificationsInApp()
   const [ouvert, setOuvert] = useState(false)
   const [position, setPosition] = useState({ top: 0, right: 0 })
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const router = useRouter()
   const boutonRef = useRef<HTMLButtonElement>(null)
 
@@ -69,7 +69,9 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
   }
 
   function toggle() {
-    if (!ouvert && boutonRef.current) {
+    const seraOuvert = !ouvert
+
+    if (seraOuvert && boutonRef.current) {
       // Position calculée depuis le bouton plutôt que déduite en CSS
       // (`right-0` sur le wrapper) : la cloche n'est pas forcément près du
       // bord droit de l'écran (header mobile : OfficineSwitcher, cloche,
@@ -87,7 +89,15 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
         right: Math.min(Math.max(rightIdeal, margeMin), rightMax),
       })
     }
-    setOuvert((v) => !v)
+
+    // Marque tout comme lu à l'ouverture (pas à la fermeture) plutôt que via
+    // un bouton dédié dans le panneau : ouvrir la cloche, c'est déjà
+    // consulter les notifications.
+    if (seraOuvert && nombreNonLues > 0) {
+      startTransition(() => marquerToutesNotificationsLues())
+    }
+
+    setOuvert(seraOuvert)
   }
 
   return (
@@ -128,18 +138,8 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
             style={{ top: position.top, right: position.right }}
             className="fixed z-50 max-h-[70vh] w-[320px] max-w-[calc(100vw-2rem)] overflow-y-auto rounded-2xl border border-border bg-surface shadow-lg"
           >
-            <div className="flex items-center justify-between border-b border-border px-3.5 py-2.5">
+            <div className="border-b border-border px-3.5 py-2.5">
               <span className="text-[13px] font-semibold text-ink">Notifications</span>
-              {nombreNonLues > 0 && (
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => startTransition(() => marquerToutesNotificationsLues())}
-                  className="text-[11.5px] font-semibold text-primary disabled:opacity-60"
-                >
-                  Tout marquer comme lu
-                </button>
-              )}
             </div>
 
             {notifications.length === 0 ? (
