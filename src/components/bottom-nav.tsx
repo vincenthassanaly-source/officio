@@ -34,30 +34,35 @@ export function BottomNav() {
 
   const navRef = useRef<HTMLElement>(null)
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map())
-  const [pill, setPill] = useState<PositionPill | null>(null)
+  const [positions, setPositions] = useState<Map<string, PositionPill>>(new Map())
 
-  // Mesure la position/largeur de l'item actif (ref + getBoundingClientRect,
-  // pas de librairie tierce) et la reporte dans le pill de fond, animé en CSS
-  // via `.bottom-nav-pill` (transition sur transform/width, voir globals.css).
-  // useLayoutEffect (pas useEffect) : la mesure et l'application du style se
-  // font avant la peinture du navigateur, donc sans flash à un changement de
-  // page (seul un vrai changement d'onglet, où le pill existe déjà, anime).
+  // Mesure la position/largeur de CHAQUE item (ref + getBoundingClientRect,
+  // pas de librairie tierce), une seule fois au montage puis à chaque resize
+  // du nav (ResizeObserver) — jamais à chaque navigation, car la grille
+  // d'onglets elle-même ne bouge pas quand `cleActive` change, seul l'item
+  // actif change. Le pill de l'item actif (voir `pill` plus bas) est alors
+  // dérivé directement de ces positions déjà connues, dans le MÊME rendu que
+  // le changement de couleur du texte actif, au lieu d'un state "pill"
+  // recalculé après coup dans un effet gardé par `cleActive` : évite un
+  // second aller-retour (rendu → useLayoutEffect → setState → re-rendu)
+  // inutile à chaque tap, et donc une fenêtre visuelle, même brève, où le
+  // texte de l'onglet actif a déjà changé sans que le pill ait suivi.
   useLayoutEffect(() => {
     const mesurer = () => {
       const nav = navRef.current
-      const itemActif = cleActive ? itemRefs.current.get(cleActive) : null
-      if (!nav || !itemActif) {
-        setPill(null)
-        return
-      }
+      if (!nav) return
       const rectNav = nav.getBoundingClientRect()
-      const rectItem = itemActif.getBoundingClientRect()
-      setPill({
-        gauche: rectItem.left - rectNav.left,
-        largeur: rectItem.width,
-        haut: rectItem.top - rectNav.top,
-        hauteur: rectItem.height,
+      const prochain = new Map<string, PositionPill>()
+      itemRefs.current.forEach((el, cle) => {
+        const rectItem = el.getBoundingClientRect()
+        prochain.set(cle, {
+          gauche: rectItem.left - rectNav.left,
+          largeur: rectItem.width,
+          haut: rectItem.top - rectNav.top,
+          hauteur: rectItem.height,
+        })
       })
+      setPositions(prochain)
     }
 
     mesurer()
@@ -67,7 +72,9 @@ export function BottomNav() {
     const observer = new ResizeObserver(mesurer)
     observer.observe(nav)
     return () => observer.disconnect()
-  }, [cleActive])
+  }, [])
+
+  const pill = cleActive ? (positions.get(cleActive) ?? null) : null
 
   return (
     <>
@@ -76,9 +83,19 @@ export function BottomNav() {
         className="fixed bottom-0 left-0 right-0 z-20 flex w-full shrink-0 justify-around overflow-x-hidden border-t border-border bg-surface px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden print:hidden"
       >
         {pill && (
+          // `left-0` est indispensable : sans ancrage explicite, un élément
+          // absolument positionné à l'intérieur d'un conteneur flex prend sa
+          // "position statique" (déterminée par la distribution flex, ex.
+          // `justify-around`) comme origine du `translateX` ci-dessous, pas
+          // le bord gauche du nav. Résultat observé sans `left-0` : le pill
+          // s'affiche décalé d'un montant fixe (dépendant du nombre/largeur
+          // des onglets) par rapport à l'onglet réellement actif — sur TOUS
+          // les onglets, de façon reproductible — alors que le texte actif
+          // (`text-primary`, calculé indépendamment) reste correct. Voir
+          // scripts/RAPPORT-bottom-nav-fix-*.md pour la démonstration.
           <span
             aria-hidden
-            className="bottom-nav-pill pointer-events-none absolute rounded-2xl bg-primary-soft"
+            className="bottom-nav-pill pointer-events-none absolute left-0 rounded-2xl bg-primary-soft"
             style={{ transform: `translateX(${pill.gauche}px)`, top: pill.haut, width: pill.largeur, height: pill.hauteur }}
           />
         )}
