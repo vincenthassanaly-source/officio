@@ -1,6 +1,7 @@
 'use client'
 
 import { useOptimistic, useState, useTransition } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { toggleTache } from '@/app/actions/taches'
 import { useToast } from '@/components/ui/toast-provider'
@@ -11,7 +12,10 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { toISODate } from '@/lib/dates'
-import { ModaleEditionTache } from '@/components/taches-list'
+
+// Jamais visible au premier rendu (montée seulement au clic sur une tâche) :
+// voir modale-edition-tache.tsx.
+const ModaleEditionTache = dynamic(() => import('@/components/modale-edition-tache'), { ssr: false })
 
 function badgeEcheance(echeance: string | null, aujourdhuiIso: string): { label: string; className: string } | null {
   if (!echeance) return null

@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
+import dynamic from 'next/dynamic'
 import { supprimerRendezVous } from '@/app/actions/agenda'
 import { toggleTache } from '@/app/actions/taches'
 import type { RendezVous } from '@/lib/data/rendez-vous'
@@ -8,10 +9,13 @@ import type { Tache } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
-import { ModaleEditionTache } from '@/components/taches-list'
 import { formatJourCourt, toISODate } from '@/lib/dates'
 import { useToast } from '@/components/ui/toast-provider'
 import { ItemLigne, regrouperItemsParJour } from './agenda-item-ligne'
+
+// Jamais visible au premier rendu (montée seulement au clic sur une tâche) :
+// voir modale-edition-tache.tsx.
+const ModaleEditionTache = dynamic(() => import('@/components/modale-edition-tache'), { ssr: false })
 
 export function AgendaVueGlobale({
   rendezVous,
