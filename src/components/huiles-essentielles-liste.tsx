@@ -228,16 +228,18 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
         className={CHAMP_CLASS}
       />
 
-      <button
-        type="button"
-        onClick={() => {
-          setFormOuvert((v) => !v)
-          setEnEdition(null)
-        }}
-        className="self-start text-xs font-semibold text-primary"
-      >
-        {formOuvert ? '× Annuler' : '+ Ajouter une huile'}
-      </button>
+      {ongletStatut === 'en_stock' && (
+        <button
+          type="button"
+          onClick={() => {
+            setFormOuvert((v) => !v)
+            setEnEdition(null)
+          }}
+          className="self-start text-xs font-semibold text-primary"
+        >
+          {formOuvert ? '× Annuler' : '+ Créer une nouvelle huile'}
+        </button>
+      )}
 
       {formOuvert && (
         <form
