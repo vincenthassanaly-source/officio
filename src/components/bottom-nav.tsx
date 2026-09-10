@@ -34,30 +34,35 @@ export function BottomNav() {
 
   const navRef = useRef<HTMLElement>(null)
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map())
-  const [pill, setPill] = useState<PositionPill | null>(null)
+  const [positions, setPositions] = useState<Map<string, PositionPill>>(new Map())
 
-  // Mesure la position/largeur de l'item actif (ref + getBoundingClientRect,
-  // pas de librairie tierce) et la reporte dans le pill de fond, animé en CSS
-  // via `.bottom-nav-pill` (transition sur transform/width, voir globals.css).
-  // useLayoutEffect (pas useEffect) : la mesure et l'application du style se
-  // font avant la peinture du navigateur, donc sans flash à un changement de
-  // page (seul un vrai changement d'onglet, où le pill existe déjà, anime).
+  // Mesure la position/largeur de CHAQUE item (ref + getBoundingClientRect,
+  // pas de librairie tierce), une seule fois au montage puis à chaque resize
+  // du nav (ResizeObserver) — jamais à chaque navigation, car la grille
+  // d'onglets elle-même ne bouge pas quand `cleActive` change, seul l'item
+  // actif change. Le pill de l'item actif (voir `pill` plus bas) est alors
+  // dérivé directement de ces positions déjà connues, dans le MÊME rendu que
+  // le changement de couleur du texte actif, au lieu d'un state "pill"
+  // recalculé après coup dans un effet gardé par `cleActive` : évite un
+  // second aller-retour (rendu → useLayoutEffect → setState → re-rendu)
+  // inutile à chaque tap, et donc une fenêtre visuelle, même brève, où le
+  // texte de l'onglet actif a déjà changé sans que le pill ait suivi.
   useLayoutEffect(() => {
     const mesurer = () => {
       const nav = navRef.current
-      const itemActif = cleActive ? itemRefs.current.get(cleActive) : null
-      if (!nav || !itemActif) {
-        setPill(null)
-        return
-      }
+      if (!nav) return
       const rectNav = nav.getBoundingClientRect()
-      const rectItem = itemActif.getBoundingClientRect()
-      setPill({
-        gauche: rectItem.left - rectNav.left,
-        largeur: rectItem.width,
-        haut: rectItem.top - rectNav.top,
-        hauteur: rectItem.height,
+      const prochain = new Map<string, PositionPill>()
+      itemRefs.current.forEach((el, cle) => {
+        const rectItem = el.getBoundingClientRect()
+        prochain.set(cle, {
+          gauche: rectItem.left - rectNav.left,
+          largeur: rectItem.width,
+          haut: rectItem.top - rectNav.top,
+          hauteur: rectItem.height,
+        })
       })
+      setPositions(prochain)
     }
 
     mesurer()
@@ -67,7 +72,9 @@ export function BottomNav() {
     const observer = new ResizeObserver(mesurer)
     observer.observe(nav)
     return () => observer.disconnect()
-  }, [cleActive])
+  }, [])
+
+  const pill = cleActive ? (positions.get(cleActive) ?? null) : null
 
   return (
     <>
