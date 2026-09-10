@@ -282,6 +282,38 @@ button,
   }
 }
 
+/* Indicateur de navigation (components/indicateur-navigation.tsx) — barre
+   fine affichée immédiatement au tap sur un item de bottom-nav.tsx/
+   menu-plus-panel.tsx, avant que le serveur ait répondu (voir
+   lib/navigation-en-cours.ts). Même durée/easing que les toasts ci-dessus
+   pour l'apparition/disparition (opacité) ; le balayage interne est une
+   animation en boucle indépendante, tant que la navigation reste en cours. */
+.indicateur-nav {
+  transition: opacity 180ms ease-out;
+}
+@keyframes indicateur-nav-balayage {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+.indicateur-nav-balayage {
+  animation: indicateur-nav-balayage 900ms ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .indicateur-nav {
+    transition-duration: 0.01ms;
+  }
+  .indicateur-nav-balayage {
+    animation: none;
+    /* Sans balayage, un remplissage statique reste un signal visible de
+       "navigation en cours" sans mouvement continu. */
+    width: 100%;
+  }
+}
+
 /* Panneaux modaux et bottom-sheets (modale-confirmation.tsx,
    ModaleEditionTache, ModaleEditionNote, ModaleDetailJour,
    fenetre-aujourdhui.tsx, lightbox-image.tsx) — mêmes durée et easing que

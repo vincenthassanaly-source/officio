@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { NAV_ITEMS, deriveDirectionNav, estLienActif, estModuleSecondaireActif } from '@/lib/nav-items'
 import { IconAccueil, IconAgenda, IconDocuments, IconLiaison, IconPlus } from '@/components/nav-icons'
 import { MenuPlusPanel } from '@/components/menu-plus-panel'
+import { demarrerNavigation } from '@/lib/navigation-en-cours'
 
 const ICONES: Record<string, React.ComponentType<{ className?: string }>> = {
   '/': IconAccueil,
@@ -111,6 +112,11 @@ export function BottomNav() {
                 else itemRefs.current.delete(item.href)
               }}
               href={item.href}
+              // Signal visuel immédiat au tap (voir IndicateurNavigation dans
+              // layout.tsx) : ces 3 routes n'ont pas de prefetch (juste
+              // en-dessous), rien d'autre n'indique que le tap a été pris en
+              // compte tant que le serveur n'a pas répondu.
+              onClick={() => demarrerNavigation(item.href)}
               // prefetch={false} conservé uniquement sur /, /liaison et /agenda :
               // ces pages sont en Cache-Control no-store (voir next.config.ts),
               // le prefetch resservirait un contenu obsolète (ex. non lus).

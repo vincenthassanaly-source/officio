@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { BottomNav } from '@/components/bottom-nav'
+import { IndicateurNavigation } from '@/components/indicateur-navigation'
 import { PageViewTransition } from '@/components/page-view-transition'
 import { SidebarNav } from '@/components/sidebar-nav'
 import { OfficineSwitcher } from '@/components/officine-switcher'
@@ -39,6 +40,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <NotificationsProvider notifications={notifications} nombreNonLues={nombreNonLues}>
       <div className="flex w-full flex-1 flex-col overflow-x-hidden lg:flex-row lg:overflow-x-visible">
+        <IndicateurNavigation />
         <EcouteurSession />
         <EcouteurRepriseApp />
         <FenetreAujourdhui />

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { MODULES_SECONDAIRES, deriveDirectionNav } from '@/lib/nav-items'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { demarrerNavigation } from '@/lib/navigation-en-cours'
 
 /**
  * Panneau remontant du bas listant les modules secondaires (accessibles
@@ -42,6 +43,9 @@ export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer:
                 key={module.href}
                 href={module.href}
                 onClick={() => {
+                  // Signal visuel immédiat au tap (voir IndicateurNavigation
+                  // dans layout.tsx), même mécanisme que bottom-nav.tsx.
+                  demarrerNavigation(module.href)
                   signalerNavigation()
                   onFermer()
                 }}
