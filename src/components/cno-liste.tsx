@@ -5,6 +5,7 @@ import { ajouterPatientCno, modifierQuantiteCno, supprimerPatientCno } from '@/a
 import type { PatientCno } from '@/lib/data/cno'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { vibrer } from '@/lib/haptics'
 
 const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
@@ -112,6 +113,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
 
   function enregistrerQuantite(id: string, quantite: number) {
     startTransition(async () => {
+      vibrer()
       appliquerOptimiste({ type: 'quantite', id, quantite })
       try {
         await modifierQuantiteCno(id, quantite)
@@ -126,6 +128,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
 
   function supprimerPatient(id: string) {
     startTransition(async () => {
+      vibrer()
       appliquerOptimiste({ type: 'suppression', id })
       try {
         await supprimerPatientCno(id)

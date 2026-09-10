@@ -4,6 +4,7 @@ import { useOptimistic, useState, useTransition } from 'react'
 import { ajouterProduitARecommander, supprimerProduitARecommander } from '@/app/actions/produits-a-recommander'
 import type { ProduitARecommander } from '@/lib/data/produits-a-recommander'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
+import { vibrer } from '@/lib/haptics'
 
 export function ProduitsARecommanderListe({ produits }: { produits: ProduitARecommander[] }) {
   const [nomProduit, setNomProduit] = useState('')
@@ -58,6 +59,7 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
                 onChange={() => {
                   retirerApresAnimation(p.id, () =>
                     startTransition(async () => {
+                      vibrer()
                       retirerOptimiste(p.id)
                       try {
                         await supprimerProduitARecommander(p.id)

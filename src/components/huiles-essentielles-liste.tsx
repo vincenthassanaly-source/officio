@@ -20,6 +20,7 @@ import type { HuileEssentielle, StatutHuile } from '@/lib/data/huiles-essentiell
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { ModaleAjoutDepuisStock } from '@/components/huiles-essentielles-modale-ajout-stock'
 import { useToast } from '@/components/ui/toast-provider'
+import { vibrer } from '@/lib/haptics'
 
 const DELAI_APPUI_LONG_MS = 500
 
@@ -123,6 +124,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
 
   function changerStatut(id: string, nouveauStatut: StatutHuile) {
     startTransition(async () => {
+      vibrer()
       appliquerOptimiste({ type: 'statut', id, statut: nouveauStatut })
       try {
         await changerStatutHuile(id, nouveauStatut)
@@ -141,6 +143,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
     if (volumeMl !== null && !Number.isFinite(volumeMl)) return
 
     startTransition(async () => {
+      vibrer()
       appliquerOptimiste({ type: 'volume', id, volumeMl })
       try {
         await modifierVolumeACommander(id, volumeMl)

@@ -8,6 +8,7 @@ import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
+import { vibrer } from '@/lib/haptics'
 
 function formatDate(iso: string) {
   const date = new Date(iso)
@@ -51,6 +52,7 @@ export function Suggestions({
   function supprimer(id: string) {
     retirerApresAnimation(id, () =>
       startTransition(async () => {
+        vibrer()
         appliquerOptimiste({ type: 'suppression', id })
         try {
           await supprimerSuggestion(id)
@@ -124,6 +126,7 @@ export function Suggestions({
                 disabled={isPending}
                 onChange={() => {
                   startTransition(async () => {
+                    vibrer()
                     appliquerOptimiste({ type: 'bascule', id: s.id })
                     try {
                       await basculerSuggestionFaite(s.id, !s.fait)

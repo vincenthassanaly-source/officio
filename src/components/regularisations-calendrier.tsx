@@ -5,6 +5,7 @@ import { ajouterRegularisation, marquerAFaire, marquerFacture } from '@/app/acti
 import { ChampsFormulaire } from '@/components/regularisations-liste'
 import type { Regularisation, StatutRegularisation } from '@/lib/data/regularisations'
 import { formatDateLongue, formatJourCourt, formatMoisAnnee, getMonthGridDates, toISODate } from '@/lib/dates'
+import { vibrer } from '@/lib/haptics'
 
 export function RegularisationsCalendrier({
   regularisations,
@@ -161,6 +162,7 @@ export function RegularisationsCalendrier({
                     type="button"
                     onClick={() =>
                       startTransition(async () => {
+                        vibrer()
                         const nouveauStatut: StatutRegularisation = facture ? 'a_faire' : 'facture'
                         changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
                         await (facture ? marquerAFaire(r.id) : marquerFacture(r.id))

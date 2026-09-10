@@ -5,6 +5,7 @@ import { ajouterRuptureStock, supprimerRuptureStock } from '@/app/actions/ruptur
 import type { RuptureStock } from '@/lib/data/ruptures-stock'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
+import { vibrer } from '@/lib/haptics'
 
 export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
   const [nomProduit, setNomProduit] = useState('')
@@ -68,6 +69,7 @@ export function RupturesStockListe({ ruptures }: { ruptures: RuptureStock[] }) {
                 onChange={() => {
                   retirerApresAnimation(r.id, () =>
                     startTransition(async () => {
+                      vibrer()
                       retirerOptimiste(r.id)
                       try {
                         await supprimerRuptureStock(r.id)

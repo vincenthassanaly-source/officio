@@ -30,6 +30,7 @@ import { ajouterEnAttente, listerEnAttente, retirerEnAttente } from '@/lib/messa
 import { useToast, type TypeToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
+import { vibrer } from '@/lib/haptics'
 import { ChampAudio } from '@/components/champ-audio'
 import { ChampPhotos } from '@/components/champ-photos'
 import { LightboxImage } from '@/components/lightbox-image'
@@ -107,6 +108,7 @@ export function FilDeMessages({
   const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
 
   function basculerPouce(id: string) {
+    vibrer()
     appliquerOptimiste({ type: 'pouce', id })
     return togglePouceMessage(id)
   }
@@ -118,6 +120,7 @@ export function FilDeMessages({
   function supprimerMessageOptimiste(id: string) {
     retirerApresAnimation(id, () =>
       startTransition(async () => {
+        vibrer()
         appliquerOptimiste({ type: 'suppression', id })
         try {
           await supprimerMessage(id)

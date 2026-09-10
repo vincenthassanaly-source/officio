@@ -12,6 +12,7 @@ import type { Regularisation, StatutRegularisation } from '@/lib/data/regularisa
 import { formatDateCourte, toISODate } from '@/lib/dates'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { vibrer } from '@/lib/haptics'
 
 export const CHAMP_CLASS =
   'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
@@ -280,6 +281,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
         onBasculerFacture={() => {
           const nouveauStatut: StatutRegularisation = r.statut === 'facture' ? 'a_faire' : 'facture'
           startTransition(async () => {
+            vibrer()
             changerStatutOptimiste({ id: r.id, statut: nouveauStatut })
             try {
               await (r.statut === 'facture' ? marquerAFaire(r.id) : marquerFacture(r.id))

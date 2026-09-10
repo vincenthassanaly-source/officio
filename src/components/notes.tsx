@@ -13,6 +13,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { vibrer } from '@/lib/haptics'
 import { ChampPhotos } from '@/components/champ-photos'
 import { LightboxImage } from '@/components/lightbox-image'
 
@@ -94,6 +95,7 @@ export function Notes({
   function supprimer(id: string) {
     retirerApresAnimation(id, () =>
       startTransition(async () => {
+        vibrer()
         retirerOptimiste(id)
         try {
           await supprimerNote(id)

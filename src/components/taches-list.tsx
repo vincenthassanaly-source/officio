@@ -23,6 +23,7 @@ import { LightboxImage } from '@/components/lightbox-image'
 import { useToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
+import { vibrer } from '@/lib/haptics'
 
 // Même format que formatHeure() dans rappels-agenda/route.ts ('HH:MM:SS' ou
 // 'HH:MM' -> 'HHhMM'). Exportée pour être réutilisée par
@@ -142,6 +143,7 @@ export function TachesList({
   // CarteTache, qui l'appelle déjà dans son propre startTransition (gestion
   // d'erreur/toast inchangée là-bas).
   function basculerPouce(id: string) {
+    vibrer()
     appliquerOptimiste({ type: 'pouce', id })
     return togglePouceTache(id)
   }
@@ -157,6 +159,7 @@ export function TachesList({
   function supprimer(id: string) {
     retirerApresAnimation(id, () =>
       startTransition(async () => {
+        vibrer()
         appliquerOptimiste({ type: 'suppression', id })
         try {
           await supprimerTache(id)
@@ -177,6 +180,7 @@ export function TachesList({
   function basculerStatut(tache: Tache) {
     retirerApresAnimation(tache.id, () =>
       startTransition(async () => {
+        vibrer()
         appliquerOptimiste({ type: 'statut', id: tache.id })
         try {
           await toggleTache(tache.id, tache.statut)
