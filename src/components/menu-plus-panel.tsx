@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { MODULES_SECONDAIRES } from '@/lib/nav-items'
+import { usePathname } from 'next/navigation'
+import { MODULES_SECONDAIRES, deriveDirectionNav } from '@/lib/nav-items'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
 /**
@@ -11,6 +12,7 @@ import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
  * transparent, contenu ancré en bas sur mobile.
  */
 export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer: () => void }) {
+  const pathname = usePathname()
   const signalerNavigation = useFermerAvecRetour(ouvert, onFermer)
 
   if (!ouvert) return null
@@ -34,6 +36,7 @@ export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer:
         <div className="grid grid-cols-2 gap-2.5">
           {MODULES_SECONDAIRES.map((module) => {
             const Icone = module.icone
+            const direction = deriveDirectionNav(pathname, module.href)
             return (
               <Link
                 key={module.href}
@@ -42,6 +45,11 @@ export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer:
                   signalerNavigation()
                   onFermer()
                 }}
+                // Sens du slide de page-view-transition.tsx (voir
+                // deriveDirectionNav) : les modules secondaires partagent
+                // tous l'ordinal de Carnet/Plus, donc "avance" depuis
+                // n'importe quel autre onglet de la bottom nav.
+                transitionTypes={direction ? [direction] : undefined}
                 className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
               >
                 <div

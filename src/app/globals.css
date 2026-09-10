@@ -158,6 +158,75 @@ button,
   }
 }
 
+/* Slide directionnel (bottom nav / panneau "Plus" mobile, voir
+   deriveDirectionNav dans lib/nav-items.ts et page-view-transition.tsx) :
+   "avance" glisse vers la gauche (nouvelle page entrant depuis la droite),
+   "recule" vers la droite (retour), sur le modèle de la navigation
+   déjà en place côté Kilio. Remplace le simple fondu ci-dessus uniquement
+   quand un sens a pu être déduit de l'ordre des items de navigation ; sinon
+   `page-transition` (fondu) reste le comportement par défaut. */
+::view-transition-old(.page-transition-avance),
+::view-transition-new(.page-transition-avance),
+::view-transition-old(.page-transition-recule),
+::view-transition-new(.page-transition-recule) {
+  animation-duration: 220ms;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+::view-transition-old(.page-transition-avance) {
+  animation-name: page-transition-avance-out;
+}
+::view-transition-new(.page-transition-avance) {
+  animation-name: page-transition-avance-in;
+}
+::view-transition-old(.page-transition-recule) {
+  animation-name: page-transition-recule-out;
+}
+::view-transition-new(.page-transition-recule) {
+  animation-name: page-transition-recule-in;
+}
+
+@keyframes page-transition-avance-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+@keyframes page-transition-avance-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes page-transition-recule-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+@keyframes page-transition-recule-in {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* Recommandation officielle de la doc View Transitions de Next.js : sous
    prefers-reduced-motion, les échanges de contenu redeviennent instantanés
    (comportement par défaut du navigateur sans transition). */

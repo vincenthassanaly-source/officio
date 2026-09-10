@@ -16,10 +16,22 @@ import { usePathname } from 'next/navigation'
 // pour ne jamais capturer d'instantané natif du navigateur (rendu dans le
 // top layer, au-dessus de tout le document y compris les éléments `fixed`
 // comme la BottomNav) pour un changement interne à une page.
+// Sens du slide : la classe appliquée dépend du "transition type" porté par
+// la navigation qui a déclenché le changement de pathname (posé via
+// `transitionTypes` sur les <Link> de bottom-nav.tsx/menu-plus-panel.tsx,
+// voir deriveDirectionNav dans lib/nav-items.ts). Sans type connu (navigation
+// hors bottom nav, drill-down dans un module, retour navigateur natif...),
+// `default` retombe sur le fondu existant — voir globals.css.
+const SLIDE_PAR_DIRECTION = {
+  'nav-avance': 'page-transition-avance',
+  'nav-recule': 'page-transition-recule',
+  default: 'page-transition',
+} as const
+
 export function PageViewTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   return (
-    <ViewTransition key={pathname} default="page-transition" update="none">
+    <ViewTransition key={pathname} enter={SLIDE_PAR_DIRECTION} exit={SLIDE_PAR_DIRECTION} update="none">
       {children}
     </ViewTransition>
   )

@@ -3,7 +3,7 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { NAV_ITEMS, estLienActif, estModuleSecondaireActif } from '@/lib/nav-items'
+import { NAV_ITEMS, deriveDirectionNav, estLienActif, estModuleSecondaireActif } from '@/lib/nav-items'
 import { IconAccueil, IconAgenda, IconDocuments, IconLiaison, IconPlus } from '@/components/nav-icons'
 import { MenuPlusPanel } from '@/components/menu-plus-panel'
 
@@ -85,6 +85,7 @@ export function BottomNav() {
         {LIENS_DIRECTS.map((item) => {
           const actif = estLienActif(item.href, pathname)
           const Icone = ICONES[item.href]
+          const direction = deriveDirectionNav(pathname, item.href)
           return (
             <Link
               key={item.href}
@@ -97,6 +98,10 @@ export function BottomNav() {
               // ces pages sont en Cache-Control no-store (voir next.config.ts),
               // le prefetch resservirait un contenu obsolète (ex. non lus).
               prefetch={item.href === '/' || item.href === '/liaison' || item.href === '/agenda' ? false : undefined}
+              // Sens du slide de page-view-transition.tsx, déduit de l'ordre
+              // des onglets (voir deriveDirectionNav) : absent si l'onglet
+              // ciblé est déjà actif, retombe alors sur le fondu par défaut.
+              transitionTypes={direction ? [direction] : undefined}
               className={`relative z-10 flex shrink-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-3 py-1.5 text-xs font-semibold sm:px-4 ${
                 actif ? 'text-primary' : 'text-muted'
               }`}

@@ -47,3 +47,33 @@ export function estLienActif(href: string, pathname: string): boolean {
 export function estModuleSecondaireActif(pathname: string): boolean {
   return MODULES_SECONDAIRES.some((m) => estLienActif(m.href, pathname))
 }
+
+export type DirectionNav = 'nav-avance' | 'nav-recule'
+
+// Ordinal d'un pathname dans l'ordre visuel Accueil → Liaison → Agenda →
+// Documents → Carnet/Plus (voir NAV_ITEMS), utilisé pour déduire le sens du
+// slide directionnel entre deux pages (page-view-transition.tsx). Carnet
+// (dernier item de NAV_ITEMS) partage son ordinal avec tous les modules du
+// panneau "Plus", regroupés visuellement derrière le même bouton en bottom
+// nav mobile.
+function ordinalNavigation(pathname: string): number | undefined {
+  const indexDirect = NAV_ITEMS.findIndex((item) => estLienActif(item.href, pathname))
+  if (indexDirect !== -1) return indexDirect
+  if (estModuleSecondaireActif(pathname)) return NAV_ITEMS.length - 1
+  return undefined
+}
+
+// Déduit le sens avance (slide vers la gauche) / recule (slide vers la
+// droite) entre le pathname courant et une cible de navigation, à partir de
+// leur position dans l'ordre ci-dessus. Undefined dès que l'un des deux ne
+// correspond à aucun item connu (drill-down dans un module) ou que les deux
+// partagent le même ordinal (ex: bascule entre deux modules du panneau
+// "Plus") : page-view-transition.tsx retombe alors sur le simple fondu.
+export function deriveDirectionNav(pathname: string, href: string): DirectionNav | undefined {
+  const cible = href.split('?')[0].split('#')[0]
+  if (cible === pathname) return undefined
+  const depart = ordinalNavigation(pathname)
+  const arrivee = ordinalNavigation(cible)
+  if (depart === undefined || arrivee === undefined || depart === arrivee) return undefined
+  return arrivee > depart ? 'nav-avance' : 'nav-recule'
+}
