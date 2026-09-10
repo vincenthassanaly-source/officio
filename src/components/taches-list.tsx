@@ -8,6 +8,7 @@ import {
   type TransitionStartFunction,
 } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import { creerTache, toggleTache, supprimerTache, togglePouceTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
@@ -493,9 +494,13 @@ function CarteTache({
         } ${enSortie ? 'item-sortie' : 'item-entree'}`}
       >
       {tache.photoUrl && (
-        <button type="button" onClick={() => setPhotoAgrandie(true)} aria-label="Agrandir la photo" className="shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage, pas une image du projet */}
-          <img src={tache.photoUrl} alt="" className="h-10 w-10 rounded-lg object-cover" />
+        <button
+          type="button"
+          onClick={() => setPhotoAgrandie(true)}
+          aria-label="Agrandir la photo"
+          className="relative block h-10 w-10 shrink-0 overflow-hidden rounded-lg"
+        >
+          <Image src={tache.photoUrl} alt="" fill sizes="40px" className="object-cover" />
         </button>
       )}
       {photoAgrandie && tache.photoUrl && (

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { creerNote, modifierNote, supprimerNote } from '@/app/actions/notes'
 import type { NoteAvecAuteur } from '@/lib/data/notes'
 import { normaliser } from '@/lib/recherche-texte'
@@ -318,9 +319,14 @@ function CarteNote({
       {note.photosUrls.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {note.photosUrls.map((url, index) => (
-            <button key={url} type="button" onClick={() => setPhotoAgrandie(index)} aria-label="Agrandir la photo">
-              {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage */}
-              <img src={url} alt="" className="h-16 w-16 rounded-xl object-cover" />
+            <button
+              key={url}
+              type="button"
+              onClick={() => setPhotoAgrandie(index)}
+              aria-label="Agrandir la photo"
+              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl"
+            >
+              <Image src={url} alt="" fill sizes="64px" className="object-cover" />
             </button>
           ))}
           {photoAgrandie !== null && (

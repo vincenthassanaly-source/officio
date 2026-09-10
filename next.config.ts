@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
         hostname: 'hjerdcehdzfjhzefnnel.supabase.co',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        // Distinct du pattern ci-dessus : les photos de tâches/notes/messages
+        // sont servies via des URLs signées (createSignedUrl), dont le chemin
+        // Supabase Storage est `/object/sign/...`, pas `/object/public/...` —
+        // voir next/image dans notes.tsx, taches-list.tsx, fil-de-messages.tsx.
+        protocol: 'https',
+        hostname: 'hjerdcehdzfjhzefnnel.supabase.co',
+        pathname: '/storage/v1/object/sign/**',
+      },
     ],
   },
   experimental: {

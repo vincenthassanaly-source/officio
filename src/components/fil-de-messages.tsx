@@ -12,6 +12,7 @@ import {
   type TransitionStartFunction,
 } from 'react'
 import { createPortal } from 'react-dom'
+import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
 import {
   envoyerMessage,
@@ -588,9 +589,14 @@ function MessageItem({
       {m.photosUrls.length > 0 && (
         <div className={`flex flex-wrap gap-1.5 ${m.contenu || m.audioUrl ? 'mt-2' : ''}`}>
           {m.photosUrls.map((url, index) => (
-            <button key={url} type="button" onClick={() => setPhotoAgrandie(index)} aria-label="Agrandir la photo">
-              {/* eslint-disable-next-line @next/next/no-img-element -- URL signée Supabase Storage */}
-              <img src={url} alt="" className="h-16 w-16 rounded-xl object-cover" />
+            <button
+              key={url}
+              type="button"
+              onClick={() => setPhotoAgrandie(index)}
+              aria-label="Agrandir la photo"
+              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl"
+            >
+              <Image src={url} alt="" fill sizes="64px" className="object-cover" />
             </button>
           ))}
           {photoAgrandie !== null && (

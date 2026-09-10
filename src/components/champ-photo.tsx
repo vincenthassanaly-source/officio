@@ -80,7 +80,11 @@ export function ChampPhoto({
       {apercu ? (
         <div className="relative h-16 w-16">
           <button type="button" onClick={() => setAgrandie(true)} aria-label="Agrandir la photo">
-            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob URL), pas une image distante */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- `apercu` mélange deux
+                origines dans le même state : une URL signée Supabase Storage au montage
+                (édition, voir `photoInitiale`) OU une blob URL locale dès qu'un nouveau
+                fichier est choisi (voir `choisir()`) — next/image ne peut pas décoder une
+                blob: URL, et rien ici ne permet de distinguer statiquement les deux cas. */}
             <img src={apercu} alt="" className="h-16 w-16 rounded-xl object-cover" />
           </button>
           <button
