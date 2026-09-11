@@ -458,6 +458,14 @@ export function PlanningEquipe({
           const travailJour = creneaux.filter(
             (c) => c.date === iso && c.type === 'travail' && c.heure_debut && c.heure_fin
           )
+          // Colonne fixe par personne (type couloirs de piscine) : chaque membre
+          // ayant au moins un créneau travail ce jour-là occupe toute la hauteur
+          // de la journée dans sa propre colonne, même sans chevauchement horaire
+          // avec les autres — pas de recalcul dynamique façon Google Agenda.
+          // L'ordre suit celui de `equipe` pour qu'un membre ne change pas de
+          // colonne d'un jour à l'autre.
+          const profilsJour = equipe.map((m) => m.id).filter((id) => travailJour.some((c) => c.profil_id === id))
+          const nbColonnes = profilsJour.length
           return (
             <div key={iso} className="relative border-l border-border" style={{ height: hauteurGrille }}>
               {graduations.map((h) => (
@@ -473,6 +481,10 @@ export function PlanningEquipe({
                 const top = (debut - heureMin) * PX_PAR_HEURE
                 const hauteur = Math.max((fin - debut) * PX_PAR_HEURE, 14)
                 const membre = equipe.find((m) => m.id === c.profil_id)
+                const index = profilsJour.indexOf(c.profil_id)
+                const largeur = 100 / nbColonnes
+                const tailleTexte = nbColonnes >= 4 ? 'text-[6.5px]' : nbColonnes === 3 ? 'text-[7px]' : 'text-[8px]'
+                const afficherHoraire = hauteur > 26 && nbColonnes <= 2
                 return (
                   <button
                     type="button"
@@ -480,11 +492,11 @@ export function PlanningEquipe({
                     onClick={() => setCreneauDetail(c)}
                     disabled={isPending}
                     title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour le détail)`}
-                    className={`absolute inset-x-0.5 overflow-hidden rounded-md px-1 py-0.5 text-left text-[8px] font-semibold leading-tight disabled:opacity-70 ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
-                    style={{ top, height: hauteur }}
+                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left font-semibold leading-tight disabled:opacity-70 ${tailleTexte} ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
+                    style={{ top, height: hauteur, left: `calc(${index * largeur}% + 2px)`, width: `calc(${largeur}% - 4px)` }}
                   >
                     <div className="truncate">{membre?.initiales ?? '?'}</div>
-                    {hauteur > 26 && (
+                    {afficherHoraire && (
                       <div className="truncate opacity-90">
                         {formatHeure(c.heure_debut!)}-{formatHeure(c.heure_fin!)}
                       </div>
