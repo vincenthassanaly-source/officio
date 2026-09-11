@@ -23,6 +23,24 @@ function formatDate(iso: string) {
   return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} · ${heure}`
 }
 
+// Même pattern que taches-list.tsx (non exportée là-bas non plus) : icône
+// propre à l'accordéon, dupliquée plutôt que partagée entre composants.
+function IconChevron({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
+}
+
 export function Suggestions({
   suggestions,
   profilActuelId,
@@ -48,6 +66,8 @@ export function Suggestions({
         : etat.map((s) => (s.id === action.id ? { ...s, fait: !s.fait } : s))
   )
   const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
+  // Accordéon "Archivé". Fermé par défaut à l'arrivée sur la page.
+  const [archiveOuverte, setArchiveOuverte] = useState(false)
 
   function supprimer(id: string) {
     retirerApresAnimation(id, () =>
@@ -66,6 +86,31 @@ export function Suggestions({
       })
     )
   }
+
+  // Cocher/décocher une suggestion la fait changer de section (active <->
+  // archivée) : un retrait de sa liste d'origine, animé comme tel via
+  // useRetraitAnime — la carte réapparaît en fondu de l'autre côté
+  // (`item-entree` au remontage), sans saut ni duplication le temps de la
+  // transition. Même pattern que basculerStatut dans taches-list.tsx.
+  function basculerFait(s: SuggestionAvecAuteur) {
+    retirerApresAnimation(s.id, () =>
+      startTransition(async () => {
+        vibrer()
+        appliquerOptimiste({ type: 'bascule', id: s.id })
+        try {
+          await basculerSuggestionFaite(s.id, !s.fait)
+        } catch (err) {
+          toast({
+            type: 'erreur',
+            message: err instanceof Error ? err.message : 'Échec du changement de statut de la suggestion.',
+          })
+        }
+      })
+    )
+  }
+
+  const suggestionsActives = suggestionsOptimistes.filter((s) => !s.fait)
+  const suggestionsArchivees = suggestionsOptimistes.filter((s) => s.fait)
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -104,77 +149,65 @@ export function Suggestions({
       </form>
 
       <div className="flex flex-1 flex-col gap-3">
-        {suggestionsOptimistes.length === 0 && (
+        {suggestionsActives.length === 0 && suggestionsArchivees.length === 0 && (
           <p className="py-10 text-center text-sm text-muted">
             Aucune suggestion pour le moment. Propose la première idée ci-dessus.
           </p>
         )}
 
-        {suggestionsOptimistes.map((s) => {
-          const couleurAuteur = (s.auteur ? couleurs.get(s.auteur.id) : null) ?? COULEUR_PAR_DEFAUT
-          return (
-          <div
+        {suggestionsActives.map((s) => (
+          <CarteSuggestion
             key={s.id}
-            className={`rounded-[20px] bg-surface shadow-card p-4 ${s.fait ? 'opacity-60' : ''} ${
-              estEnSortie(s.id) ? 'item-sortie' : 'item-entree'
+            suggestion={s}
+            profilActuelId={profilActuelId}
+            couleurs={couleurs}
+            isPending={isPending}
+            enSortie={estEnSortie(s.id)}
+            onBasculerFait={basculerFait}
+            onDemanderSuppression={setIdASupprimer}
+          />
+        ))}
+      </div>
+
+      {suggestionsArchivees.length > 0 && (
+        <div className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
+          <button
+            type="button"
+            onClick={() => setArchiveOuverte((o) => !o)}
+            aria-expanded={archiveOuverte}
+            className="flex items-center justify-between gap-2 text-left"
+          >
+            <span className="text-[13.5px] font-semibold text-ink">Archivé ({suggestionsArchivees.length})</span>
+            <IconChevron
+              className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
+                archiveOuverte ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+          <div
+            className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+              archiveOuverte ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
             }`}
           >
-            <div className="mb-2 flex items-center gap-2.5">
-              <input
-                type="checkbox"
-                checked={s.fait}
-                disabled={isPending}
-                onChange={() => {
-                  startTransition(async () => {
-                    vibrer()
-                    appliquerOptimiste({ type: 'bascule', id: s.id })
-                    try {
-                      await basculerSuggestionFaite(s.id, !s.fait)
-                    } catch (err) {
-                      toast({
-                        type: 'erreur',
-                        message: err instanceof Error ? err.message : 'Échec du changement de statut de la suggestion.',
-                      })
-                    }
-                  })
-                }}
-                aria-label={s.fait ? 'Marquer comme non traitée' : 'Marquer comme traitée'}
-                className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
-              />
-              <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
-              >
-                {s.auteur?.initiales ?? '?'}
+            <div className="overflow-hidden">
+              <div className="flex flex-col gap-3 pt-3">
+                {suggestionsArchivees.map((s) => (
+                  <CarteSuggestion
+                    key={s.id}
+                    suggestion={s}
+                    profilActuelId={profilActuelId}
+                    couleurs={couleurs}
+                    isPending={isPending}
+                    enSortie={estEnSortie(s.id)}
+                    onBasculerFait={basculerFait}
+                    onDemanderSuppression={setIdASupprimer}
+                  />
+                ))}
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[13.5px] font-semibold text-ink">
-                  {s.auteur?.nom_complet ?? 'Ancien collègue'}
-                </div>
-                <div className="text-[11px] text-muted">{formatDate(s.created_at)}</div>
-              </div>
-              {s.auteur?.id === profilActuelId && (
-                <button
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => setIdASupprimer(s.id)}
-                  aria-label="Supprimer la suggestion"
-                  className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
-                >
-                  ×
-                </button>
-              )}
             </div>
-            <p
-              className={`whitespace-pre-wrap text-[13.5px] leading-relaxed ${
-                s.fait ? 'text-muted line-through' : 'text-ink'
-              }`}
-            >
-              {s.message}
-            </p>
           </div>
-          )
-        })}
-      </div>
+        </div>
+      )}
 
       <ModaleConfirmation
         ouvert={idASupprimer !== null}
@@ -187,6 +220,77 @@ export function Suggestions({
         }}
         onAnnuler={() => setIdASupprimer(null)}
       />
+    </div>
+  )
+}
+
+// Carte individuelle, réutilisée par la liste active et la section
+// "Archivé" (voir Suggestions ci-dessus) : mêmes checkbox/avatar/bouton de
+// suppression qu'avant l'extraction.
+function CarteSuggestion({
+  suggestion,
+  profilActuelId,
+  couleurs,
+  isPending,
+  enSortie,
+  onBasculerFait,
+  onDemanderSuppression,
+}: {
+  suggestion: SuggestionAvecAuteur
+  profilActuelId: string
+  couleurs: Map<string, CouleurAvatar>
+  isPending: boolean
+  enSortie: boolean
+  onBasculerFait: (suggestion: SuggestionAvecAuteur) => void
+  onDemanderSuppression: (id: string) => void
+}) {
+  const couleurAuteur = (suggestion.auteur ? couleurs.get(suggestion.auteur.id) : null) ?? COULEUR_PAR_DEFAUT
+
+  return (
+    <div
+      className={`rounded-[20px] bg-surface shadow-card p-4 ${suggestion.fait ? 'opacity-60' : ''} ${
+        enSortie ? 'item-sortie' : 'item-entree'
+      }`}
+    >
+      <div className="mb-2 flex items-center gap-2.5">
+        <input
+          type="checkbox"
+          checked={suggestion.fait}
+          disabled={isPending}
+          onChange={() => onBasculerFait(suggestion)}
+          aria-label={suggestion.fait ? 'Marquer comme non traitée' : 'Marquer comme traitée'}
+          className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
+        />
+        <div
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
+        >
+          {suggestion.auteur?.initiales ?? '?'}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[13.5px] font-semibold text-ink">
+            {suggestion.auteur?.nom_complet ?? 'Ancien collègue'}
+          </div>
+          <div className="text-[11px] text-muted">{formatDate(suggestion.created_at)}</div>
+        </div>
+        {suggestion.auteur?.id === profilActuelId && (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => onDemanderSuppression(suggestion.id)}
+            aria-label="Supprimer la suggestion"
+            className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+          >
+            ×
+          </button>
+        )}
+      </div>
+      <p
+        className={`whitespace-pre-wrap text-[13.5px] leading-relaxed ${
+          suggestion.fait ? 'text-muted line-through' : 'text-ink'
+        }`}
+      >
+        {suggestion.message}
+      </p>
     </div>
   )
 }
