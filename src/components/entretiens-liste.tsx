@@ -5,7 +5,6 @@ import { useOptimistic, useState, useTransition } from 'react'
 import {
   creerTypeEntretien,
   renommerTypeEntretien,
-  archiverTypeEntretien,
   reordonnerTypesEntretien,
   supprimerTypeEntretien,
 } from '@/app/actions/entretiens'
@@ -16,7 +15,6 @@ import { useToast } from '@/components/ui/toast-provider'
 type ActionTypes =
   | { type: 'ajout'; item: TypeEntretien }
   | { type: 'suppression'; id: string }
-  | { type: 'archive'; id: string; actif: boolean }
   | { type: 'reorder'; ids: string[] }
 
 function reducerTypes(etat: TypeEntretien[], action: ActionTypes): TypeEntretien[] {
@@ -25,8 +23,6 @@ function reducerTypes(etat: TypeEntretien[], action: ActionTypes): TypeEntretien
       return [...etat, action.item]
     case 'suppression':
       return etat.filter((t) => t.id !== action.id)
-    case 'archive':
-      return etat.map((t) => (t.id === action.id ? { ...t, actif: action.actif } : t))
     case 'reorder': {
       const parId = new Map(etat.map((t) => [t.id, t]))
       return action.ids.map((id, i) => ({ ...parId.get(id)!, ordre: i }))
@@ -87,20 +83,6 @@ export function EntretiensListe({ types }: { types: TypeEntretien[] }) {
         toast({ type: 'succes', message: 'Type d’entretien renommé.' })
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec du renommage.' })
-      }
-    })
-  }
-
-  function basculerArchive(type: TypeEntretien) {
-    startTransition(async () => {
-      appliquerOptimiste({ type: 'archive', id: type.id, actif: !type.actif })
-      try {
-        await archiverTypeEntretien(type.id, !type.actif)
-      } catch (err) {
-        toast({
-          type: 'erreur',
-          message: err instanceof Error ? err.message : "Échec de la mise à jour du statut.",
-        })
       }
     })
   }
@@ -205,15 +187,6 @@ export function EntretiensListe({ types }: { types: TypeEntretien[] }) {
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
             </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => basculerArchive(type)}
-            className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-              type.actif ? 'bg-neutral-soft text-muted' : 'bg-primary-soft text-primary'
-            }`}
-          >
-            {type.actif ? 'Archiver' : 'Réactiver'}
           </button>
           <button
             type="button"
