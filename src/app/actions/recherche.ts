@@ -69,6 +69,7 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
     regularisationsRes,
     notesRes,
     activiteRes,
+    entretienRealisesRes,
   ] = await Promise.all([
     supabase.from('messages').select('id, contenu').eq('officine_id', officineId),
     supabase.from('taches').select('id, titre').eq('officine_id', officineId),
@@ -90,6 +91,10 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
       .eq('officine_id', officineId),
     supabase.from('notes').select('id, titre, contenu').eq('officine_id', officineId),
     supabase.from('journal_activite').select('id, titre, url').eq('officine_id', officineId),
+    supabase
+      .from('entretien_realises')
+      .select('id, type_entretien_id, patient_nom, patient_prenom')
+      .eq('officine_id', officineId),
   ])
 
   const messages = chargerCategorie('messages', messagesRes)
@@ -106,6 +111,7 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
   const regularisations = chargerCategorie('regularisations_ordonnances', regularisationsRes)
   const notes = chargerCategorie('notes', notesRes)
   const activite = chargerCategorie('journal_activite', activiteRes)
+  const entretienRealises = chargerCategorie('entretien_realises', entretienRealisesRes)
 
   // Liens vers les messages/tâches ciblés : mêmes paramètres que ceux déjà
   // utilisés par les notifications (cf. supabase/functions/envoyer-rappels-
@@ -215,6 +221,17 @@ export async function rechercherGlobal(query: string): Promise<GroupeResultatsRe
       activite
         .filter((a) => correspond([a.titre], q))
         .map((a) => ({ id: a.id, label: a.titre, url: a.url ?? '/activite' }))
+    ),
+    grouper(
+      'entretiens-realises',
+      'Entretiens réalisés',
+      entretienRealises
+        .filter((e) => correspond([e.patient_nom, e.patient_prenom], q))
+        .map((e) => ({
+          id: e.id,
+          label: `${e.patient_prenom} ${e.patient_nom}`.trim(),
+          url: `/entretiens-pharmaceutiques/${e.type_entretien_id}/realiser?id=${e.id}`,
+        }))
     ),
   ]
 
