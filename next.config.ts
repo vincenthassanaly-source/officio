@@ -58,6 +58,13 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
       },
       {
+        // Édition collective (types/items/documents) potentiellement modifiée
+        // par plusieurs membres coup sur coup : même fraîcheur immédiate que
+        // les 3 routes ci-dessus plutôt que le cache court par défaut.
+        source: '/entretiens-pharmaceutiques/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
         // Toutes les autres pages (documents, carnet, fournisseurs, profil,
         // huiles essentielles, chaussures, etc.) : leurs données changent
         // rarement en cours de session, un court cache navigateur évite de
@@ -65,10 +72,10 @@ const nextConfig: NextConfig = {
         // risquer un contenu significativement périmé. `private` car le
         // contenu est propre à l'officine/l'utilisateur connecté (pas de
         // cache partagé/CDN). Assets statiques Next (hashés, immuables) non
-        // concernés par cette règle : exclus explicitement, comme les 3
-        // routes ci-dessus (`.+` plutôt que `.*` exclut aussi la racine `/`
+        // concernés par cette règle : exclus explicitement, comme les routes
+        // ci-dessus (`.+` plutôt que `.*` exclut aussi la racine `/`
         // elle-même, dont le nombre de caractères après le `/` est nul).
-        source: '/((?!_next/static|_next/image|liaison|agenda).+)',
+        source: '/((?!_next/static|_next/image|liaison|agenda|entretiens-pharmaceutiques).+)',
         headers: [{ key: 'Cache-Control', value: 'private, max-age=10, must-revalidate' }],
       },
     ]
