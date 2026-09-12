@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
-import type { SectionEntretien } from '@/lib/data/entretiens'
+import type { SectionEntretien, EtapeMethodologie } from '@/lib/data/entretiens'
 
 const TYPES_ACCEPTES = ['application/pdf', 'image/jpeg', 'image/png']
 
@@ -71,7 +71,12 @@ export async function supprimerTypeEntretien(id: string) {
 
 // --- Items par section (méthodologie / facturation / questions) -------
 
-export async function creerItemEntretien(typeEntretienId: string, section: SectionEntretien, contenu: string) {
+export async function creerItemEntretien(
+  typeEntretienId: string,
+  section: SectionEntretien,
+  contenu: string,
+  etape: EtapeMethodologie | null = null
+) {
   const contenuNettoye = contenu.trim()
   if (!contenuNettoye) return
 
@@ -80,6 +85,7 @@ export async function creerItemEntretien(typeEntretienId: string, section: Secti
     p_type_entretien_id: typeEntretienId,
     p_section: section,
     p_contenu: contenuNettoye,
+    p_etape: section === 'methodologie' ? etape : null,
   })
 
   if (error) throw new Error(error.message)
@@ -87,12 +93,21 @@ export async function creerItemEntretien(typeEntretienId: string, section: Secti
   revalidatePath(`/entretiens-pharmaceutiques/${typeEntretienId}`)
 }
 
-export async function modifierItemEntretien(id: string, typeEntretienId: string, contenu: string) {
+export async function modifierItemEntretien(
+  id: string,
+  typeEntretienId: string,
+  contenu: string,
+  etape: EtapeMethodologie | null = null
+) {
   const contenuNettoye = contenu.trim()
   if (!contenuNettoye) return
 
   const supabase = await createClient()
-  const { error } = await supabase.rpc('modifier_item_entretien', { p_id: id, p_contenu: contenuNettoye })
+  const { error } = await supabase.rpc('modifier_item_entretien', {
+    p_id: id,
+    p_contenu: contenuNettoye,
+    p_etape: etape,
+  })
 
   if (error) throw new Error(error.message)
 

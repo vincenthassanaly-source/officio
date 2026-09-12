@@ -3,6 +3,14 @@ import { createClient } from '@/lib/supabase/server'
 
 export type SectionEntretien = 'methodologie' | 'facturation' | 'questions'
 
+// Sous-étape de regroupement pour la section méthodologie — non pertinent
+// (toujours NULL) pour les autres sections.
+export type EtapeMethodologie =
+  | 'annee1_entretien1'
+  | 'annee1_entretien2'
+  | 'annee1_entretien3'
+  | 'annees_suivantes'
+
 export type TypeEntretien = {
   id: string
   nom: string
@@ -18,6 +26,7 @@ export type ItemEntretien = {
   section: SectionEntretien
   contenu: string
   ordre: number
+  etape: EtapeMethodologie | null
   created_at: string
   updated_at: string
 }
@@ -87,7 +96,7 @@ export const getItemsEntretien = cache(
 
     const { data, error } = await supabase
       .from('entretien_items')
-      .select('id, type_entretien_id, section, contenu, ordre, created_at, updated_at')
+      .select('id, type_entretien_id, section, contenu, ordre, etape, created_at, updated_at')
       .eq('type_entretien_id', typeEntretienId)
       .order('ordre', { ascending: true })
 
