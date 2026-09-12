@@ -52,13 +52,13 @@ function ChampsFormulaire({ fournisseur }: { fournisseur?: Fournisseur }) {
           name="telephone"
           defaultValue={fournisseur?.telephone ?? ''}
           placeholder="Téléphone"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
         />
         <input
           name="telephone_commandes"
           defaultValue={fournisseur?.telephone_commandes ?? ''}
           placeholder="Téléphone commandes"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
         />
       </div>
       <input

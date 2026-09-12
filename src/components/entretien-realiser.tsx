@@ -384,13 +384,13 @@ function FormulairePatient({
             onChange={(e) => setPatientPrenom(e.target.value)}
             placeholder="Prénom"
             autoFocus
-            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[15px] text-ink outline-none focus:border-primary"
+            className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[15px] text-ink outline-none focus:border-primary"
           />
           <input
             value={patientNom}
             onChange={(e) => setPatientNom(e.target.value)}
             placeholder="Nom"
-            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[15px] text-ink outline-none focus:border-primary"
+            className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[15px] text-ink outline-none focus:border-primary"
           />
         </div>
 
@@ -408,7 +408,7 @@ function FormulairePatient({
               onChange={(e) => setAnneeAccompagnement(e.target.value)}
               placeholder="Année (ex. Année 1)"
               list="suggestions-annee"
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
+              className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[13.5px] text-ink outline-none focus:border-primary"
             />
             <datalist id="suggestions-annee">
               <option value="Année 1" />

@@ -43,14 +43,14 @@ function ChampsFormulaire({ contact }: { contact?: Contact }) {
           name="telephone"
           defaultValue={contact?.telephone ?? ''}
           placeholder="Téléphone"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
         />
         <input
           name="email"
           type="email"
           defaultValue={contact?.email ?? ''}
           placeholder="Email"
-          className={`flex-1 ${CHAMP_CLASS}`}
+          className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
         />
       </div>
       <input name="adresse" defaultValue={contact?.adresse ?? ''} placeholder="Adresse" className={CHAMP_CLASS} />
