@@ -34,7 +34,9 @@ import {
   IconNote,
   IconActivite,
   IconPosologie,
+  IconEntretien,
 } from '@/components/nav-icons'
+import { getTypesEntretien, type TypeEntretien } from '@/lib/data/entretiens'
 
 // Sur mobile (PWA installée), fermer complètement l'app (swipe dans les
 // apps récentes) puis la rouvrir peut afficher un instantané mis en cache
@@ -93,6 +95,7 @@ export default async function AccueilPage() {
     produitsARecommanderR,
     notesR,
     journalActiviteR,
+    typesEntretienR,
   ] = await Promise.allSettled([
     getMessages(officine.officine_id),
     getTaches(officine.officine_id),
@@ -107,6 +110,7 @@ export default async function AccueilPage() {
     getProduitsARecommander(officine.officine_id),
     getNotes(officine.officine_id),
     getJournalActivite(officine.officine_id),
+    getTypesEntretien(officine.officine_id),
   ])
 
   const messages = valeur('getMessages', messagesR, [] as MessageAvecDetails[])
@@ -125,6 +129,7 @@ export default async function AccueilPage() {
     entrees: [],
     curseurSuivant: null,
   } as PageJournalActivite)
+  const typesEntretien = valeur('getTypesEntretien', typesEntretienR, [] as TypeEntretien[])
 
   // Un chiffre "—" plutôt qu'un décompte trompeur (ex: 0) sur les cartes dont
   // la donnée a échoué à charger — voir `valeur` ci-dessus.
@@ -137,6 +142,8 @@ export default async function AccueilPage() {
   const rupturesOk = rupturesStockR.status === 'fulfilled' && produitsARecommanderR.status === 'fulfilled'
   const notesOk = notesR.status === 'fulfilled'
   const journalActiviteOk = journalActiviteR.status === 'fulfilled'
+  const typesEntretienOk = typesEntretienR.status === 'fulfilled'
+  const typesEntretienActifs = typesEntretien.filter((t) => t.actif).length
 
   const huilesACommander = huiles.filter((h) => h.statut === 'a_commander').length
   const suggestionsNonTraitees = suggestions.filter((s) => !s.fait).length
@@ -376,6 +383,20 @@ export default async function AccueilPage() {
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Plan de posologie</div>
             <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+          </div>
+        </Link>
+        <Link
+          href="/entretiens-pharmaceutiques"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-purple-soft text-purple">
+            <IconEntretien className="h-[18px] w-[18px]" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Entretiens pharmaceutiques</div>
+            <div className="mt-0.5 text-[11px] text-muted">
+              {typesEntretienOk ? `${typesEntretienActifs} types actifs` : '—'}
+            </div>
           </div>
         </Link>
       </div>

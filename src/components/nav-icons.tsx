@@ -262,6 +262,25 @@ export function IconPosologie({ className }: IconProps) {
   )
 }
 
+// Bulle de dialogue avec un cœur : entretien pharmaceutique (échange
+// pharmacien-patient autour d'une pathologie/traitement).
+export function IconEntretien({ className }: IconProps) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+      <path d="M12 9c-.7-.7-1.8-.7-2.5 0s-.7 1.8 0 2.5L12 14l2.5-2.5c.7-.7.7-1.8 0-2.5s-1.8-.7-2.5 0z" />
+    </svg>
+  )
+}
+
 // Grille 2x2 : symbole générique "plus de modules", utilisé par le bouton
 // "Plus" de la bottom nav mobile pour ouvrir le panneau des modules
 // secondaires (voir menu-plus-panel.tsx).

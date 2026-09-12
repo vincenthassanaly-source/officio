@@ -11,6 +11,7 @@ import {
   IconNote,
   IconActivite,
   IconPosologie,
+  IconEntretien,
 } from '@/components/nav-icons'
 
 export const NAV_ITEMS = [
@@ -38,6 +39,7 @@ export const MODULES_SECONDAIRES = [
   { href: '/notes', label: 'Notes', icone: IconNote, couleurFond: 'bg-primary-soft', couleurTexte: 'text-primary-dark' },
   { href: '/activite', label: 'Activité', icone: IconActivite, couleurFond: 'bg-neutral-soft', couleurTexte: 'text-neutral-text' },
   { href: '/plan-posologie', label: 'Plan de posologie', icone: IconPosologie, couleurFond: 'bg-accent-soft', couleurTexte: 'text-accent' },
+  { href: '/entretiens-pharmaceutiques', label: 'Entretiens pharmaceutiques', icone: IconEntretien, couleurFond: 'bg-purple-soft', couleurTexte: 'text-purple' },
 ]
 
 export function estLienActif(href: string, pathname: string): boolean {
