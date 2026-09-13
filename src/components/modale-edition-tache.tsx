@@ -71,7 +71,7 @@ export default function ModaleEditionTache({
       role="dialog"
       aria-modal="true"
       aria-labelledby="modale-edition-tache-titre"
-      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 sm:items-center"
       onClick={onFerme}
     >
       <form

@@ -45,7 +45,7 @@ export function ModaleAjoutDepuisStock({
 
   return createPortal(
     <div
-      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
+      className="overlay-entree fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 sm:items-center"
       onClick={onFerme}
     >
       <div
@@ -72,7 +72,7 @@ export function ModaleAjoutDepuisStock({
           className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
 
-        <div className="flex max-h-80 flex-col gap-1.5 overflow-y-auto">
+        <div className="flex max-h-80 flex-col gap-1.5 overflow-y-auto overscroll-contain">
           {huilesEnStock.length === 0 && (
             <p className="py-10 text-center text-sm text-muted">Aucune huile ne correspond.</p>
           )}

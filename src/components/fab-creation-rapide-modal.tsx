@@ -348,10 +348,10 @@ export default function FabCreationRapideModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby={idTitre}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 lg:items-center"
     >
       <button type="button" aria-label="Fermer" onClick={onFermer} className="absolute inset-0" />
-      <div className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl">
+      <div className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl">
         <button
           type="button"
           onClick={onFermer}
