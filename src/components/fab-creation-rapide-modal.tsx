@@ -46,7 +46,9 @@ function MenuChoix({
 }) {
   return (
     <div className="flex flex-col gap-2 p-4">
-      <div className="mb-1 text-center font-heading text-lg text-ink">Créer</div>
+      <h2 id="fab-creation-titre-menu" className="mb-1 text-center font-heading text-lg text-ink">
+        Créer
+      </h2>
       <button
         type="button"
         onClick={() => onChoisir('message')}
@@ -122,7 +124,9 @@ function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
       }}
       className="flex flex-col gap-3 p-4"
     >
-      <div className="font-heading text-lg text-ink">Nouveau message</div>
+      <h2 id="fab-creation-titre-message" className="font-heading text-lg text-ink">
+        Nouveau message
+      </h2>
       <div className="flex gap-1.5">
         {CATEGORIES.map((c) => (
           <button
@@ -184,7 +188,9 @@ function FormulaireTache({
       }}
       className="flex flex-col gap-3 p-4"
     >
-      <div className="font-heading text-lg text-ink">Nouvelle tâche</div>
+      <h2 id="fab-creation-titre-tache" className="font-heading text-lg text-ink">
+        Nouvelle tâche
+      </h2>
       <textarea
         name="titre"
         required
@@ -247,7 +253,9 @@ function FormulaireRegularisation({ onCree }: { onCree: () => void }) {
       }}
       className="flex flex-col gap-3 p-4"
     >
-      <div className="font-heading text-lg text-ink">Nouvelle régularisation</div>
+      <h2 id="fab-creation-titre-regularisation" className="font-heading text-lg text-ink">
+        Nouvelle régularisation
+      </h2>
       <ChampsFormulaire dateRegularisationParDefaut={toISODate(new Date())} />
       <button
         type="submit"
@@ -277,7 +285,9 @@ function FormulaireNote({ onCree }: { onCree: () => void }) {
       }}
       className="flex flex-col gap-3 p-4"
     >
-      <div className="font-heading text-lg text-ink">Nouvelle note</div>
+      <h2 id="fab-creation-titre-note" className="font-heading text-lg text-ink">
+        Nouvelle note
+      </h2>
       <input
         name="titre"
         value={titre}
@@ -322,8 +332,24 @@ export default function FabCreationRapideModal({
   onChoisir: (vue: 'message' | 'tache' | 'regularisation' | 'note') => void
   onFermer: () => void
 }) {
+  // Un id de titre par vue (chacune porte son propre <h2>, voir plus haut) :
+  // aria-labelledby doit suivre le titre réellement affiché, pas un titre
+  // générique fixe.
+  const idTitre = {
+    menu: 'fab-creation-titre-menu',
+    message: 'fab-creation-titre-message',
+    tache: 'fab-creation-titre-tache',
+    regularisation: 'fab-creation-titre-regularisation',
+    note: 'fab-creation-titre-note',
+  }[vue]
+
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={idTitre}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center"
+    >
       <button type="button" aria-label="Fermer" onClick={onFermer} className="absolute inset-0" />
       <div className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl">
         <button

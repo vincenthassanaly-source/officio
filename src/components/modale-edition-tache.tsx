@@ -68,6 +68,9 @@ export default function ModaleEditionTache({
 
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modale-edition-tache-titre"
       className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onFerme}
     >
@@ -92,7 +95,9 @@ export default function ModaleEditionTache({
         className="panneau-entree flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-ink">Modifier la tâche</h2>
+          <h2 id="modale-edition-tache-titre" className="text-sm font-bold text-ink">
+            Modifier la tâche
+          </h2>
           <button type="button" onClick={onFerme} aria-label="Fermer sans enregistrer" className="text-muted">
             ×
           </button>
