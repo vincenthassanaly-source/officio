@@ -90,6 +90,8 @@ export function OfficineSwitcher({
         type="button"
         onClick={toggle}
         disabled={isPending}
+        aria-haspopup="listbox"
+        aria-expanded={ouvert}
         className={
           avecLogo
             ? 'flex min-w-0 shrink-0 items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-neutral-soft disabled:opacity-60'
