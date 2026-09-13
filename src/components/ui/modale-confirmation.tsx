@@ -49,15 +49,6 @@ export function ModaleConfirmation({
     if (ouvert) boutonAnnulerRef.current?.focus()
   }, [ouvert])
 
-  useEffect(() => {
-    if (!ouvert) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') onAnnuler()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [ouvert, onAnnuler])
-
   if (!ouvert) return null
 
   const classeBoutonConfirmer = destructif

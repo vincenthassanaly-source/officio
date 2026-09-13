@@ -40,6 +40,12 @@ import { useEffect, useRef } from 'react'
  * vraie navigation pour prévenir ce nettoyage, plutôt que de deviner l'état
  * de l'historique après coup (retour compatible : ignoré par les appelants
  * qui ne l'utilisent pas).
+ *
+ * Gère aussi la touche Échap (déclenche `fermer()`) tant que `ouvert` est
+ * vrai : centralisé ici plutôt que dupliqué dans chaque modale/panneau
+ * appelant — voir l'ancien useEffect keydown de ModaleConfirmation, retiré au
+ * profit de celui-ci — pour que toute nouvelle surface utilisant ce hook
+ * hérite de la fermeture Échap sans code local supplémentaire.
  */
 let compteurOverlay = 0
 
@@ -67,10 +73,15 @@ export function useFermerAvecRetour(ouvert: boolean, fermer: () => void) {
       fermetureParRetour = true
       fermerRef.current()
     }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') fermerRef.current()
+    }
     window.addEventListener('popstate', onPopState)
+    window.addEventListener('keydown', onKeyDown)
 
     return () => {
       window.removeEventListener('popstate', onPopState)
+      window.removeEventListener('keydown', onKeyDown)
       if (!fermetureParRetour && !navigationEnCoursRef.current && history.state?.id === monId) {
         history.back()
       }
