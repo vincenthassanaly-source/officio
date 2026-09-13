@@ -150,7 +150,10 @@ export function RechercheGlobale() {
         {chargement && <Spinner className="h-4 w-4 shrink-0 text-muted" />}
 
         {ouvert && (
-          <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[70vh] overflow-y-auto rounded-[20px] border border-border bg-surface p-2 shadow-lg">
+          <div
+            aria-live="polite"
+            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[70vh] overflow-y-auto rounded-[20px] border border-border bg-surface p-2 shadow-lg"
+          >
             {chargement ? (
               <p className="px-3 py-6 text-center text-[12.5px] text-muted">Recherche…</p>
             ) : aAffiner ? (

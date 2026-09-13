@@ -69,7 +69,12 @@ export function SqueletteGrilleTuiles({ nombre = 8 }: { nombre?: number }) {
 
 /** Enveloppe commune : occupe la hauteur disponible et porte le pouls. */
 export function SquelettePage({ children }: { children: React.ReactNode }) {
-  return <div className="flex flex-1 animate-pulse flex-col gap-3">{children}</div>
+  return (
+    <div role="status" aria-live="polite" className="flex flex-1 animate-pulse flex-col gap-3">
+      <span className="sr-only">Chargement…</span>
+      {children}
+    </div>
+  )
 }
 
 // Repli par défaut, conservé tel quel pour les routes dont la forme réelle

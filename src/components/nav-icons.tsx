@@ -10,6 +10,7 @@ export function IconAccueil({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M3 12l9-9 9 9" />
       <path d="M5 10v10h14V10" />
@@ -27,6 +28,7 @@ export function IconLiaison({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
@@ -43,6 +45,7 @@ export function IconAgenda({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <rect x="3" y="5" width="18" height="16" rx="2" />
       <path d="M16 3v4M8 3v4M3 10h18" />
@@ -60,6 +63,7 @@ export function IconDocuments({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
     </svg>
@@ -76,6 +80,7 @@ export function IconCarnet({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <rect x="3" y="4" width="18" height="16" rx="2" />
       <circle cx="9" cy="10" r="2" />
@@ -94,6 +99,7 @@ export function IconFournisseurs({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <rect x="1" y="7" width="14" height="10" rx="1" />
       <path d="M15 10h4l3 3v4h-7z" />
@@ -113,6 +119,7 @@ export function IconHuiles({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M12 3s7 7.3 7 12a7 7 0 1 1-14 0c0-4.7 7-12 7-12z" />
     </svg>
@@ -129,6 +136,7 @@ export function IconChaussures({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M2 17.5V10a1 1 0 0 1 1-1h3c1.4 0 2.7.5 3.7 1.4l3 2.6c1 .9 2.4 1.5 3.8 1.5H21a1 1 0 0 1 1 1v1.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z" />
       <path d="M6 9V6" />
@@ -146,6 +154,7 @@ export function IconCno({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <rect x="3.5" y="9" width="17" height="6" rx="3" transform="rotate(-25 12 12)" />
       <line x1="10.3" y1="7.4" x2="13.7" y2="16.6" transform="rotate(-25 12 12)" />
@@ -163,6 +172,7 @@ export function IconRegularisation({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M6 3h9l3 3v15H6z" />
       <path d="M9 13l2 2 4-4" />
@@ -180,6 +190,7 @@ export function IconVaccin({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M19.5 4.5L4.5 19.5" />
       <path d="M17 2l5 5" />
@@ -200,6 +211,7 @@ export function IconSuggestions({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3 11.2V16h6v-1.8A6 6 0 0 0 12 3z" />
     </svg>
@@ -216,6 +228,7 @@ export function IconRupturesStock({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M3 7.5 12 3l9 4.5-9 4.5-9-4.5Z" />
       <path d="M3 7.5v9L12 21l9-4.5v-9" />
@@ -235,6 +248,7 @@ export function IconNote({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M5 3h11l3 3v15H5z" />
       <path d="M16 3v3h3" />
@@ -255,6 +269,7 @@ export function IconPosologie({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3 3" />
@@ -274,6 +289,7 @@ export function IconEntretien({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
       <path d="M12 9c-.7-.7-1.8-.7-2.5 0s-.7 1.8 0 2.5L12 14l2.5-2.5c.7-.7.7-1.8 0-2.5s-1.8-.7-2.5 0z" />
@@ -294,6 +310,7 @@ export function IconPlus({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <rect x="3" y="3" width="8" height="8" rx="1.5" />
       <rect x="13" y="3" width="8" height="8" rx="1.5" />
@@ -315,6 +332,7 @@ export function IconActivite({ className }: IconProps) {
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
+      aria-hidden="true"
     >
       <circle cx="5" cy="6" r="1.5" fill="currentColor" stroke="none" />
       <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
