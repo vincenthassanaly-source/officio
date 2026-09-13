@@ -68,6 +68,7 @@ export function ModaleAjoutDepuisStock({
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher une huile en stock…"
+          aria-label="Rechercher une huile en stock…"
           autoFocus
           className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />

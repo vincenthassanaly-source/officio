@@ -112,11 +112,13 @@ export default function ModaleEditionTache({
           required
           defaultValue={tache.titre}
           placeholder="Titre de la tâche"
+          aria-label="Titre de la tâche"
           className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
         <select
           name="assigne_id"
           defaultValue={tache.assigne?.id ?? ''}
+          aria-label="Assigner à"
           className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         >
           <option value="">Non assignée (toute l&rsquo;équipe)</option>
@@ -131,12 +133,14 @@ export default function ModaleEditionTache({
             type="date"
             name="echeance"
             defaultValue={tache.echeance ?? ''}
+            aria-label="Date d'échéance"
             className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
           <input
             type="time"
             name="echeance_heure"
             defaultValue={tache.echeance_heure?.slice(0, 5) ?? ''}
+            aria-label="Heure d'échéance"
             className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
         </div>

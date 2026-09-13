@@ -148,6 +148,7 @@ function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
           value={contenu}
           onChange={(e) => setContenu(e.target.value)}
           placeholder="Écrire un message…"
+          aria-label="Écrire un message…"
           className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
         <ChampAudio onChange={setAudio} />
@@ -195,12 +196,14 @@ function FormulaireTache({
         name="titre"
         required
         placeholder="Titre de la tâche"
+        aria-label="Titre de la tâche"
         className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
       />
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <select
           name="assigne_id"
           defaultValue=""
+          aria-label="Assigner à"
           className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         >
           <option value="">Non assignée (toute l&rsquo;équipe)</option>
@@ -293,6 +296,7 @@ function FormulaireNote({ onCree }: { onCree: () => void }) {
         value={titre}
         onChange={(e) => setTitre(e.target.value)}
         placeholder="Titre de la note"
+        aria-label="Titre de la note"
         className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
       />
       <textarea
