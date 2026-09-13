@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { listerComptes, retirerCompte, ajouterOuMettreAJourCompte, type CompteAppareil } from '@/lib/comptes-appareil'
 import { authentifierCompteAppareil } from '@/lib/supabase/authentification-appareil'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { couleurAvatar, texteAvatar } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 
@@ -106,6 +107,7 @@ export function SwitchIdentite({
   const [comptes, setComptes] = useState<CompteAppareil[]>([])
   const [comptesExpires, setComptesExpires] = useState<Record<string, true>>({})
   const [enCoursId, setEnCoursId] = useState<string | null>(null)
+  const [compteASupprimer, setCompteASupprimer] = useState<CompteAppareil | null>(null)
   // Rechargement complet requis après un changement de compte (voir
   // node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md :
   // "For logout flows, using window.location.href instead of router.push
@@ -169,6 +171,11 @@ export function SwitchIdentite({
     })
   }
 
+  function confirmerSuppression() {
+    if (compteASupprimer) supprimer(compteASupprimer.profilId)
+    setCompteASupprimer(null)
+  }
+
   return (
     <div className="relative">
       <button
@@ -212,7 +219,7 @@ export function SwitchIdentite({
                   </button>
                   <button
                     type="button"
-                    onClick={() => supprimer(c.profilId)}
+                    onClick={() => setCompteASupprimer(c)}
                     aria-label="Retirer ce compte de cet ordinateur"
                     className="mr-1 shrink-0 text-muted hover:text-rec"
                   >
@@ -248,6 +255,19 @@ export function SwitchIdentite({
           </Link>
         </div>
       )}
+
+      <ModaleConfirmation
+        ouvert={compteASupprimer !== null}
+        titre="Retirer ce compte ?"
+        description={
+          compteASupprimer
+            ? `« ${compteASupprimer.nomComplet} » ne sera plus proposé sur cet ordinateur. Vous pourrez vous reconnecter avec ce compte à tout moment.`
+            : undefined
+        }
+        texteConfirmer="Retirer"
+        onConfirmer={confirmerSuppression}
+        onAnnuler={() => setCompteASupprimer(null)}
+      />
     </div>
   )
 }
