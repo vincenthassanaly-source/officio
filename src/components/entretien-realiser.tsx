@@ -86,9 +86,19 @@ export function RealiserEntretien({
     ? calculerEtape(entretienActif.annee_accompagnement, entretienActif.numero_entretien)
     : null
 
-  const methodologieAffichee = typeAEtapes
-    ? items.methodologie.filter((i) => i.etape === null || i.etape === etapeCalculee)
-    : items.methodologie
+  const methodologieAffichee = useMemo(
+    () =>
+      typeAEtapes ? items.methodologie.filter((i) => i.etape === null || i.etape === etapeCalculee) : items.methodologie,
+    [typeAEtapes, items.methodologie, etapeCalculee]
+  )
+
+  // Checklist combinée (méthodologie affichée + questions) pour l'indicateur
+  // de progression de l'en-tête — recalculée uniquement quand ces listes ou
+  // la Map de réponses changent, pas à chaque rendu.
+  const itemsChecklist = useMemo(
+    () => [...methodologieAffichee, ...items.questions],
+    [methodologieAffichee, items.questions]
+  )
 
   const [reponses, appliquerReponse] = useOptimistic(
     new Map(reponsesActives.map((r) => [r.item_id, r.statut])),
@@ -97,6 +107,11 @@ export function RealiserEntretien({
       copie.set(action.itemId, action.statut)
       return copie
     }
+  )
+
+  const nombreRenseignes = useMemo(
+    () => itemsChecklist.filter((item) => reponses.has(item.id)).length,
+    [itemsChecklist, reponses]
   )
 
   const [notes, setNotes] = useState(entretienActif?.notes ?? '')
@@ -150,7 +165,8 @@ export function RealiserEntretien({
               key={s}
               type="button"
               onClick={() => cocher(item.id, s)}
-              className={`rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold ${
+              aria-pressed={statut === s}
+              className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold ${
                 statut === s ? CLASSES_STATUT[s] : 'bg-neutral-soft text-muted'
               }`}
             >
@@ -170,7 +186,7 @@ export function RealiserEntretien({
           <button
             type="button"
             onClick={() => setModaleOuverte('creation')}
-            className="rounded-xl bg-primary px-3 py-1.5 text-[12px] font-semibold text-white"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-3 py-1.5 text-[12px] font-semibold text-white"
           >
             + Réaliser un entretien
           </button>
@@ -216,19 +232,33 @@ export function RealiserEntretien({
                 <button
                   type="button"
                   onClick={() => setModaleOuverte('edition')}
-                  className="rounded-lg border border-border px-2.5 py-1.5 text-[11.5px] font-semibold text-muted"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-2.5 py-1.5 text-[11.5px] font-semibold text-muted"
                 >
                   Modifier
                 </button>
                 <button
                   type="button"
                   onClick={() => setASupprimer(true)}
-                  className="rounded-lg border border-border px-2.5 py-1.5 text-[11.5px] font-semibold text-rec"
+                  className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-2.5 py-1.5 text-[11.5px] font-semibold text-rec"
                 >
                   Supprimer
                 </button>
               </div>
             </div>
+
+            {itemsChecklist.length > 0 && (
+              <div className="flex items-center gap-2" role="group" aria-label="Progression de la checklist">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-track">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width]"
+                    style={{ width: `${(nombreRenseignes / itemsChecklist.length) * 100}%` }}
+                  />
+                </div>
+                <span className="shrink-0 text-[11px] font-semibold text-muted">
+                  {nombreRenseignes}/{itemsChecklist.length} renseignés
+                </span>
+              </div>
+            )}
 
             {typeAEtapes && !etapeCalculee && (
               <p className="rounded-lg bg-neutral-soft px-2.5 py-2 text-[11.5px] text-muted">
@@ -239,16 +269,26 @@ export function RealiserEntretien({
           </section>
 
           {methodologieAffichee.length > 0 && (
-            <section className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
-              <h2 className="text-[13.5px] font-bold text-ink">Méthodologie / déroulé</h2>
-              <div className="flex flex-col gap-1.5">{methodologieAffichee.map(renderItem)}</div>
+            <section className="rounded-[20px] bg-surface shadow-card p-3.5">
+              <details open className="group">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-[13.5px] font-bold text-ink [&::-webkit-details-marker]:hidden">
+                  <span>Méthodologie / déroulé</span>
+                  <IconeChevron />
+                </summary>
+                <div className="mt-2 flex flex-col gap-1.5">{methodologieAffichee.map(renderItem)}</div>
+              </details>
             </section>
           )}
 
           {items.questions.length > 0 && (
-            <section className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
-              <h2 className="text-[13.5px] font-bold text-ink">Questions à poser</h2>
-              <div className="flex flex-col gap-1.5">{items.questions.map(renderItem)}</div>
+            <section className="rounded-[20px] bg-surface shadow-card p-3.5">
+              <details open className="group">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-[13.5px] font-bold text-ink [&::-webkit-details-marker]:hidden">
+                  <span>Questions à poser</span>
+                  <IconeChevron />
+                </summary>
+                <div className="mt-2 flex flex-col gap-1.5">{items.questions.map(renderItem)}</div>
+              </details>
             </section>
           )}
 
@@ -265,7 +305,7 @@ export function RealiserEntretien({
               type="button"
               disabled={isPending}
               onClick={enregistrerNotes}
-              className="self-end rounded-xl bg-primary px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center self-end rounded-xl bg-primary px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-60"
             >
               Enregistrer les notes
             </button>
@@ -299,6 +339,26 @@ export function RealiserEntretien({
 
 function sabonnerSansChangement() {
   return () => {}
+}
+
+// Chevron de repli/dépli des sections <details> — décoratif (l'état
+// ouvert/fermé est déjà porté nativement par <summary>), donc masqué aux
+// lecteurs d'écran.
+function IconeChevron() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      aria-hidden="true"
+      className="shrink-0 text-muted transition-transform group-open:rotate-180"
+    >
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  )
 }
 
 function FormulairePatient({
@@ -373,7 +433,12 @@ function FormulairePatient({
           <h2 id="formulaire-patient-titre" className="text-sm font-bold text-ink">
             {entretien ? 'Modifier l’entretien' : 'Réaliser un entretien'}
           </h2>
-          <button type="button" onClick={onFerme} aria-label="Fermer" className="text-muted">
+          <button
+            type="button"
+            onClick={onFerme}
+            aria-label="Fermer"
+            className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted"
+          >
             ×
           </button>
         </div>
@@ -432,7 +497,7 @@ function FormulairePatient({
           type="button"
           disabled={isPending || !patientNom.trim() || !patientPrenom.trim() || !dateEntretien}
           onClick={valider}
-          className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+          className="min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
         >
           {entretien ? 'Enregistrer' : 'Créer'}
         </button>
