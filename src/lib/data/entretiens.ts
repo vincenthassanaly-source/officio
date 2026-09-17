@@ -43,6 +43,10 @@ export type DocumentEntretien = {
   ajoute_par: { id: string; nom_complet: string; initiales: string } | null
 }
 
+// Compteurs par section + documents pour une carte de type d'entretien
+// (liste), affichés en compact à côté du nom.
+export type CompteursEntretien = Record<SectionEntretien, number> & { documents: number }
+
 // Un type d'entretien par officine (nom + statut actif/archivé), triés par
 // ordre d'affichage — voir reordonner_types_entretien() côté écriture.
 export const getTypesEntretien = cache(async (officineId: string): Promise<TypeEntretien[]> => {
@@ -142,3 +146,41 @@ export const getDocumentsEntretien = cache(async (typeEntretienId: string): Prom
     ajoute_par: Array.isArray(d.ajoute_par) ? d.ajoute_par[0] ?? null : d.ajoute_par,
   }))
 })
+
+// Compteurs (méthodologie/facturation/questions/documents) pour un lot de
+// types d'entretien, en 2 requêtes groupées (pas de N+1) — utilisé par la
+// liste des types pour afficher des badges compacts par carte.
+export const getCompteursEntretien = cache(
+  async (typeIds: string[]): Promise<Record<string, CompteursEntretien>> => {
+    const compteurs: Record<string, CompteursEntretien> = {}
+    for (const id of typeIds) {
+      compteurs[id] = { methodologie: 0, facturation: 0, questions: 0, documents: 0 }
+    }
+    if (typeIds.length === 0) return compteurs
+
+    const supabase = await createClient()
+
+    const [itemsRes, documentsRes] = await Promise.all([
+      supabase.from('entretien_items').select('type_entretien_id, section').in('type_entretien_id', typeIds),
+      supabase.from('entretien_documents').select('type_entretien_id').in('type_entretien_id', typeIds),
+    ])
+
+    if (itemsRes.error) {
+      console.error('getCompteursEntretien items', itemsRes.error)
+    } else {
+      for (const row of itemsRes.data) {
+        compteurs[row.type_entretien_id][row.section as SectionEntretien]++
+      }
+    }
+
+    if (documentsRes.error) {
+      console.error('getCompteursEntretien documents', documentsRes.error)
+    } else {
+      for (const row of documentsRes.data) {
+        compteurs[row.type_entretien_id].documents++
+      }
+    }
+
+    return compteurs
+  }
+)

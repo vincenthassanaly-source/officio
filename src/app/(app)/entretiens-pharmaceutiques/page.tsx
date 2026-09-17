@@ -1,5 +1,5 @@
 import { getOfficineActive } from '@/lib/data/officine-active'
-import { getTypesEntretien } from '@/lib/data/entretiens'
+import { getTypesEntretien, getCompteursEntretien } from '@/lib/data/entretiens'
 import { EntretiensListe } from '@/components/entretiens-liste'
 import { LienRetour } from '@/components/lien-retour'
 
@@ -14,12 +14,13 @@ export default async function EntretiensPharmaceutiquesPage() {
   if (!officine) return null
 
   const types = await getTypesEntretien(officine.officine_id)
+  const compteurs = await getCompteursEntretien(types.map((t) => t.id))
 
   return (
     <>
       <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Entretiens pharmaceutiques</h1>
-      <EntretiensListe types={types} />
+      <EntretiensListe types={types} compteurs={compteurs} />
     </>
   )
 }

@@ -8,7 +8,7 @@ import {
   reordonnerTypesEntretien,
   supprimerTypeEntretien,
 } from '@/app/actions/entretiens'
-import type { TypeEntretien } from '@/lib/data/entretiens'
+import type { TypeEntretien, CompteursEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 
@@ -30,7 +30,34 @@ function reducerTypes(etat: TypeEntretien[], action: ActionTypes): TypeEntretien
   }
 }
 
-export function EntretiensListe({ types }: { types: TypeEntretien[] }) {
+const VIDE: CompteursEntretien = { methodologie: 0, facturation: 0, questions: 0, documents: 0 }
+
+function CompteursType({ compteurs }: { compteurs: CompteursEntretien }) {
+  return (
+    <div
+      className="mt-1 flex items-center gap-1"
+      aria-label={`${compteurs.methodologie} étapes de méthodologie, ${compteurs.facturation} points de facturation, ${compteurs.questions} questions, ${compteurs.documents} documents`}
+    >
+      {[compteurs.methodologie, compteurs.facturation, compteurs.questions, compteurs.documents].map((valeur, i) => (
+        <span
+          key={i}
+          aria-hidden="true"
+          className="flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-soft px-1 text-[9.5px] font-bold text-muted"
+        >
+          {valeur}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+export function EntretiensListe({
+  types,
+  compteurs,
+}: {
+  types: TypeEntretien[]
+  compteurs: Record<string, CompteursEntretien>
+}) {
   const [nomNouveau, setNomNouveau] = useState('')
   const [formOuvert, setFormOuvert] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
@@ -172,6 +199,7 @@ export function EntretiensListe({ types }: { types: TypeEntretien[] }) {
           <div className={`truncate text-[13.5px] font-semibold ${type.actif ? 'text-ink' : 'text-muted line-through'}`}>
             {type.nom}
           </div>
+          <CompteursType compteurs={compteurs[type.id] ?? VIDE} />
         </Link>
         <div className="flex shrink-0 items-center gap-1.5">
           <button
