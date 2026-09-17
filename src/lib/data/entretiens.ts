@@ -1,15 +1,13 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
 
-export type SectionEntretien = 'methodologie' | 'facturation' | 'questions'
+export type SectionEntretien = 'methodologie' | 'facturation'
 
-// Sous-étape de regroupement pour la section méthodologie — non pertinent
-// (toujours NULL) pour les autres sections.
-export type EtapeMethodologie =
-  | 'annee1_entretien1'
-  | 'annee1_entretien2'
-  | 'annee1_entretien3'
-  | 'annees_suivantes'
+// Libellé de phase, propre à chaque type d'entretien (ex. « Année 1 –
+// Entretien 1 » pour les entretiens au rythme annuel) — non pertinent
+// (toujours NULL) pour la section facturation. Texte libre : chaque type
+// définit ses propres libellés ou n'en a pas.
+export type PhaseEntretien = string | null
 
 export type TypeEntretien = {
   id: string
@@ -26,7 +24,7 @@ export type ItemEntretien = {
   section: SectionEntretien
   contenu: string
   ordre: number
-  etape: EtapeMethodologie | null
+  phase: PhaseEntretien
   intitule: string | null
   created_at: string
   updated_at: string
@@ -44,6 +42,7 @@ export type DocumentEntretien = {
   type_fichier: string
   taille_octets: number | null
   categorie: CategorieDocumentEntretien
+  tag: string | null
   created_at: string
   ajoute_par: { id: string; nom_complet: string; initiales: string } | null
 }
@@ -93,20 +92,19 @@ export const getTypeEntretien = cache(async (id: string): Promise<TypeEntretien 
 
 // Items d'un type d'entretien, groupés par section et triés par ordre —
 // une entrée par valeur de SectionEntretien, même vide, pour que l'UI
-// affiche les 3 sections sans avoir à vérifier leur présence.
+// affiche les 2 sections sans avoir à vérifier leur présence.
 export const getItemsEntretien = cache(
   async (typeEntretienId: string): Promise<Record<SectionEntretien, ItemEntretien[]>> => {
     const vide: Record<SectionEntretien, ItemEntretien[]> = {
       methodologie: [],
       facturation: [],
-      questions: [],
     }
 
     const supabase = await createClient()
 
     const { data, error } = await supabase
       .from('entretien_items')
-      .select('id, type_entretien_id, section, contenu, ordre, etape, intitule, created_at, updated_at')
+      .select('id, type_entretien_id, section, contenu, ordre, phase, intitule, created_at, updated_at')
       .eq('type_entretien_id', typeEntretienId)
       .order('ordre', { ascending: true })
 
@@ -129,7 +127,7 @@ export const getDocumentsEntretien = cache(async (typeEntretienId: string): Prom
   const { data, error } = await supabase
     .from('entretien_documents')
     .select(
-      `id, type_entretien_id, nom, chemin_stockage, type_fichier, taille_octets, categorie, created_at,
+      `id, type_entretien_id, nom, chemin_stockage, type_fichier, taille_octets, categorie, tag, created_at,
        ajoute_par:profils!entretien_documents_ajoute_par_fkey ( id, nom_complet, initiales )`
     )
     .eq('type_entretien_id', typeEntretienId)
@@ -148,19 +146,20 @@ export const getDocumentsEntretien = cache(async (typeEntretienId: string): Prom
     type_fichier: d.type_fichier,
     taille_octets: d.taille_octets,
     categorie: d.categorie as CategorieDocumentEntretien,
+    tag: d.tag,
     created_at: d.created_at,
     ajoute_par: Array.isArray(d.ajoute_par) ? d.ajoute_par[0] ?? null : d.ajoute_par,
   }))
 })
 
-// Compteurs (méthodologie/facturation/questions/documents) pour un lot de
-// types d'entretien, en 2 requêtes groupées (pas de N+1) — utilisé par la
-// liste des types pour afficher des badges compacts par carte.
+// Compteurs (méthodologie/facturation/documents) pour un lot de types
+// d'entretien, en 2 requêtes groupées (pas de N+1) — utilisé par la liste
+// des types pour afficher des badges compacts par carte.
 export const getCompteursEntretien = cache(
   async (typeIds: string[]): Promise<Record<string, CompteursEntretien>> => {
     const compteurs: Record<string, CompteursEntretien> = {}
     for (const id of typeIds) {
-      compteurs[id] = { methodologie: 0, facturation: 0, questions: 0, documents: 0 }
+      compteurs[id] = { methodologie: 0, facturation: 0, documents: 0 }
     }
     if (typeIds.length === 0) return compteurs
 

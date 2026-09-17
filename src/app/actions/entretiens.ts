@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
-import type { SectionEntretien, EtapeMethodologie, CategorieDocumentEntretien } from '@/lib/data/entretiens'
+import type { SectionEntretien, PhaseEntretien, CategorieDocumentEntretien } from '@/lib/data/entretiens'
 
 const TYPES_ACCEPTES = ['application/pdf', 'image/jpeg', 'image/png']
 const CATEGORIES_DOCUMENT: CategorieDocumentEntretien[] = [
@@ -75,18 +75,17 @@ export async function supprimerTypeEntretien(id: string) {
   revalidatePath('/entretiens-pharmaceutiques')
 }
 
-// --- Items par section (méthodologie / facturation / questions) -------
+// --- Items par section (méthodologie / facturation) --------------------
 
-// L'étape de regroupement n'a de sens que pour la méthodologie et les
-// questions (cf. commentaire de colonne entretien_items.etape) ; les items
-// de facturation restent toujours à etape = NULL.
-const SECTIONS_AVEC_ETAPE: SectionEntretien[] = ['methodologie', 'questions']
+// La phase de regroupement n'a de sens que pour la méthodologie (script
+// guidé) ; les items de facturation restent toujours à phase = NULL.
+const SECTIONS_AVEC_PHASE: SectionEntretien[] = ['methodologie']
 
 export async function creerItemEntretien(
   typeEntretienId: string,
   section: SectionEntretien,
   contenu: string,
-  etape: EtapeMethodologie | null = null,
+  phase: PhaseEntretien = null,
   intitule: string | null = null
 ) {
   const contenuNettoye = contenu.trim()
@@ -97,7 +96,7 @@ export async function creerItemEntretien(
     p_type_entretien_id: typeEntretienId,
     p_section: section,
     p_contenu: contenuNettoye,
-    p_etape: SECTIONS_AVEC_ETAPE.includes(section) ? etape : null,
+    p_etape: SECTIONS_AVEC_PHASE.includes(section) ? phase?.trim() || null : null,
     p_intitule: section === 'facturation' ? intitule?.trim() || null : null,
   })
 
@@ -110,7 +109,7 @@ export async function modifierItemEntretien(
   id: string,
   typeEntretienId: string,
   contenu: string,
-  etape: EtapeMethodologie | null = null,
+  phase: PhaseEntretien = null,
   intitule: string | null = null
 ) {
   const contenuNettoye = contenu.trim()
@@ -120,7 +119,7 @@ export async function modifierItemEntretien(
   const { error } = await supabase.rpc('modifier_item_entretien', {
     p_id: id,
     p_contenu: contenuNettoye,
-    p_etape: etape,
+    p_etape: phase?.trim() || null,
     p_intitule: intitule?.trim() || null,
   })
 
@@ -155,6 +154,7 @@ export async function ajouterDocumentEntretien(formData: FormData) {
   const nomPersonnalise = String(formData.get('nom') ?? '').trim()
   const categorieSaisie = String(formData.get('categorie') ?? '') as CategorieDocumentEntretien
   const categorie = CATEGORIES_DOCUMENT.includes(categorieSaisie) ? categorieSaisie : 'autre'
+  const tag = String(formData.get('tag') ?? '').trim() || null
 
   if (!(fichier instanceof File) || fichier.size === 0) {
     throw new Error('Merci de choisir un fichier.')
@@ -186,12 +186,25 @@ export async function ajouterDocumentEntretien(formData: FormData) {
     p_type_fichier: fichier.type,
     p_taille_octets: fichier.size,
     p_categorie: categorie,
+    p_tag: tag,
   })
 
   if (erreurInsert) {
     await supabase.storage.from('entretiens').remove([chemin])
     throw new Error(erreurInsert.message)
   }
+
+  revalidatePath(`/entretiens-pharmaceutiques/${typeEntretienId}`)
+}
+
+export async function modifierTagDocumentEntretien(id: string, typeEntretienId: string, tag: string | null) {
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('modifier_tag_document_entretien', {
+    p_id: id,
+    p_tag: tag?.trim() || null,
+  })
+
+  if (error) throw new Error(error.message)
 
   revalidatePath(`/entretiens-pharmaceutiques/${typeEntretienId}`)
 }
