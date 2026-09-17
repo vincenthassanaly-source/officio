@@ -11,25 +11,7 @@ import type { ItemEntretien, EtapeMethodologie } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { reducerItemsEntretien } from '@/components/entretien-items-reducer'
-
-const ORDRE_ETAPES: EtapeMethodologie[] = [
-  'annee1_entretien1',
-  'annee1_entretien2',
-  'annee1_entretien3',
-  'annees_suivantes',
-]
-
-const LABELS_ETAPE: Record<EtapeMethodologie, string> = {
-  annee1_entretien1: 'Année 1 — 1er entretien',
-  annee1_entretien2: 'Année 1 — 2e entretien',
-  annee1_entretien3: 'Année 1 — 3e entretien',
-  annees_suivantes: 'Années suivantes',
-}
-
-const OPTIONS_ETAPE: { valeur: EtapeMethodologie | ''; label: string }[] = [
-  { valeur: '', label: 'Contenu général (non séquencé)' },
-  ...ORDRE_ETAPES.map((etape) => ({ valeur: etape, label: LABELS_ETAPE[etape] })),
-]
+import { OPTIONS_ETAPE, StepperEtapes, regrouperParEtape } from '@/components/entretien-etapes'
 
 export function EntretienMethodologie({
   typeEntretienId,
@@ -52,13 +34,7 @@ export function EntretienMethodologie({
   const [itemsOptimistes, appliquerOptimiste] = useOptimistic(items, reducerItemsEntretien)
   const tries = [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre)
 
-  const general = tries.filter((i) => i.etape === null)
-  const groupes = ORDRE_ETAPES.map((etape) => ({ etape, items: tries.filter((i) => i.etape === etape) })).filter(
-    (g) => g.items.length > 0
-  )
-  // Un type "a des étapes" dès qu'au moins un de ses items renseigne l'étape
-  // de méthodologie — sinon la fiche affiche une simple liste (cf. refonte).
-  const typeAEtapes = groupes.length > 0
+  const { general, groupes } = regrouperParEtape(tries)
 
   function ajouter() {
     const contenu = contenuNouveau.trim()
@@ -247,36 +223,7 @@ export function EntretienMethodologie({
         <p className="py-4 text-center text-[12.5px] text-muted">Aucune étape renseignée pour l’instant.</p>
       )}
 
-      {general.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          {typeAEtapes && <h3 className="text-[12px] font-bold text-muted">Contenu général</h3>}
-          {general.map((item, i) => ligneItem(item, i, general))}
-        </div>
-      )}
-
-      {typeAEtapes && (
-        <ol className="flex flex-col">
-          {groupes.map(({ etape, items: itemsGroupe }, index) => (
-            <li key={etape} className="relative flex gap-3 pb-5 last:pb-0">
-              {index < groupes.length - 1 && (
-                <span aria-hidden="true" className="absolute bottom-0 left-[15px] top-8 w-px bg-border" />
-              )}
-              <span
-                aria-hidden="true"
-                className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-[13px] font-bold text-white"
-              >
-                {index + 1}
-              </span>
-              <div className="min-w-0 flex-1 pt-0.5">
-                <h3 className="mb-2 text-[13px] font-bold text-ink">{LABELS_ETAPE[etape]}</h3>
-                <div className="flex flex-col gap-1.5">
-                  {itemsGroupe.map((item, i) => ligneItem(item, i, itemsGroupe))}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ol>
-      )}
+      <StepperEtapes general={general} groupes={groupes} rendreItem={ligneItem} />
 
       {modeEdition && (
         <>

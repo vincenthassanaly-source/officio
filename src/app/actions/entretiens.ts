@@ -71,6 +71,11 @@ export async function supprimerTypeEntretien(id: string) {
 
 // --- Items par section (méthodologie / facturation / questions) -------
 
+// L'étape de regroupement n'a de sens que pour la méthodologie et les
+// questions (cf. commentaire de colonne entretien_items.etape) ; les items
+// de facturation restent toujours à etape = NULL.
+const SECTIONS_AVEC_ETAPE: SectionEntretien[] = ['methodologie', 'questions']
+
 export async function creerItemEntretien(
   typeEntretienId: string,
   section: SectionEntretien,
@@ -85,7 +90,7 @@ export async function creerItemEntretien(
     p_type_entretien_id: typeEntretienId,
     p_section: section,
     p_contenu: contenuNettoye,
-    p_etape: section === 'methodologie' ? etape : null,
+    p_etape: SECTIONS_AVEC_ETAPE.includes(section) ? etape : null,
   })
 
   if (error) throw new Error(error.message)
