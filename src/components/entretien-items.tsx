@@ -7,62 +7,36 @@ import {
   supprimerItemEntretien,
   reordonnerItemsEntretien,
 } from '@/app/actions/entretiens'
-import type { ItemEntretien, EtapeMethodologie } from '@/lib/data/entretiens'
+import type { ItemEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { reducerItemsEntretien } from '@/components/entretien-items-reducer'
-import { OPTIONS_ETAPE, StepperEtapes, regrouperParEtape } from '@/components/entretien-etapes'
-
-type SectionSimple = 'facturation' | 'questions'
-
-const LABELS_SECTION: Record<SectionSimple, { titre: string; placeholder: string; vide: string }> = {
-  facturation: {
-    titre: 'Facturation',
-    placeholder: 'Détail (montant, code, condition…)',
-    vide: 'Aucun point de facturation renseigné pour l’instant.',
-  },
-  questions: {
-    titre: 'Questions à poser',
-    placeholder: 'Question à poser au patient…',
-    vide: 'Aucune question renseignée pour l’instant.',
-  },
-}
 
 export function EntretienItems({
-  section,
   typeEntretienId,
   items,
   modeEdition,
 }: {
-  section: SectionSimple
   typeEntretienId: string
   items: ItemEntretien[]
   modeEdition: boolean
 }) {
-  const labels = LABELS_SECTION[section]
-  const avecEtape = section === 'questions'
-  const avecIntitule = section === 'facturation'
-
   const [contenuNouveau, setContenuNouveau] = useState('')
   const [intituleNouveau, setIntituleNouveau] = useState('')
-  const [etapeNouvelle, setEtapeNouvelle] = useState<EtapeMethodologie | ''>('')
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [contenuEnEdition, setContenuEnEdition] = useState('')
   const [intituleEnEdition, setIntituleEnEdition] = useState('')
-  const [etapeEnEdition, setEtapeEnEdition] = useState<EtapeMethodologie | ''>('')
   const [aSupprimer, setASupprimer] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
 
   const [itemsOptimistes, appliquerOptimiste] = useOptimistic(items, reducerItemsEntretien)
   const tries = [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre)
-  const { general, groupes } = regrouperParEtape(tries)
 
   function ajouter() {
     const contenu = contenuNouveau.trim()
     if (!contenu) return
-    const etape = avecEtape ? etapeNouvelle || null : null
-    const intitule = avecIntitule ? intituleNouveau.trim() || null : null
+    const intitule = intituleNouveau.trim() || null
 
     startTransition(async () => {
       appliquerOptimiste({
@@ -70,20 +44,19 @@ export function EntretienItems({
         item: {
           id: `temp-${Date.now()}`,
           type_entretien_id: typeEntretienId,
-          section,
+          section: 'facturation',
           contenu,
           ordre: tries.length,
-          etape,
+          phase: null,
           intitule,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
       })
       try {
-        await creerItemEntretien(typeEntretienId, section, contenu, etape, intitule)
+        await creerItemEntretien(typeEntretienId, 'facturation', contenu, null, intitule)
         setContenuNouveau('')
         setIntituleNouveau('')
-        setEtapeNouvelle('')
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de l'ajout." })
       }
@@ -93,13 +66,12 @@ export function EntretienItems({
   function modifier(id: string) {
     const contenu = contenuEnEdition.trim()
     if (!contenu) return
-    const etape = avecEtape ? etapeEnEdition || null : null
-    const intitule = avecIntitule ? intituleEnEdition.trim() || null : null
+    const intitule = intituleEnEdition.trim() || null
 
     startTransition(async () => {
-      appliquerOptimiste({ type: 'modification', id, contenu, etape, intitule })
+      appliquerOptimiste({ type: 'modification', id, contenu, intitule })
       try {
-        await modifierItemEntretien(id, typeEntretienId, contenu, etape, intitule)
+        await modifierItemEntretien(id, typeEntretienId, contenu, null, intitule)
         setEnEdition(null)
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de la modification.' })
@@ -118,13 +90,13 @@ export function EntretienItems({
     })
   }
 
-  function deplacer(groupe: ItemEntretien[], index: number, direction: -1 | 1) {
+  function deplacer(index: number, direction: -1 | 1) {
     const cible = index + direction
-    if (cible < 0 || cible >= groupe.length) return
+    if (cible < 0 || cible >= tries.length) return
 
-    const nouveauGroupe = [...groupe]
-    ;[nouveauGroupe[index], nouveauGroupe[cible]] = [nouveauGroupe[cible], nouveauGroupe[index]]
-    const ids = nouveauGroupe.map((i) => i.id)
+    const nouveauxTries = [...tries]
+    ;[nouveauxTries[index], nouveauxTries[cible]] = [nouveauxTries[cible], nouveauxTries[index]]
+    const ids = nouveauxTries.map((i) => i.id)
 
     startTransition(async () => {
       appliquerOptimiste({ type: 'reorder', ids })
@@ -136,13 +108,11 @@ export function EntretienItems({
     })
   }
 
-  function ligneItem(item: ItemEntretien, index: number, groupe: ItemEntretien[]) {
+  function ligneItem(item: ItemEntretien, index: number) {
     if (!modeEdition) {
       return (
         <div key={item.id} className="rounded-xl bg-bg p-2.5">
-          {avecIntitule && item.intitule && (
-            <p className="mb-1 text-[13.5px] font-bold text-ink">{item.intitule}</p>
-          )}
+          {item.intitule && <p className="mb-1 text-[13.5px] font-bold text-ink">{item.intitule}</p>}
           <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{item.contenu}</p>
         </div>
       )
@@ -151,34 +121,18 @@ export function EntretienItems({
     if (enEdition === item.id) {
       return (
         <div key={item.id} className="flex flex-col gap-2 rounded-xl border border-primary p-2">
-          {avecIntitule && (
-            <input
-              value={intituleEnEdition}
-              onChange={(e) => setIntituleEnEdition(e.target.value)}
-              placeholder="Intitulé (ex. « AVK — 1er entretien »)"
-              className="rounded-lg border border-border bg-bg px-2.5 py-2 text-[13.5px] font-semibold text-ink outline-none focus:border-primary"
-            />
-          )}
+          <input
+            value={intituleEnEdition}
+            onChange={(e) => setIntituleEnEdition(e.target.value)}
+            placeholder="Intitulé (ex. « AVK — 1er entretien »)"
+            className="rounded-lg border border-border bg-bg px-2.5 py-2 text-[13.5px] font-semibold text-ink outline-none focus:border-primary"
+          />
           <textarea
-            autoFocus={!avecIntitule}
             value={contenuEnEdition}
             onChange={(e) => setContenuEnEdition(e.target.value)}
             rows={2}
             className="flex-1 resize-none rounded-lg border border-border bg-bg px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-primary"
           />
-          {avecEtape && (
-            <select
-              value={etapeEnEdition}
-              onChange={(e) => setEtapeEnEdition(e.target.value as EtapeMethodologie | '')}
-              className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[12px] text-ink outline-none focus:border-primary"
-            >
-              {OPTIONS_ETAPE.map((o) => (
-                <option key={o.valeur} value={o.valeur}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          )}
           <div className="flex justify-end gap-1.5">
             <button
               type="button"
@@ -206,7 +160,7 @@ export function EntretienItems({
           <button
             type="button"
             disabled={index === 0}
-            onClick={() => deplacer(groupe, index, -1)}
+            onClick={() => deplacer(index, -1)}
             aria-label="Monter"
             className="flex h-4 w-4 items-center justify-center text-[10px] text-muted disabled:opacity-25"
           >
@@ -214,8 +168,8 @@ export function EntretienItems({
           </button>
           <button
             type="button"
-            disabled={index === groupe.length - 1}
-            onClick={() => deplacer(groupe, index, 1)}
+            disabled={index === tries.length - 1}
+            onClick={() => deplacer(index, 1)}
             aria-label="Descendre"
             className="flex h-4 w-4 items-center justify-center text-[10px] text-muted disabled:opacity-25"
           >
@@ -223,9 +177,7 @@ export function EntretienItems({
           </button>
         </div>
         <div className="min-w-0 flex-1">
-          {avecIntitule && item.intitule && (
-            <p className="mb-1 text-[13.5px] font-bold text-ink">{item.intitule}</p>
-          )}
+          {item.intitule && <p className="mb-1 text-[13.5px] font-bold text-ink">{item.intitule}</p>}
           <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{item.contenu}</p>
         </div>
         <div className="flex shrink-0 items-center gap-1">
@@ -235,7 +187,6 @@ export function EntretienItems({
               setEnEdition(item.id)
               setContenuEnEdition(item.contenu)
               setIntituleEnEdition(item.intitule ?? '')
-              setEtapeEnEdition(item.etape ?? '')
             }}
             aria-label="Modifier"
             className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-soft text-muted"
@@ -260,15 +211,13 @@ export function EntretienItems({
 
   return (
     <section className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card">
-      <h2 className="text-[13.5px] font-bold text-ink">{labels.titre}</h2>
+      <h2 className="text-[13.5px] font-bold text-ink">Facturation</h2>
 
-      {tries.length === 0 && <p className="py-4 text-center text-[12.5px] text-muted">{labels.vide}</p>}
-
-      {avecEtape ? (
-        <StepperEtapes general={general} groupes={groupes} rendreItem={ligneItem} />
-      ) : (
-        <div className="flex flex-col gap-1.5">{tries.map((item, i) => ligneItem(item, i, tries))}</div>
+      {tries.length === 0 && (
+        <p className="py-4 text-center text-[12.5px] text-muted">Aucun point de facturation renseigné pour l’instant.</p>
       )}
+
+      <div className="flex flex-col gap-1.5">{tries.map((item, i) => ligneItem(item, i))}</div>
 
       {modeEdition && (
         <>
@@ -279,19 +228,17 @@ export function EntretienItems({
             }}
             className="flex flex-col gap-2"
           >
-            {avecIntitule && (
-              <input
-                value={intituleNouveau}
-                onChange={(e) => setIntituleNouveau(e.target.value)}
-                placeholder="Intitulé (optionnel, ex. « AVK — 1er entretien »)"
-                className="rounded-xl border border-border bg-bg px-3 py-2 text-[13.5px] font-semibold text-ink outline-none focus:border-primary"
-              />
-            )}
+            <input
+              value={intituleNouveau}
+              onChange={(e) => setIntituleNouveau(e.target.value)}
+              placeholder="Intitulé (optionnel, ex. « AVK — 1er entretien »)"
+              className="rounded-xl border border-border bg-bg px-3 py-2 text-[13.5px] font-semibold text-ink outline-none focus:border-primary"
+            />
             <div className="flex gap-2">
               <textarea
                 value={contenuNouveau}
                 onChange={(e) => setContenuNouveau(e.target.value)}
-                placeholder={labels.placeholder}
+                placeholder="Détail (montant, code, condition…)"
                 rows={1}
                 className="flex-1 resize-none rounded-xl border border-border bg-bg px-3 py-2 text-[13.5px] text-ink outline-none focus:border-primary"
               />
@@ -303,19 +250,6 @@ export function EntretienItems({
                 Ajouter
               </button>
             </div>
-            {avecEtape && (
-              <select
-                value={etapeNouvelle}
-                onChange={(e) => setEtapeNouvelle(e.target.value as EtapeMethodologie | '')}
-                className="rounded-xl border border-border bg-bg px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary"
-              >
-                {OPTIONS_ETAPE.map((o) => (
-                  <option key={o.valeur} value={o.valeur}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            )}
           </form>
 
           <ModaleConfirmation

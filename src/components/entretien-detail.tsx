@@ -16,12 +16,11 @@ const EntretienDocuments = dynamic(
   { loading: () => <ChargementSection /> }
 )
 
-type OngletEntretien = 'methodologie' | 'facturation' | 'questions' | 'documents'
+type OngletEntretien = 'methodologie' | 'facturation' | 'documents'
 
 const ONGLETS: { id: OngletEntretien; label: string }[] = [
-  { id: 'methodologie', label: 'Méthodologie' },
+  { id: 'methodologie', label: 'Script' },
   { id: 'facturation', label: 'Facturation' },
-  { id: 'questions', label: 'Questions' },
   { id: 'documents', label: 'Documents' },
 ]
 
@@ -83,7 +82,6 @@ export function EntretienDetail({
         compteurs={{
           methodologie: items.methodologie.length,
           facturation: items.facturation.length,
-          questions: items.questions.length,
           documents: documents.length,
         }}
       />
@@ -93,20 +91,7 @@ export function EntretienDetail({
           <EntretienMethodologie typeEntretienId={type.id} items={items.methodologie} modeEdition={modeEdition} />
         )}
         {onglet === 'facturation' && (
-          <EntretienItems
-            section="facturation"
-            typeEntretienId={type.id}
-            items={items.facturation}
-            modeEdition={modeEdition}
-          />
-        )}
-        {onglet === 'questions' && (
-          <EntretienItems
-            section="questions"
-            typeEntretienId={type.id}
-            items={items.questions}
-            modeEdition={modeEdition}
-          />
+          <EntretienItems typeEntretienId={type.id} items={items.facturation} modeEdition={modeEdition} />
         )}
         {onglet === 'documents' && (
           <EntretienDocuments typeEntretienId={type.id} documents={documents} modeEdition={modeEdition} />

@@ -7,11 +7,11 @@ import {
   supprimerItemEntretien,
   reordonnerItemsEntretien,
 } from '@/app/actions/entretiens'
-import type { ItemEntretien, EtapeMethodologie } from '@/lib/data/entretiens'
+import type { ItemEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { reducerItemsEntretien } from '@/components/entretien-items-reducer'
-import { OPTIONS_ETAPE, StepperEtapes, regrouperParEtape } from '@/components/entretien-etapes'
+import { StepperEtapes, regrouperParEtape } from '@/components/entretien-etapes'
 
 export function EntretienMethodologie({
   typeEntretienId,
@@ -23,10 +23,10 @@ export function EntretienMethodologie({
   modeEdition: boolean
 }) {
   const [contenuNouveau, setContenuNouveau] = useState('')
-  const [etapeNouvelle, setEtapeNouvelle] = useState<EtapeMethodologie | ''>('')
+  const [phaseNouvelle, setPhaseNouvelle] = useState('')
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [contenuEnEdition, setContenuEnEdition] = useState('')
-  const [etapeEnEdition, setEtapeEnEdition] = useState<EtapeMethodologie | ''>('')
+  const [phaseEnEdition, setPhaseEnEdition] = useState('')
   const [aSupprimer, setASupprimer] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
@@ -35,11 +35,12 @@ export function EntretienMethodologie({
   const tries = [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre)
 
   const { general, groupes } = regrouperParEtape(tries)
+  const phasesExistantes = groupes.map((g) => g.phase)
 
   function ajouter() {
     const contenu = contenuNouveau.trim()
     if (!contenu) return
-    const etape = etapeNouvelle || null
+    const phase = phaseNouvelle.trim() || null
 
     startTransition(async () => {
       appliquerOptimiste({
@@ -50,16 +51,16 @@ export function EntretienMethodologie({
           section: 'methodologie',
           contenu,
           ordre: tries.length,
-          etape,
+          phase,
           intitule: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
       })
       try {
-        await creerItemEntretien(typeEntretienId, 'methodologie', contenu, etape)
+        await creerItemEntretien(typeEntretienId, 'methodologie', contenu, phase)
         setContenuNouveau('')
-        setEtapeNouvelle('')
+        setPhaseNouvelle('')
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de l'ajout." })
       }
@@ -69,12 +70,12 @@ export function EntretienMethodologie({
   function modifier(id: string) {
     const contenu = contenuEnEdition.trim()
     if (!contenu) return
-    const etape = etapeEnEdition || null
+    const phase = phaseEnEdition.trim() || null
 
     startTransition(async () => {
-      appliquerOptimiste({ type: 'modification', id, contenu, etape })
+      appliquerOptimiste({ type: 'modification', id, contenu, phase })
       try {
-        await modifierItemEntretien(id, typeEntretienId, contenu, etape)
+        await modifierItemEntretien(id, typeEntretienId, contenu, phase)
         setEnEdition(null)
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de la modification.' })
@@ -94,7 +95,7 @@ export function EntretienMethodologie({
   }
 
   // Le réordonnancement se fait à l'intérieur d'un même groupe visuel
-  // (général, ou une étape donnée) : on ne renumérote que ce sous-ensemble.
+  // (général, ou une phase donnée) : on ne renumérote que ce sous-ensemble.
   function deplacer(groupe: ItemEntretien[], index: number, direction: -1 | 1) {
     const cible = index + direction
     if (cible < 0 || cible >= groupe.length) return
@@ -132,17 +133,13 @@ export function EntretienMethodologie({
             rows={2}
             className="flex-1 resize-none rounded-lg border border-border bg-bg px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-primary"
           />
-          <select
-            value={etapeEnEdition}
-            onChange={(e) => setEtapeEnEdition(e.target.value as EtapeMethodologie | '')}
+          <input
+            value={phaseEnEdition}
+            onChange={(e) => setPhaseEnEdition(e.target.value)}
+            list="phases-existantes"
+            placeholder="Phase (optionnel, ex. « Année 1 – Entretien 1 »)"
             className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[12px] text-ink outline-none focus:border-primary"
-          >
-            {OPTIONS_ETAPE.map((o) => (
-              <option key={o.valeur} value={o.valeur}>
-                {o.label}
-              </option>
-            ))}
-          </select>
+          />
           <div className="flex justify-end gap-1.5">
             <button
               type="button"
@@ -193,7 +190,7 @@ export function EntretienMethodologie({
             onClick={() => {
               setEnEdition(item.id)
               setContenuEnEdition(item.contenu)
-              setEtapeEnEdition(item.etape ?? '')
+              setPhaseEnEdition(item.phase ?? '')
             }}
             aria-label="Modifier"
             className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-soft text-muted"
@@ -218,7 +215,7 @@ export function EntretienMethodologie({
 
   return (
     <section className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card">
-      <h2 className="text-[13.5px] font-bold text-ink">Méthodologie / déroulé</h2>
+      <h2 className="text-[13.5px] font-bold text-ink">Script de l’entretien</h2>
 
       {tries.length === 0 && (
         <p className="py-4 text-center text-[12.5px] text-muted">Aucune étape renseignée pour l’instant.</p>
@@ -228,6 +225,12 @@ export function EntretienMethodologie({
 
       {modeEdition && (
         <>
+          <datalist id="phases-existantes">
+            {phasesExistantes.map((phase) => (
+              <option key={phase} value={phase} />
+            ))}
+          </datalist>
+
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -243,17 +246,13 @@ export function EntretienMethodologie({
               className="flex-1 resize-none rounded-xl border border-border bg-bg px-3 py-2 text-[13.5px] text-ink outline-none focus:border-primary"
             />
             <div className="flex gap-2">
-              <select
-                value={etapeNouvelle}
-                onChange={(e) => setEtapeNouvelle(e.target.value as EtapeMethodologie | '')}
+              <input
+                value={phaseNouvelle}
+                onChange={(e) => setPhaseNouvelle(e.target.value)}
+                list="phases-existantes"
+                placeholder="Phase (optionnel, ex. « Année 1 – Entretien 1 »)"
                 className="flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary"
-              >
-                {OPTIONS_ETAPE.map((o) => (
-                  <option key={o.valeur} value={o.valeur}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
+              />
               <button
                 type="submit"
                 disabled={isPending || !contenuNouveau.trim()}

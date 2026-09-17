@@ -1,4 +1,4 @@
-import type { ItemEntretien, EtapeMethodologie } from '@/lib/data/entretiens'
+import type { ItemEntretien, PhaseEntretien } from '@/lib/data/entretiens'
 
 export type ActionItemsEntretien =
   | { type: 'ajout'; item: ItemEntretien }
@@ -7,7 +7,7 @@ export type ActionItemsEntretien =
       type: 'modification'
       id: string
       contenu: string
-      etape?: EtapeMethodologie | null
+      phase?: PhaseEntretien
       intitule?: string | null
     }
   | { type: 'reorder'; ids: string[] }
@@ -21,7 +21,7 @@ export function reducerItemsEntretien(etat: ItemEntretien[], action: ActionItems
     case 'modification':
       return etat.map((i) =>
         i.id === action.id
-          ? { ...i, contenu: action.contenu, etape: action.etape ?? i.etape, intitule: action.intitule ?? i.intitule }
+          ? { ...i, contenu: action.contenu, phase: action.phase ?? i.phase, intitule: action.intitule ?? i.intitule }
           : i
       )
     case 'reorder': {

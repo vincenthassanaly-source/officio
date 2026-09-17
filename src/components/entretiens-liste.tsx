@@ -30,15 +30,15 @@ function reducerTypes(etat: TypeEntretien[], action: ActionTypes): TypeEntretien
   }
 }
 
-const VIDE: CompteursEntretien = { methodologie: 0, facturation: 0, questions: 0, documents: 0 }
+const VIDE: CompteursEntretien = { methodologie: 0, facturation: 0, documents: 0 }
 
 function CompteursType({ compteurs }: { compteurs: CompteursEntretien }) {
   return (
     <div
       className="mt-1 flex items-center gap-1"
-      aria-label={`${compteurs.methodologie} étapes de méthodologie, ${compteurs.facturation} points de facturation, ${compteurs.questions} questions, ${compteurs.documents} documents`}
+      aria-label={`${compteurs.methodologie} étapes du script, ${compteurs.facturation} points de facturation, ${compteurs.documents} documents`}
     >
-      {[compteurs.methodologie, compteurs.facturation, compteurs.questions, compteurs.documents].map((valeur, i) => (
+      {[compteurs.methodologie, compteurs.facturation, compteurs.documents].map((valeur, i) => (
         <span
           key={i}
           aria-hidden="true"
@@ -233,8 +233,8 @@ export function EntretiensListe({
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[12.5px] text-muted">
-          Un type par entretien encadré par la convention. Ouvre un type pour renseigner sa méthodologie, sa
-          facturation, ses questions et ses documents.
+          Un type par entretien encadré par la convention. Ouvre un type pour renseigner son script, sa
+          facturation et ses documents.
         </p>
         <button
           type="button"
