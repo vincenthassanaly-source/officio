@@ -51,6 +51,7 @@ export function EntretienMethodologie({
           contenu,
           ordre: tries.length,
           etape,
+          intitule: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },

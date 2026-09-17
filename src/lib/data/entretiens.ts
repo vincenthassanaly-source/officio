@@ -27,6 +27,7 @@ export type ItemEntretien = {
   contenu: string
   ordre: number
   etape: EtapeMethodologie | null
+  intitule: string | null
   created_at: string
   updated_at: string
 }
@@ -96,7 +97,7 @@ export const getItemsEntretien = cache(
 
     const { data, error } = await supabase
       .from('entretien_items')
-      .select('id, type_entretien_id, section, contenu, ordre, etape, created_at, updated_at')
+      .select('id, type_entretien_id, section, contenu, ordre, etape, intitule, created_at, updated_at')
       .eq('type_entretien_id', typeEntretienId)
       .order('ordre', { ascending: true })
 

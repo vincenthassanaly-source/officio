@@ -80,7 +80,8 @@ export async function creerItemEntretien(
   typeEntretienId: string,
   section: SectionEntretien,
   contenu: string,
-  etape: EtapeMethodologie | null = null
+  etape: EtapeMethodologie | null = null,
+  intitule: string | null = null
 ) {
   const contenuNettoye = contenu.trim()
   if (!contenuNettoye) return
@@ -91,6 +92,7 @@ export async function creerItemEntretien(
     p_section: section,
     p_contenu: contenuNettoye,
     p_etape: SECTIONS_AVEC_ETAPE.includes(section) ? etape : null,
+    p_intitule: section === 'facturation' ? intitule?.trim() || null : null,
   })
 
   if (error) throw new Error(error.message)
@@ -102,7 +104,8 @@ export async function modifierItemEntretien(
   id: string,
   typeEntretienId: string,
   contenu: string,
-  etape: EtapeMethodologie | null = null
+  etape: EtapeMethodologie | null = null,
+  intitule: string | null = null
 ) {
   const contenuNettoye = contenu.trim()
   if (!contenuNettoye) return
@@ -112,6 +115,7 @@ export async function modifierItemEntretien(
     p_id: id,
     p_contenu: contenuNettoye,
     p_etape: etape,
+    p_intitule: intitule?.trim() || null,
   })
 
   if (error) throw new Error(error.message)

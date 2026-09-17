@@ -3,7 +3,13 @@ import type { ItemEntretien, EtapeMethodologie } from '@/lib/data/entretiens'
 export type ActionItemsEntretien =
   | { type: 'ajout'; item: ItemEntretien }
   | { type: 'suppression'; id: string }
-  | { type: 'modification'; id: string; contenu: string; etape?: EtapeMethodologie | null }
+  | {
+      type: 'modification'
+      id: string
+      contenu: string
+      etape?: EtapeMethodologie | null
+      intitule?: string | null
+    }
   | { type: 'reorder'; ids: string[] }
 
 export function reducerItemsEntretien(etat: ItemEntretien[], action: ActionItemsEntretien): ItemEntretien[] {
@@ -14,7 +20,9 @@ export function reducerItemsEntretien(etat: ItemEntretien[], action: ActionItems
       return etat.filter((i) => i.id !== action.id)
     case 'modification':
       return etat.map((i) =>
-        i.id === action.id ? { ...i, contenu: action.contenu, etape: action.etape ?? i.etape } : i
+        i.id === action.id
+          ? { ...i, contenu: action.contenu, etape: action.etape ?? i.etape, intitule: action.intitule ?? i.intitule }
+          : i
       )
     case 'reorder': {
       // Ne met à jour que les éléments présents dans `ids` (peut être un sous-ensemble,
