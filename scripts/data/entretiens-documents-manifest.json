@@ -1,0 +1,128 @@
+{
+  "_note": "Manifeste établi le 2026-09-17 par recherche web (WebSearch) sur ameli.fr / has-sante.fr / cespharm.fr / ansm.sante.fr uniquement. IMPORTANT : dans l'environnement d'exécution de cette session, le proxy réseau bloque l'accès sortant vers ces 4 domaines (egress proxy) — les URLs ci-dessous n'ont donc pas pu être vérifiées par un fetch réel (statut HTTP, Content-Type, octets). scripts/import-documents-entretiens-2026-09-17.mjs revérifie chaque URL au moment de l'exécution (Content-Type attendu : application/pdf, image/jpeg ou image/png) et ignore/loggue toute entrée invalide plutôt que de l'importer à l'aveugle. Voir scripts/RAPPORT-import-documents-entretiens-2026-09-17.md pour le détail des types sans document trouvé.",
+  "entretiens": {
+    "Entretien AVK": [
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/5393/document/entretien-pharmaceutique-avk_assurance-maladie.pdf",
+        "nom": "Entretien pharmaceutique AVK - grille officielle",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.cespharm.fr/content/download/45785/file/carnet-avk-carnet-d-information-et-de-suivi-du-traitement.pdf",
+        "nom": "Carnet AVK - carnet d'information et de suivi du traitement",
+        "categorie": "support_patient",
+        "source": "cespharm.fr"
+      }
+    ],
+    "Entretien AOD": [
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/5394/document/entretien-pharmaceutique-aod-fiche-suivi_assurance-maladie.pdf",
+        "nom": "Entretien pharmaceutique AOD - fiche de suivi",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      }
+    ],
+    "Entretien asthme": [
+      {
+        "url": "https://www.ameli.fr/fileadmin/user_upload/documents/2016203_EntretiensPharmaceutiques_asthme_FichesSuivi.pdf",
+        "nom": "Entretiens pharmaceutiques asthme - fiches de suivi",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      }
+    ],
+    "Entretien anticancéreux oraux": [
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/650_SORAFENIB_entretien_quot_effets_indesirables.pdf",
+        "nom": "Anticancéreux oraux - Sorafénib (Nexavar) - entretien effets indésirables",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/675-PALBOCICLIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - Palbociclib (Ibrance) - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/604_ANASTROZOL_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - Anastrozol - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      }
+    ],
+    "Bilan partagé de médication (BPM)": [
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/502_BPM_formulaire_adhesion.pdf",
+        "nom": "BPM - formulaire d'adhésion",
+        "categorie": "autre",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/503_BPM_bilan_entretien_recueil_info.pdf",
+        "nom": "BPM - entretien de recueil d'information",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/504_BPM_formulaire_bilan_analyse_traitements.pdf",
+        "nom": "BPM - analyse des traitements du patient",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/505_BPM_entretien_conseil.pdf",
+        "nom": "BPM - entretien-conseil avec le patient",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      }
+    ],
+    "Entretien femme enceinte": [],
+    "Entretien opioïdes": [
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/Fiche-pharmacien-accompagnement-opioides.pdf",
+        "nom": "Accompagnement opioïdes - fiche entretien pharmacien",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.has-sante.fr/upload/docs/application/pdf/2022-03/de_la_prevention_du_trouble_de_lusage_et_des_surdoses_a_la_prise_en_charge_des_surdoses_dopioides_-_fiche.pdf",
+        "nom": "De la prévention du trouble de l'usage à la prise en charge des surdoses d'opioïdes",
+        "categorie": "autre",
+        "source": "has-sante.fr"
+      },
+      {
+        "url": "https://www.has-sante.fr/upload/docs/application/pdf/2022-03/reco_opioides.pdf",
+        "nom": "Bon usage des médicaments opioïdes - recommandation HAS",
+        "categorie": "autre",
+        "source": "has-sante.fr"
+      },
+      {
+        "url": "https://ansm.sante.fr/uploads/2025/04/08/20250408-marr-actiq-guide-pharmacien-2025-03.pdf",
+        "nom": "Fentanyl à libération rapide (Actiq) - guide pharmacien MARR",
+        "categorie": "autre",
+        "source": "ansm.sante.fr"
+      }
+    ],
+    "Bilan de prévention": [
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/Mon-bilan-prevention-livret-presentation.pdf",
+        "nom": "Mon bilan prévention - livret de présentation",
+        "categorie": "support_patient",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/Mon-bilan-prevention-autoquestionnaire-45-50ans.pdf",
+        "nom": "Mon bilan prévention - autoquestionnaire 45-50 ans",
+        "categorie": "support_patient",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/Mon-bilan-prevention-autoquestionnaire-60-65ans.pdf",
+        "nom": "Mon bilan prévention - autoquestionnaire 60-65 ans",
+        "categorie": "support_patient",
+        "source": "ameli.fr"
+      }
+    ]
+  }
+}
