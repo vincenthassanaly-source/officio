@@ -54,8 +54,6 @@ export function EntretienDetail({
         </p>
       )}
 
-      <EntretienResume items={items} nombreDocuments={documents.length} ongletActif={onglet} onNaviguer={setOnglet} />
-
       <div role="group" aria-label="Mode d’affichage" className="flex shrink-0 gap-1 rounded-xl bg-track p-1">
         <button
           type="button"
@@ -79,7 +77,16 @@ export function EntretienDetail({
         </button>
       </div>
 
-      <EntretienNavigation ongletActif={onglet} onChanger={setOnglet} />
+      <EntretienNavigation
+        ongletActif={onglet}
+        onChanger={setOnglet}
+        compteurs={{
+          methodologie: items.methodologie.length,
+          facturation: items.facturation.length,
+          questions: items.questions.length,
+          documents: documents.length,
+        }}
+      />
 
       <div id={`panneau-${onglet}`} role="tabpanel" aria-labelledby={`onglet-${onglet}`} className="flex flex-col gap-3">
         {onglet === 'methodologie' && (
@@ -109,50 +116,14 @@ export function EntretienDetail({
   )
 }
 
-function EntretienResume({
-  items,
-  nombreDocuments,
-  ongletActif,
-  onNaviguer,
-}: {
-  items: Record<SectionEntretien, ItemEntretien[]>
-  nombreDocuments: number
-  ongletActif: OngletEntretien
-  onNaviguer: (onglet: OngletEntretien) => void
-}) {
-  const chips: { id: OngletEntretien; label: string; valeur: number }[] = [
-    { id: 'methodologie', label: 'Étapes', valeur: items.methodologie.length },
-    { id: 'facturation', label: 'Facturation', valeur: items.facturation.length },
-    { id: 'questions', label: 'Questions', valeur: items.questions.length },
-    { id: 'documents', label: 'Documents', valeur: nombreDocuments },
-  ]
-
-  return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-      {chips.map((chip) => (
-        <button
-          key={chip.id}
-          type="button"
-          onClick={() => onNaviguer(chip.id)}
-          aria-current={ongletActif === chip.id ? 'true' : undefined}
-          className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-2xl border p-2.5 text-center transition ${
-            ongletActif === chip.id ? 'border-primary bg-primary-soft' : 'border-border bg-surface'
-          }`}
-        >
-          <span className="font-heading text-lg text-ink">{chip.valeur}</span>
-          <span className="text-[11px] font-semibold text-muted">{chip.label}</span>
-        </button>
-      ))}
-    </div>
-  )
-}
-
 function EntretienNavigation({
   ongletActif,
   onChanger,
+  compteurs,
 }: {
   ongletActif: OngletEntretien
   onChanger: (onglet: OngletEntretien) => void
+  compteurs: Record<OngletEntretien, number>
 }) {
   function onKeyDown(e: KeyboardEvent<HTMLButtonElement>, index: number) {
     if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
@@ -177,14 +148,23 @@ function EntretienNavigation({
           type="button"
           aria-selected={ongletActif === o.id}
           aria-controls={`panneau-${o.id}`}
+          aria-label={`${o.label} (${compteurs[o.id]})`}
           tabIndex={ongletActif === o.id ? 0 : -1}
           onClick={() => onChanger(o.id)}
           onKeyDown={(e) => onKeyDown(e, index)}
-          className={`flex min-h-11 shrink-0 items-center rounded-xl px-3.5 text-[13px] font-semibold transition ${
+          className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-[13px] font-semibold transition ${
             ongletActif === o.id ? 'bg-primary text-white shadow-card' : 'bg-surface text-muted'
           }`}
         >
           {o.label}
+          <span
+            aria-hidden="true"
+            className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${
+              ongletActif === o.id ? 'bg-white/25 text-white' : 'bg-neutral-soft text-muted'
+            }`}
+          >
+            {compteurs[o.id]}
+          </span>
         </button>
       ))}
     </nav>
