@@ -1,10 +1,10 @@
 {
-  "_note": "Manifeste établi le 2026-09-17 par recherche web (WebSearch) sur ameli.fr / has-sante.fr / cespharm.fr / ansm.sante.fr uniquement. IMPORTANT : dans l'environnement d'exécution de cette session, le proxy réseau bloque l'accès sortant vers ces 4 domaines (egress proxy) — les URLs ci-dessous n'ont donc pas pu être vérifiées par un fetch réel (statut HTTP, Content-Type, octets). scripts/import-documents-entretiens-2026-09-17.mjs revérifie chaque URL au moment de l'exécution (Content-Type attendu : application/pdf, image/jpeg ou image/png) et ignore/loggue toute entrée invalide plutôt que de l'importer à l'aveugle. Voir scripts/RAPPORT-import-documents-entretiens-2026-09-17.md pour le détail des types sans document trouvé.",
+  "_note": "Manifeste établi le 2026-09-17, complété le 2026-09-17 par navigation réelle (Claude Browser) sur ameli.fr / ansm.sante.fr. Entretien femme enceinte : mémo pharmacien (ameli.fr) + dépliant patiente ANSM 'Enceinte, les médicaments c'est pas n'importe comment' (le lien ameli.fr vers le flyer ANSM ne pointe pas directement vers un PDF mais vers la page dossier ANSM ; le dépliant destiné au patient, mentionné sur la page ameli.fr comme remis par le pharmacien, a été résolu depuis cette page ANSM). Entretien anticancéreux oraux : les 85 fiches 'entretien initial' par molécule listées sur la page ameli.fr dédiée ont été résolues individuellement (chaque URL /content/anticancereux-entretien-initial-molecule-<molécule> redirige vers le PDF direct) et vérifiées par fetch réel (HTTP 200, Content-Type: application/pdf) au moment de la constitution du manifeste. Toutes les URLs du manifeste (documents précédemment identifiés + ajouts) sont revérifiées une dernière fois juste avant l'import par le script scripts/import-documents-entretiens-2026-09-17.mjs, qui ignore/logue toute entrée invalide.",
   "entretiens": {
     "Entretien AVK": [
       {
-        "url": "https://www.ameli.fr/sites/default/files/Documents/5393/document/entretien-pharmaceutique-avk_assurance-maladie.pdf",
-        "nom": "Entretien pharmaceutique AVK - grille officielle",
+        "url": "https://www.ameli.fr/sites/default/files/Documents/403_AVK_entretien_evaluation.pdf",
+        "nom": "AVK - Entretien d'évaluation (grille officielle)",
         "categorie": "fiche_suivi",
         "source": "ameli.fr"
       },
@@ -17,36 +17,528 @@
     ],
     "Entretien AOD": [
       {
-        "url": "https://www.ameli.fr/sites/default/files/Documents/5394/document/entretien-pharmaceutique-aod-fiche-suivi_assurance-maladie.pdf",
-        "nom": "Entretien pharmaceutique AOD - fiche de suivi",
+        "url": "https://www.ameli.fr/sites/default/files/Documents/303_AOD_entretien_evaluation.pdf",
+        "nom": "AOD - Entretien d'évaluation (fiche de suivi)",
         "categorie": "fiche_suivi",
         "source": "ameli.fr"
       }
     ],
     "Entretien asthme": [
       {
-        "url": "https://www.ameli.fr/fileadmin/user_upload/documents/2016203_EntretiensPharmaceutiques_asthme_FichesSuivi.pdf",
-        "nom": "Entretiens pharmaceutiques asthme - fiches de suivi",
+        "url": "https://www.ameli.fr/sites/default/files/Documents/203_ASTHME_entretien_evaluation.pdf",
+        "nom": "Asthme - Entretien d'évaluation (fiche de suivi)",
         "categorie": "fiche_suivi",
         "source": "ameli.fr"
       }
     ],
     "Entretien anticancéreux oraux": [
       {
-        "url": "https://www.ameli.fr/sites/default/files/Documents/650_SORAFENIB_entretien_quot_effets_indesirables.pdf",
-        "nom": "Anticancéreux oraux - Sorafénib (Nexavar) - entretien effets indésirables",
+        "url": "https://www.ameli.fr/sites/default/files/Documents/662-ABEMACICLIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ABEMACICLIB - entretien initial",
         "categorie": "fiche_suivi",
         "source": "ameli.fr"
       },
       {
-        "url": "https://www.ameli.fr/sites/default/files/Documents/675-PALBOCICLIB_entretien_initial.pdf",
-        "nom": "Anticancéreux oraux - Palbociclib (Ibrance) - entretien initial",
+        "url": "https://www.ameli.fr/sites/default/files/Documents/601_ABIRATERONE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ABIRATERONE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/86_ACALABRUTINIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ACALABRUTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/602-AFATINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - AFATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/663-ALECTINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ALECTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/664-ALTRETAMINE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ALTRETAMINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/603_ANAGRELIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ANAGRELIDE - entretien initial",
         "categorie": "fiche_suivi",
         "source": "ameli.fr"
       },
       {
         "url": "https://www.ameli.fr/sites/default/files/Documents/604_ANASTROZOL_entretien_initial.pdf",
-        "nom": "Anticancéreux oraux - Anastrozol - entretien initial",
+        "nom": "Anticancéreux oraux - ANASTROZOLE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/665-APALUTAMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - APALUTAMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/87_ASCIMINIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ASCIMINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/605_AXITINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - AXITINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/606_BEXAROTENE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - BEXAROTÈNE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/607_BICALUTAMIDE_entretien_initial_0.pdf",
+        "nom": "Anticancéreux oraux - BICALUTAMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/666-BINIMECTINIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - BINIMECTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/608_BOSUTINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - BOSUTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/667-BRIGRATINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - BRIGATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/609_BUSULFAN_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - BUSULFAN - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/610_CABOZANTINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - CABOZANTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/611_CAPECITABINE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - CAPÉCITABINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/612_CERITINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - CERITINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/613_CHLORAMBUCIL_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - CHLORAMBUCIL - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/614-COBIMETINIB_VEMURAFENIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - COBIMETINIB + VEMURAFÉNIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/615_CRIZOTINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - CRIZOTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/616_CYCLOPHOSPHAMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - CYCLOPHOSPHAMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/617_DABRAFENIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - DABRAFÉNIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/81_DAROLUTAMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - DAROLUTAMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/618_DASATINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - DASATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/619-ENZALUTAMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ENZALUTAMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/620_ERLOTINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ERLOTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/621_ESTRAMUSTINE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ESTRAMUSTINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/622_ETOPOSIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ÉTOPOSIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/623_EVEROLIMUS_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - ÉVÉROLIMUS - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/624_EXEMESTANE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - EXÉMESTANE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/625_FLUDARABINE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - FLUDARABINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/627_GEFITINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - GÉFITINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/82_GILTERITINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - GILTERITINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/628_HYDROXYCARBAMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - HYDROXYCARBAMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/629_IBRUTINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - IBRUTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/630_IDARUBICINE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - IDARUBICINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/669-IDELALISIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - IDELALISIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/631_IMATINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - IMATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/670-IXAZOMIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - IXAZOMIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/632_LAPATINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - LAPATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/633_LENALIDOMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - LENALIDOMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/634_LENVATINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - LENVATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/635_LETROZOLE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - LÉTROZOLE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/671-LORLATINIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - LORLATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/636_MEGESTROL_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - MEGESTROL - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/637_MELPHALAN_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - MELPHALAN - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/638_MERCAPTOPURINE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - MERCAPTOPURINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/639_METHOTREXATE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - METHOTREXATE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/83_MIDOSTAURINE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - MIDOSTAURINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/640_NILOTINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - NILOTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/641_NILUTAMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - NILUTAMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/642_NINTEDANIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - NINTÉDANIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/672-NIRAPARIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - NIRAPARIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/673-OLAPARIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - OLAPARIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/674-OSIMERTINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - OSIMERTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/675-PALBOCICLIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - PALBOCICLIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/643_PAZOPANIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - PAZOPANIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/84_PEMIGATINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - PEMIGATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/644_PIPOBROMAN_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - PIPOBROMAN - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/645_POMALIDOMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - POMALIDOMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/646_PONATINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - PONATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/647_PROCARBAZINE_entretien_initial_0.pdf",
+        "nom": "Anticancéreux oraux - PROCARBAZINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/648-REGORAFENIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - RÉGORAFENIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/676-RIBOCICLIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - RIBOCICLIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/677-RUCAPARIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - RUCAPARIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/649-RUXOLITINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - RUXOLITINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/678-SONIDEGIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - SONIDEGIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/650_SORAFENIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - SORAFENIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/651_SUNITINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - SUNITINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/85_TALAZOPARIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - TALAZOPARIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/652_TAMOXIFENE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - TAMOXIFÈNE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/653_THALIDOMIDE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - THALIDOMIDE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/654_TOPOTECAN_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - TOPOTÉCAN - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/655_TOREMIFENE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - TORÉMIFÈNE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/656_TRAMETINIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - TRAMÉTINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/657_TRIFLURIDINE_TIPIRACINEE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - TRIFLURIDINE/TIPIRACINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/88_TUCATINIB%20_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - TUCATINIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/658_VANDETANIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - VANDÉTANIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/659_VEMURAFENIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - VEMURAFÉNIB - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/679-VENETOCLAX_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - VENETOCLAX - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/660_VINORELBINE_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - VINORELBINE - entretien initial",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/661_VISMODEGIB_entretien_initial.pdf",
+        "nom": "Anticancéreux oraux - VISMODEGIB - entretien initial",
         "categorie": "fiche_suivi",
         "source": "ameli.fr"
       }
@@ -77,7 +569,20 @@
         "source": "ameli.fr"
       }
     ],
-    "Entretien femme enceinte": [],
+    "Entretien femme enceinte": [
+      {
+        "url": "https://www.ameli.fr/sites/default/files/Documents/memo-pharmacien-accompagnement-femme-enceinte.pdf",
+        "nom": "Mémo pharmacien - Accompagnement femme enceinte",
+        "categorie": "fiche_suivi",
+        "source": "ameli.fr"
+      },
+      {
+        "url": "https://ansm.sante.fr/uploads/2021/10/20/z-card-c06-credit-300x78-mockup-fr-2.pdf",
+        "nom": "Enceinte, les médicaments c'est pas n'importe comment - dépliant patiente ANSM",
+        "categorie": "support_patient",
+        "source": "ansm.sante.fr"
+      }
+    ],
     "Entretien opioïdes": [
       {
         "url": "https://www.ameli.fr/sites/default/files/Documents/Fiche-pharmacien-accompagnement-opioides.pdf",
