@@ -4,9 +4,15 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
-import type { SectionEntretien, EtapeMethodologie } from '@/lib/data/entretiens'
+import type { SectionEntretien, EtapeMethodologie, CategorieDocumentEntretien } from '@/lib/data/entretiens'
 
 const TYPES_ACCEPTES = ['application/pdf', 'image/jpeg', 'image/png']
+const CATEGORIES_DOCUMENT: CategorieDocumentEntretien[] = [
+  'support_patient',
+  'fiche_suivi',
+  'affiche_support',
+  'autre',
+]
 
 // --- Types d'entretien -------------------------------------------------
 
@@ -147,6 +153,8 @@ export async function ajouterDocumentEntretien(formData: FormData) {
   const fichier = formData.get('fichier')
   const typeEntretienId = String(formData.get('type_entretien_id') ?? '')
   const nomPersonnalise = String(formData.get('nom') ?? '').trim()
+  const categorieSaisie = String(formData.get('categorie') ?? '') as CategorieDocumentEntretien
+  const categorie = CATEGORIES_DOCUMENT.includes(categorieSaisie) ? categorieSaisie : 'autre'
 
   if (!(fichier instanceof File) || fichier.size === 0) {
     throw new Error('Merci de choisir un fichier.')
@@ -177,6 +185,7 @@ export async function ajouterDocumentEntretien(formData: FormData) {
     p_chemin_stockage: chemin,
     p_type_fichier: fichier.type,
     p_taille_octets: fichier.size,
+    p_categorie: categorie,
   })
 
   if (erreurInsert) {

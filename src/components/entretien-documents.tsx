@@ -6,9 +6,18 @@ import {
   supprimerDocumentEntretien,
   obtenirUrlDocumentEntretien,
 } from '@/app/actions/entretiens'
-import type { DocumentEntretien } from '@/lib/data/entretiens'
+import type { DocumentEntretien, CategorieDocumentEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+
+const LABELS_CATEGORIE: Record<CategorieDocumentEntretien, string> = {
+  support_patient: 'Support patient',
+  fiche_suivi: 'Fiche de suivi',
+  affiche_support: 'Affiche / support',
+  autre: 'Autre',
+}
+
+const OPTIONS_CATEGORIE = Object.entries(LABELS_CATEGORIE) as [CategorieDocumentEntretien, string][]
 
 function formatTaille(octets: number | null) {
   if (!octets) return ''
@@ -112,6 +121,18 @@ export function EntretienDocuments({
             placeholder="Nom du document (optionnel)"
             className="rounded-lg border border-border bg-surface px-3 py-2 text-[15px] text-ink outline-none focus:border-primary"
           />
+          <select
+            name="categorie"
+            defaultValue="autre"
+            aria-label="Catégorie du document"
+            className="rounded-lg border border-border bg-surface px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
+          >
+            {OPTIONS_CATEGORIE.map(([valeur, label]) => (
+              <option key={valeur} value={valeur}>
+                {label}
+              </option>
+            ))}
+          </select>
           <button
             type="submit"
             disabled={isPending}
@@ -142,7 +163,12 @@ export function EntretienDocuments({
                 {estImage(d.type_fichier) ? 'IMG' : 'PDF'}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-[12.5px] font-semibold text-ink">{d.nom}</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-[12.5px] font-semibold text-ink">{d.nom}</span>
+                  <span className="shrink-0 rounded-full bg-primary-soft px-1.5 py-0.5 text-[9.5px] font-semibold text-primary">
+                    {LABELS_CATEGORIE[d.categorie]}
+                  </span>
+                </div>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-muted">
                   <span>{formatTaille(d.taille_octets)}</span>
                   <span>·</span>

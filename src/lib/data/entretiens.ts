@@ -32,6 +32,10 @@ export type ItemEntretien = {
   updated_at: string
 }
 
+// Catégorie d'un document d'entretien — mêmes valeurs que la contrainte
+// CHECK entretien_documents_categorie_check.
+export type CategorieDocumentEntretien = 'support_patient' | 'fiche_suivi' | 'affiche_support' | 'autre'
+
 export type DocumentEntretien = {
   id: string
   type_entretien_id: string
@@ -39,6 +43,7 @@ export type DocumentEntretien = {
   chemin_stockage: string
   type_fichier: string
   taille_octets: number | null
+  categorie: CategorieDocumentEntretien
   created_at: string
   ajoute_par: { id: string; nom_complet: string; initiales: string } | null
 }
@@ -124,7 +129,7 @@ export const getDocumentsEntretien = cache(async (typeEntretienId: string): Prom
   const { data, error } = await supabase
     .from('entretien_documents')
     .select(
-      `id, type_entretien_id, nom, chemin_stockage, type_fichier, taille_octets, created_at,
+      `id, type_entretien_id, nom, chemin_stockage, type_fichier, taille_octets, categorie, created_at,
        ajoute_par:profils!entretien_documents_ajoute_par_fkey ( id, nom_complet, initiales )`
     )
     .eq('type_entretien_id', typeEntretienId)
@@ -142,6 +147,7 @@ export const getDocumentsEntretien = cache(async (typeEntretienId: string): Prom
     chemin_stockage: d.chemin_stockage,
     type_fichier: d.type_fichier,
     taille_octets: d.taille_octets,
+    categorie: d.categorie as CategorieDocumentEntretien,
     created_at: d.created_at,
     ajoute_par: Array.isArray(d.ajoute_par) ? d.ajoute_par[0] ?? null : d.ajoute_par,
   }))
