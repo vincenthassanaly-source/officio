@@ -17,7 +17,6 @@ import type {
   SectionEntretien,
   EtapeMethodologie,
 } from '@/lib/data/entretiens'
-import Link from 'next/link'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 
@@ -69,12 +68,6 @@ export function EntretienDetail({
           Ce type d’entretien est archivé.
         </p>
       )}
-      <Link
-        href={`/entretiens-pharmaceutiques/${type.id}/realiser`}
-        className="flex items-center justify-center rounded-[20px] bg-primary px-3.5 py-3 text-[13.5px] font-semibold text-white shadow-card"
-      >
-        Réaliser un entretien
-      </Link>
       <SectionMethodologie typeEntretienId={type.id} items={items.methodologie} />
       <SectionItems section="facturation" typeEntretienId={type.id} items={items.facturation} />
       <SectionItems section="questions" typeEntretienId={type.id} items={items.questions} />
