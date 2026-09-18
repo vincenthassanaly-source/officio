@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useOptimistic, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import {
   creerTypeEntretien,
   renommerTypeEntretien,
@@ -11,6 +11,15 @@ import {
 import type { TypeEntretien, CompteursEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import {
+  BoutonIcone,
+  CLASSE_BOUTON_PRIMAIRE,
+  CLASSE_BOUTON_SECONDAIRE,
+  CLASSE_CHAMP,
+  CLASSE_FOCUS,
+  Icone,
+  type NomIcone,
+} from '@/components/entretien-ui'
 
 type ActionTypes =
   | { type: 'ajout'; item: TypeEntretien }
@@ -32,21 +41,134 @@ function reducerTypes(etat: TypeEntretien[], action: ActionTypes): TypeEntretien
 
 const VIDE: CompteursEntretien = { methodologie: 0, facturation: 0, documents: 0 }
 
+// Les trois compteurs portent le nom des onglets de la fiche (Script /
+// Facturation / Documents) : même vocabulaire d'un écran à l'autre. Icône +
+// libellé texte + nombre, jamais un nombre nu.
+const COMPTEURS: { cle: keyof CompteursEntretien; libelle: string; icone: NomIcone }[] = [
+  { cle: 'methodologie', libelle: 'Script', icone: 'script' },
+  { cle: 'facturation', libelle: 'Facturation', icone: 'euro' },
+  { cle: 'documents', libelle: 'Documents', icone: 'fichier' },
+]
+
 function CompteursType({ compteurs }: { compteurs: CompteursEntretien }) {
   return (
-    <div
-      className="mt-1 flex items-center gap-1"
-      aria-label={`${compteurs.methodologie} étapes du script, ${compteurs.facturation} points de facturation, ${compteurs.documents} documents`}
-    >
-      {[compteurs.methodologie, compteurs.facturation, compteurs.documents].map((valeur, i) => (
-        <span
-          key={i}
-          aria-hidden="true"
-          className="flex h-4 min-w-4 items-center justify-center rounded-full bg-neutral-soft px-1 text-[9.5px] font-bold text-muted"
-        >
-          {valeur}
-        </span>
+    <ul className="mt-1.5 flex flex-wrap gap-x-3.5 gap-y-1 text-[13px] text-muted">
+      {COMPTEURS.map(({ cle, libelle, icone }) => (
+        <li key={cle} className="flex items-center gap-1.5">
+          <Icone nom={icone} taille={15} />
+          <span>{libelle}</span>
+          <span className="font-semibold tabular-nums text-ink">{compteurs[cle]}</span>
+        </li>
       ))}
+    </ul>
+  )
+}
+
+type PropsCarte = {
+  type: TypeEntretien
+  index: number
+  total: number
+  compteurs: CompteursEntretien
+  organiser: boolean
+  enRenommage: boolean
+  nomEnEdition: string
+  enCours: boolean
+  onNomChange: (nom: string) => void
+  onDemarrerRenommage: () => void
+  onAnnulerRenommage: () => void
+  onRenommer: () => void
+  onDeplacer: (direction: -1 | 1) => void
+  onSupprimer: () => void
+}
+
+// Défini hors du composant de liste : un composant déclaré dans son parent
+// change d'identité à chaque rendu et se remonte (le champ de renommage
+// perdrait le focus à chaque frappe).
+function CarteType({
+  type,
+  index,
+  total,
+  compteurs,
+  organiser,
+  enRenommage,
+  nomEnEdition,
+  enCours,
+  onNomChange,
+  onDemarrerRenommage,
+  onAnnulerRenommage,
+  onRenommer,
+  onDeplacer,
+  onSupprimer,
+}: PropsCarte) {
+  if (enRenommage) {
+    return (
+      <form
+        onSubmit={(e) => {
+          e.preventDefault()
+          onRenommer()
+        }}
+        className="flex flex-col gap-2.5 rounded-[20px] border-2 border-primary bg-surface p-3.5"
+      >
+        <label htmlFor={`nom-type-${type.id}`} className="text-[13px] font-semibold text-muted">
+          Nom du type d’entretien
+        </label>
+        <input
+          id={`nom-type-${type.id}`}
+          autoFocus
+          value={nomEnEdition}
+          onChange={(e) => onNomChange(e.target.value)}
+          className={CLASSE_CHAMP}
+        />
+        <div className="flex gap-2">
+          <button type="button" onClick={onAnnulerRenommage} className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}>
+            Annuler
+          </button>
+          <button
+            type="submit"
+            disabled={enCours || !nomEnEdition.trim()}
+            className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}
+          >
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    )
+  }
+
+  const scriptVide = compteurs.methodologie === 0
+
+  return (
+    <div className="rounded-[20px] bg-surface shadow-card">
+      <Link
+        href={`/entretiens-pharmaceutiques/${type.id}`}
+        className={`flex min-h-[4.5rem] items-center gap-3 rounded-[20px] p-4 ${CLASSE_FOCUS}`}
+      >
+        <div className="min-w-0 flex-1">
+          <div className="break-words text-[15px] font-semibold leading-snug text-ink">{type.nom}</div>
+          <CompteursType compteurs={compteurs} />
+          {scriptVide && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-[12px] font-semibold text-ink">
+              <Icone nom="crayon" taille={13} className="text-accent" />
+              Script à renseigner
+            </p>
+          )}
+        </div>
+        <Icone nom="chevron-droite" taille={20} className="text-muted" />
+      </Link>
+
+      {organiser && (
+        <div className="flex items-center justify-end gap-0.5 border-t border-border px-2 py-1">
+          <BoutonIcone label={`Monter « ${type.nom} »`} icone="haut" disabled={index === 0} onClick={() => onDeplacer(-1)} />
+          <BoutonIcone
+            label={`Descendre « ${type.nom} »`}
+            icone="bas"
+            disabled={index === total - 1}
+            onClick={() => onDeplacer(1)}
+          />
+          <BoutonIcone label={`Renommer « ${type.nom} »`} icone="crayon" onClick={onDemarrerRenommage} />
+          <BoutonIcone label={`Supprimer « ${type.nom} »`} icone="corbeille" onClick={onSupprimer} />
+        </div>
+      )}
     </div>
   )
 }
@@ -60,6 +182,10 @@ export function EntretiensListe({
 }) {
   const [nomNouveau, setNomNouveau] = useState('')
   const [formOuvert, setFormOuvert] = useState(false)
+  // Mode « Organiser » : purement côté client, n'écrit rien. Il révèle les
+  // actions de gestion (ordre, renommer, supprimer) que la simple consultation
+  // n'a pas besoin d'afficher en permanence.
+  const [organiser, setOrganiser] = useState(false)
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [nomEnEdition, setNomEnEdition] = useState('')
   const [aSupprimer, setASupprimer] = useState<{ id: string; nom: string } | null>(null)
@@ -68,8 +194,10 @@ export function EntretiensListe({
 
   const [typesOptimistes, appliquerOptimiste] = useOptimistic(types, reducerTypes)
 
-  const actifs = typesOptimistes.filter((t) => t.actif).sort((a, b) => a.ordre - b.ordre)
-  const archives = typesOptimistes.filter((t) => !t.actif).sort((a, b) => a.ordre - b.ordre)
+  const { actifs, archives } = useMemo(() => {
+    const parOrdre = [...typesOptimistes].sort((a, b) => a.ordre - b.ordre)
+    return { actifs: parOrdre.filter((t) => t.actif), archives: parOrdre.filter((t) => !t.actif) }
+  }, [typesOptimistes])
   const [archiveOuverte, setArchiveOuverte] = useState(false)
 
   function ajouter() {
@@ -144,161 +272,138 @@ export function EntretiensListe({
     })
   }
 
-  function CarteType({ type, index, liste }: { type: TypeEntretien; index: number; liste: TypeEntretien[] }) {
-    if (enEdition === type.id) {
-      return (
-        <div className="flex items-center gap-2 rounded-[20px] border border-primary bg-surface p-3.5">
-          <input
-            autoFocus
-            value={nomEnEdition}
-            onChange={(e) => setNomEnEdition(e.target.value)}
-            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-[15px] text-ink outline-none focus:border-primary"
-          />
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => renommer(type.id)}
-            className="rounded-xl bg-primary px-3 py-2 text-[12.5px] font-semibold text-white disabled:opacity-60"
-          >
-            OK
-          </button>
-          <button
-            type="button"
-            onClick={() => setEnEdition(null)}
-            className="rounded-xl border border-border px-3 py-2 text-[12.5px] font-semibold text-muted"
-          >
-            Annuler
-          </button>
-        </div>
-      )
-    }
+  function basculerOrganiser() {
+    setOrganiser((v) => !v)
+    setEnEdition(null)
+  }
 
+  function rendreCarte(type: TypeEntretien, index: number, liste: TypeEntretien[]) {
     return (
-      <div className="flex items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5">
-        <div className="flex flex-col gap-0.5">
-          <button
-            type="button"
-            disabled={index === 0}
-            onClick={() => deplacer(liste, index, -1)}
-            aria-label="Monter"
-            className="flex h-5 w-5 items-center justify-center text-muted disabled:opacity-25"
-          >
-            ▲
-          </button>
-          <button
-            type="button"
-            disabled={index === liste.length - 1}
-            onClick={() => deplacer(liste, index, 1)}
-            aria-label="Descendre"
-            className="flex h-5 w-5 items-center justify-center text-muted disabled:opacity-25"
-          >
-            ▼
-          </button>
-        </div>
-        <Link href={`/entretiens-pharmaceutiques/${type.id}`} className="min-w-0 flex-1">
-          <div className={`truncate text-[13.5px] font-semibold ${type.actif ? 'text-ink' : 'text-muted line-through'}`}>
-            {type.nom}
-          </div>
-          <CompteursType compteurs={compteurs[type.id] ?? VIDE} />
-        </Link>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => {
-              setEnEdition(type.id)
-              setNomEnEdition(type.nom)
-            }}
-            aria-label="Renommer"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setASupprimer({ id: type.id, nom: type.nom })}
-            aria-label="Supprimer"
-            className="shrink-0 text-muted hover:text-rec"
-          >
-            ×
-          </button>
-        </div>
-      </div>
+      <li key={type.id}>
+        <CarteType
+          type={type}
+          index={index}
+          total={liste.length}
+          compteurs={compteurs[type.id] ?? VIDE}
+          organiser={organiser}
+          enRenommage={enEdition === type.id}
+          nomEnEdition={nomEnEdition}
+          enCours={isPending}
+          onNomChange={setNomEnEdition}
+          onDemarrerRenommage={() => {
+            setEnEdition(type.id)
+            setNomEnEdition(type.nom)
+          }}
+          onAnnulerRenommage={() => setEnEdition(null)}
+          onRenommer={() => renommer(type.id)}
+          onDeplacer={(direction) => deplacer(liste, index, direction)}
+          onSupprimer={() => setASupprimer({ id: type.id, nom: type.nom })}
+        />
+      </li>
     )
   }
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[12.5px] text-muted">
-          Un type par entretien encadré par la convention. Ouvre un type pour renseigner son script, sa
-          facturation et ses documents.
-        </p>
+      <p className="text-[13px] leading-relaxed text-muted">
+        Un type par entretien encadré par la convention. Ouvre un type pour renseigner son script, sa
+        facturation et ses documents.
+      </p>
+
+      <div className="flex items-center gap-2">
         <button
           type="button"
-          onClick={() => setFormOuvert((v) => !v)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-lg leading-none text-white"
+          aria-pressed={organiser}
+          onClick={basculerOrganiser}
+          className={`flex min-h-11 items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold ${CLASSE_FOCUS} ${
+            organiser ? 'border-primary bg-primary-soft text-primary' : 'border-border bg-surface text-ink'
+          }`}
         >
-          {formOuvert ? '×' : '+'}
+          <Icone nom="organiser" taille={16} />
+          Organiser
+        </button>
+        <button
+          type="button"
+          aria-expanded={formOuvert}
+          aria-controls="formulaire-nouveau-type"
+          onClick={() => setFormOuvert((v) => !v)}
+          className={`${CLASSE_BOUTON_PRIMAIRE} ml-auto`}
+        >
+          <Icone nom="plus" taille={16} />
+          Ajouter un type
         </button>
       </div>
 
       {formOuvert && (
         <form
+          id="formulaire-nouveau-type"
           onSubmit={(e) => {
             e.preventDefault()
             ajouter()
           }}
-          className="flex gap-2 rounded-[20px] bg-surface shadow-card p-3"
+          className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card"
         >
+          <label htmlFor="nom-nouveau-type" className="text-[13px] font-semibold text-muted">
+            Nom du type d’entretien
+          </label>
           <input
+            id="nom-nouveau-type"
             autoFocus
             value={nomNouveau}
             onChange={(e) => setNomNouveau(e.target.value)}
-            placeholder="Nom du type d’entretien"
-            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            className={CLASSE_CHAMP}
           />
-          <button
-            type="submit"
-            disabled={isPending || !nomNouveau.trim()}
-            className="rounded-xl bg-primary px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50"
-          >
-            Ajouter
-          </button>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setFormOuvert(false)} className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}>
+              Annuler
+            </button>
+            <button type="submit" disabled={isPending || !nomNouveau.trim()} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
+              {isPending ? 'Ajout…' : 'Ajouter'}
+            </button>
+          </div>
         </form>
       )}
 
-      <div className="flex flex-1 flex-col gap-2.5">
-        {actifs.length === 0 && archives.length === 0 && (
-          <p className="py-10 text-center text-sm text-muted">
-            Aucun type d’entretien pour l’instant — ajoute-en un avec le bouton +.
-          </p>
-        )}
-        {actifs.map((t, i) => (
-          <CarteType key={t.id} type={t} index={i} liste={actifs} />
-        ))}
-      </div>
-
-      {archives.length > 0 && (
-        <div className="flex flex-col gap-2.5 rounded-[20px] bg-surface shadow-card p-3.5">
-          <button
-            type="button"
-            onClick={() => setArchiveOuverte((o) => !o)}
-            aria-expanded={archiveOuverte}
-            className="flex items-center justify-between gap-2 text-left"
-          >
-            <span className="text-[13.5px] font-semibold text-ink">Types archivés ({archives.length})</span>
-          </button>
-          {archiveOuverte && (
-            <div className="flex flex-col gap-2.5 pt-1">
-              {archives.map((t, i) => (
-                <CarteType key={t.id} type={t} index={i} liste={archives} />
-              ))}
-            </div>
+      {actifs.length === 0 && archives.length === 0 && (
+        <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <p className="text-sm text-muted">Aucun type d’entretien pour l’instant.</p>
+          {!formOuvert && (
+            <button type="button" onClick={() => setFormOuvert(true)} className={CLASSE_BOUTON_PRIMAIRE}>
+              <Icone nom="plus" taille={16} />
+              Ajouter un type
+            </button>
           )}
         </div>
+      )}
+
+      {actifs.length > 0 && (
+        <ul aria-label="Types d’entretien" className="flex flex-col gap-2.5">
+          {actifs.map((t, i) => rendreCarte(t, i, actifs))}
+        </ul>
+      )}
+
+      {archives.length > 0 && (
+        <section className="rounded-[20px] bg-surface shadow-card">
+          <h2>
+            <button
+              type="button"
+              onClick={() => setArchiveOuverte((o) => !o)}
+              aria-expanded={archiveOuverte}
+              aria-controls="types-archives"
+              className={`flex min-h-12 w-full items-center justify-between gap-2 rounded-[20px] px-4 text-left ${CLASSE_FOCUS}`}
+            >
+              <span className="text-[15px] font-semibold text-ink">Types archivés ({archives.length})</span>
+              <Icone
+                nom="chevron-bas"
+                taille={18}
+                className={`text-muted motion-safe:transition-transform motion-safe:duration-200 ${archiveOuverte ? 'rotate-180' : ''}`}
+              />
+            </button>
+          </h2>
+          <ul id="types-archives" hidden={!archiveOuverte} className="flex flex-col gap-2.5 px-2.5 pb-2.5">
+            {archives.map((t, i) => rendreCarte(t, i, archives))}
+          </ul>
+        </section>
       )}
 
       <ModaleConfirmation

@@ -495,3 +495,23 @@ button,
     box-shadow: none !important;
   }
 }
+
+/* Éléments sticky dans une page dont le contenu porte [data-sticky-layout]
+   (module Entretiens pharmaceutiques : barre d'onglets, bandeau d'édition,
+   barre de progression du script).
+
+   Sous le breakpoint lg, le wrapper de (app)/layout.tsx porte
+   `overflow-x-hidden` : overflow-y devient alors `auto`, le wrapper devient
+   le conteneur de défilement des éléments sticky — alors qu'il ne défile pas
+   (c'est le document qui défile) — et plus aucun sticky ne colle. `clip`
+   rogne le débordement horizontal à l'identique sans créer de conteneur de
+   défilement. Ciblé par :has() plutôt que corrigé dans le layout : les autres
+   pages (dont le compositeur sticky de la messagerie) gardent leur
+   comportement actuel. Sans support de :has() ou de clip, rien ne change. */
+@media (max-width: 63.99rem) {
+  @supports (overflow: clip) {
+    .overflow-x-hidden:has([data-sticky-layout]) {
+      overflow-x: clip;
+    }
+  }
+}

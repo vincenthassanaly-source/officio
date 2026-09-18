@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import type { TypeEntretien, ItemEntretien, DocumentEntretien, SectionEntretien } from '@/lib/data/entretiens'
 import { EntretienMethodologie } from '@/components/entretien-methodologie'
 import type { EtatModeEntretien } from '@/components/entretien-mode-entretien'
+import { BandeauEdition, CLASSE_FOCUS } from '@/components/entretien-ui'
 
 // Un seul onglet est visible à la fois : les sections autres que la
 // méthodologie (affichée par défaut à l'ouverture) sont chargées à la
@@ -24,6 +25,15 @@ const ONGLETS: { id: OngletEntretien; label: string }[] = [
   { id: 'facturation', label: 'Facturation' },
   { id: 'documents', label: 'Documents' },
 ]
+
+// « Entretien » n'a de sens que sur le script : sur Facturation et Documents,
+// le même mode (lecture) s'appelle « Consultation ». Le comportement est
+// identique, seul le libellé change.
+const LIBELLE_MODE_LECTURE: Record<OngletEntretien, string> = {
+  methodologie: 'Entretien',
+  facturation: 'Consultation',
+  documents: 'Consultation',
+}
 
 function ChargementSection() {
   return (
@@ -62,7 +72,9 @@ export function EntretienDetail({
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-3">
+    // data-sticky-layout : voir globals.css (le wrapper du layout empêche sinon
+    // tout élément sticky de coller en mobile).
+    <div data-sticky-layout className="flex flex-1 flex-col gap-3">
       {!type.actif && (
         <p className="rounded-xl bg-neutral-soft px-3 py-2 text-[12.5px] font-semibold text-muted">
           Ce type d’entretien est archivé.
@@ -74,17 +86,17 @@ export function EntretienDetail({
           type="button"
           aria-pressed={!modeEdition}
           onClick={() => setModeEdition(false)}
-          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold transition ${
+          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold ${CLASSE_FOCUS} ${
             !modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
-          Entretien
+          {LIBELLE_MODE_LECTURE[onglet]}
         </button>
         <button
           type="button"
           aria-pressed={modeEdition}
           onClick={() => setModeEdition(true)}
-          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold transition ${
+          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold ${CLASSE_FOCUS} ${
             modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -101,6 +113,8 @@ export function EntretienDetail({
           documents: documents.length,
         }}
       />
+
+      {modeEdition && <BandeauEdition onTerminer={() => setModeEdition(false)} />}
 
       <div id={`panneau-${onglet}`} role="tabpanel" aria-labelledby={`onglet-${onglet}`} className="flex flex-col gap-3">
         {onglet === 'methodologie' && (
@@ -144,7 +158,10 @@ function EntretienNavigation({
     <nav
       role="tablist"
       aria-label="Sections de la fiche"
-      className="sticky top-0 z-10 flex gap-1 overflow-x-auto bg-bg/95 py-1 backdrop-blur"
+      // h-12 (48 px) : le bandeau d'édition et la barre de progression collent
+      // juste dessous avec `top-12`. Plein écran (marges négatives = celles du
+      // conteneur du layout) pour que rien ne dépasse dans les gouttières.
+      className="sticky top-0 z-20 -mx-4 flex h-12 gap-1 bg-bg px-4 sm:-mx-8 sm:px-8 lg:-mx-10 lg:px-10"
     >
       {ONGLETS.map((o, index) => (
         <button
@@ -158,15 +175,15 @@ function EntretienNavigation({
           tabIndex={ongletActif === o.id ? 0 : -1}
           onClick={() => onChanger(o.id)}
           onKeyDown={(e) => onKeyDown(e, index)}
-          className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-[13px] font-semibold transition ${
+          className={`flex min-w-0 flex-auto flex-wrap items-center justify-center gap-x-1.5 overflow-hidden rounded-xl px-2 text-[13px] font-semibold ${CLASSE_FOCUS} ${
             ongletActif === o.id ? 'bg-primary text-white shadow-card' : 'bg-surface text-muted'
           }`}
         >
           {o.label}
           <span
             aria-hidden="true"
-            className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${
-              ongletActif === o.id ? 'bg-white/25 text-white' : 'bg-neutral-soft text-muted'
+            className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold tabular-nums ${
+              ongletActif === o.id ? 'bg-surface text-primary' : 'bg-neutral-soft text-ink'
             }`}
           >
             {compteurs[o.id]}
