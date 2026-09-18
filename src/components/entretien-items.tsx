@@ -49,6 +49,7 @@ export function EntretienItems({
           ordre: tries.length,
           phase: null,
           intitule,
+          type_item: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },

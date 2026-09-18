@@ -9,6 +9,12 @@ export type SectionEntretien = 'methodologie' | 'facturation'
 // définit ses propres libellés ou n'en a pas.
 export type PhaseEntretien = string | null
 
+// Type d'un item du script (méthodologie) : question à poser, point à
+// expliquer ou signal d'alerte (à orienter vers le médecin). NULL = non typé,
+// un état valide affiché normalement. Toujours NULL pour la facturation.
+// Mêmes valeurs que la contrainte CHECK entretien_items_type_item_valeurs.
+export type TypeItemEntretien = 'question' | 'explication' | 'alerte' | null
+
 export type TypeEntretien = {
   id: string
   nom: string
@@ -26,6 +32,7 @@ export type ItemEntretien = {
   ordre: number
   phase: PhaseEntretien
   intitule: string | null
+  type_item: TypeItemEntretien
   created_at: string
   updated_at: string
 }
@@ -104,7 +111,7 @@ export const getItemsEntretien = cache(
 
     const { data, error } = await supabase
       .from('entretien_items')
-      .select('id, type_entretien_id, section, contenu, ordre, phase, intitule, created_at, updated_at')
+      .select('id, type_entretien_id, section, contenu, ordre, phase, intitule, type_item, created_at, updated_at')
       .eq('type_entretien_id', typeEntretienId)
       .order('ordre', { ascending: true })
 

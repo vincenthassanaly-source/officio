@@ -4,7 +4,12 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
-import type { SectionEntretien, PhaseEntretien, CategorieDocumentEntretien } from '@/lib/data/entretiens'
+import type {
+  SectionEntretien,
+  PhaseEntretien,
+  TypeItemEntretien,
+  CategorieDocumentEntretien,
+} from '@/lib/data/entretiens'
 
 const TYPES_ACCEPTES = ['application/pdf', 'image/jpeg', 'image/png']
 const CATEGORIES_DOCUMENT: CategorieDocumentEntretien[] = [
@@ -81,15 +86,30 @@ export async function supprimerTypeEntretien(id: string) {
 // guidé) ; les items de facturation restent toujours à phase = NULL.
 const SECTIONS_AVEC_PHASE: SectionEntretien[] = ['methodologie']
 
+// Idem pour le type d'item (question / explication / alerte) : réservé au
+// script, la base l'impose aussi par CHECK. La valeur vient du client : elle
+// est validée ici avant l'appel RPC plutôt que de compter sur l'erreur SQL.
+const SECTIONS_AVEC_TYPE_ITEM: SectionEntretien[] = ['methodologie']
+const TYPES_ITEM_VALIDES: readonly string[] = ['question', 'explication', 'alerte']
+
+function validerTypeItem(typeItem: TypeItemEntretien): TypeItemEntretien {
+  if (typeItem === null) return null
+  if (!TYPES_ITEM_VALIDES.includes(typeItem)) throw new Error('Type d’élément invalide.')
+  return typeItem
+}
+
 export async function creerItemEntretien(
   typeEntretienId: string,
   section: SectionEntretien,
   contenu: string,
   phase: PhaseEntretien = null,
-  intitule: string | null = null
+  intitule: string | null = null,
+  typeItem: TypeItemEntretien = null
 ) {
   const contenuNettoye = contenu.trim()
   if (!contenuNettoye) return
+
+  const typeItemValide = validerTypeItem(typeItem)
 
   const supabase = await createClient()
   const { error } = await supabase.rpc('creer_item_entretien', {
@@ -98,6 +118,7 @@ export async function creerItemEntretien(
     p_contenu: contenuNettoye,
     p_etape: SECTIONS_AVEC_PHASE.includes(section) ? phase?.trim() || null : null,
     p_intitule: section === 'facturation' ? intitule?.trim() || null : null,
+    p_type_item: SECTIONS_AVEC_TYPE_ITEM.includes(section) ? typeItemValide : null,
   })
 
   if (error) throw new Error(error.message)
@@ -110,17 +131,25 @@ export async function modifierItemEntretien(
   typeEntretienId: string,
   contenu: string,
   phase: PhaseEntretien = null,
-  intitule: string | null = null
+  intitule: string | null = null,
+  typeItem: TypeItemEntretien = null
 ) {
   const contenuNettoye = contenu.trim()
   if (!contenuNettoye) return
 
+  const typeItemValide = validerTypeItem(typeItem)
+
+  // Phase, intitulé et type sont écrits tels quels par la RPC : null les
+  // efface. L'appelant doit donc repasser le type actuel de l'item pour le
+  // conserver ; la facturation n'en a pas (la base refuserait un type non nul
+  // hors du script).
   const supabase = await createClient()
   const { error } = await supabase.rpc('modifier_item_entretien', {
     p_id: id,
     p_contenu: contenuNettoye,
     p_etape: phase?.trim() || null,
     p_intitule: intitule?.trim() || null,
+    p_type_item: typeItemValide,
   })
 
   if (error) throw new Error(error.message)

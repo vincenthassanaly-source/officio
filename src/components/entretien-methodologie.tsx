@@ -53,6 +53,7 @@ export function EntretienMethodologie({
           ordre: tries.length,
           phase,
           intitule: null,
+          type_item: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
@@ -71,11 +72,13 @@ export function EntretienMethodologie({
     const contenu = contenuEnEdition.trim()
     if (!contenu) return
     const phase = phaseEnEdition.trim() || null
+    // La RPC écrit le type tel quel : on repasse celui de l'item pour ne pas l'effacer.
+    const typeItem = itemsOptimistes.find((i) => i.id === id)?.type_item ?? null
 
     startTransition(async () => {
       appliquerOptimiste({ type: 'modification', id, contenu, phase })
       try {
-        await modifierItemEntretien(id, typeEntretienId, contenu, phase)
+        await modifierItemEntretien(id, typeEntretienId, contenu, phase, null, typeItem)
         setEnEdition(null)
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : 'Échec de la modification.' })

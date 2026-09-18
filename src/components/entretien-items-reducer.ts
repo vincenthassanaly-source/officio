@@ -1,5 +1,7 @@
-import type { ItemEntretien, PhaseEntretien } from '@/lib/data/entretiens'
+import type { ItemEntretien, PhaseEntretien, TypeItemEntretien } from '@/lib/data/entretiens'
 
+// Pour `phase`, `intitule` et `typeItem` : `undefined` = ne pas toucher au
+// champ, `null` = l'effacer (même sémantique que la RPC côté base).
 export type ActionItemsEntretien =
   | { type: 'ajout'; item: ItemEntretien }
   | { type: 'suppression'; id: string }
@@ -9,6 +11,7 @@ export type ActionItemsEntretien =
       contenu: string
       phase?: PhaseEntretien
       intitule?: string | null
+      typeItem?: TypeItemEntretien
     }
   | { type: 'reorder'; ids: string[] }
 
@@ -21,7 +24,13 @@ export function reducerItemsEntretien(etat: ItemEntretien[], action: ActionItems
     case 'modification':
       return etat.map((i) =>
         i.id === action.id
-          ? { ...i, contenu: action.contenu, phase: action.phase ?? i.phase, intitule: action.intitule ?? i.intitule }
+          ? {
+              ...i,
+              contenu: action.contenu,
+              phase: action.phase !== undefined ? action.phase : i.phase,
+              intitule: action.intitule !== undefined ? action.intitule : i.intitule,
+              type_item: action.typeItem !== undefined ? action.typeItem : i.type_item,
+            }
           : i
       )
     case 'reorder': {
