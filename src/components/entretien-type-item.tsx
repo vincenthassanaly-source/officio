@@ -109,7 +109,7 @@ export function BadgeTypeItem({ type }: { type: TypeItemRenseigne }) {
   const meta = META[type]
   return (
     <span
-      className={`inline-flex w-fit max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold leading-tight text-ink ${meta.classeBadge}`}
+      className={`inline-flex w-fit max-w-full items-center gap-1.5 rounded-xl px-2.5 py-1 text-[12px] font-semibold leading-tight text-ink ${meta.classeBadge}`}
     >
       <span className={meta.classeIcone}>
         <IconeType type={type} />

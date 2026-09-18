@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/toast-provider'
 import { reducerItemsEntretien } from '@/components/entretien-items-reducer'
 import { StepperEtapes, regrouperParEtape } from '@/components/entretien-etapes'
 import { ScriptModeEntretien, type EtatModeEntretien } from '@/components/entretien-mode-entretien'
+import { BadgeTypeItem, OPTIONS_TYPE_ITEM, typeItemDepuisValeur } from '@/components/entretien-type-item'
 import { useEcranAllume } from '@/lib/use-ecran-allume'
 
 export function EntretienMethodologie({
@@ -28,9 +29,11 @@ export function EntretienMethodologie({
 }) {
   const [contenuNouveau, setContenuNouveau] = useState('')
   const [phaseNouvelle, setPhaseNouvelle] = useState('')
+  const [typeNouveau, setTypeNouveau] = useState('')
   const [enEdition, setEnEdition] = useState<string | null>(null)
   const [contenuEnEdition, setContenuEnEdition] = useState('')
   const [phaseEnEdition, setPhaseEnEdition] = useState('')
+  const [typeEnEdition, setTypeEnEdition] = useState('')
   const [aSupprimer, setASupprimer] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
@@ -50,6 +53,7 @@ export function EntretienMethodologie({
     const contenu = contenuNouveau.trim()
     if (!contenu) return
     const phase = phaseNouvelle.trim() || null
+    const typeItem = typeItemDepuisValeur(typeNouveau)
 
     startTransition(async () => {
       appliquerOptimiste({
@@ -62,15 +66,16 @@ export function EntretienMethodologie({
           ordre: tries.length,
           phase,
           intitule: null,
-          type_item: null,
+          type_item: typeItem,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         },
       })
       try {
-        await creerItemEntretien(typeEntretienId, 'methodologie', contenu, phase)
+        await creerItemEntretien(typeEntretienId, 'methodologie', contenu, phase, null, typeItem)
         setContenuNouveau('')
         setPhaseNouvelle('')
+        setTypeNouveau('')
       } catch (err) {
         toast({ type: 'erreur', message: err instanceof Error ? err.message : "Échec de l'ajout." })
       }
@@ -81,11 +86,10 @@ export function EntretienMethodologie({
     const contenu = contenuEnEdition.trim()
     if (!contenu) return
     const phase = phaseEnEdition.trim() || null
-    // La RPC écrit le type tel quel : on repasse celui de l'item pour ne pas l'effacer.
-    const typeItem = itemsOptimistes.find((i) => i.id === id)?.type_item ?? null
+    const typeItem = typeItemDepuisValeur(typeEnEdition)
 
     startTransition(async () => {
-      appliquerOptimiste({ type: 'modification', id, contenu, phase })
+      appliquerOptimiste({ type: 'modification', id, contenu, phase, typeItem })
       try {
         await modifierItemEntretien(id, typeEntretienId, contenu, phase, null, typeItem)
         setEnEdition(null)
@@ -135,15 +139,18 @@ export function EntretienMethodologie({
             value={contenuEnEdition}
             onChange={(e) => setContenuEnEdition(e.target.value)}
             rows={2}
+            aria-label="Contenu de l’étape"
             className="flex-1 resize-none rounded-lg border border-border bg-bg px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-primary"
           />
           <input
             value={phaseEnEdition}
             onChange={(e) => setPhaseEnEdition(e.target.value)}
             list="phases-existantes"
+            aria-label="Phase"
             placeholder="Phase (optionnel, ex. « Année 1 – Entretien 1 »)"
             className="rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[12px] text-ink outline-none focus:border-primary"
           />
+          <SelecteurTypeItem id={`type-item-${item.id}`} valeur={typeEnEdition} onChange={setTypeEnEdition} />
           <div className="flex justify-end gap-1.5">
             <button
               type="button"
@@ -187,7 +194,10 @@ export function EntretienMethodologie({
             ▼
           </button>
         </div>
-        <p className="min-w-0 flex-1 whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{item.contenu}</p>
+        <div className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
+          {item.type_item && <BadgeTypeItem type={item.type_item} />}
+          <p className="w-full whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{item.contenu}</p>
+        </div>
         <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
@@ -195,6 +205,7 @@ export function EntretienMethodologie({
               setEnEdition(item.id)
               setContenuEnEdition(item.contenu)
               setPhaseEnEdition(item.phase ?? '')
+              setTypeEnEdition(item.type_item ?? '')
             }}
             aria-label="Modifier"
             className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-soft text-muted"
@@ -252,13 +263,16 @@ export function EntretienMethodologie({
               onChange={(e) => setContenuNouveau(e.target.value)}
               placeholder="Étape du déroulé…"
               rows={1}
+              aria-label="Nouvelle étape du déroulé"
               className="flex-1 resize-none rounded-xl border border-border bg-bg px-3 py-2 text-[13.5px] text-ink outline-none focus:border-primary"
             />
+            <SelecteurTypeItem id="type-nouvel-item" valeur={typeNouveau} onChange={setTypeNouveau} />
             <div className="flex gap-2">
               <input
                 value={phaseNouvelle}
                 onChange={(e) => setPhaseNouvelle(e.target.value)}
                 list="phases-existantes"
+                aria-label="Phase"
                 placeholder="Phase (optionnel, ex. « Année 1 – Entretien 1 »)"
                 className="flex-1 rounded-xl border border-border bg-bg px-3 py-2 text-[12.5px] text-ink outline-none focus:border-primary"
               />
@@ -284,5 +298,38 @@ export function EntretienMethodologie({
         </>
       )}
     </section>
+  )
+}
+
+// Sélecteur de type d'un item (Non typé / Question / À expliquer / Alerte), avec
+// son <label> associé. <select> natif : accessible au clavier et au lecteur
+// d'écran sans travail supplémentaire, et adapté au tactile.
+function SelecteurTypeItem({
+  id,
+  valeur,
+  onChange,
+}: {
+  id: string
+  valeur: string
+  onChange: (valeur: string) => void
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <label htmlFor={id} className="shrink-0 text-[12px] font-semibold text-muted">
+        Type
+      </label>
+      <select
+        id={id}
+        value={valeur}
+        onChange={(e) => onChange(e.target.value)}
+        className="min-h-11 flex-1 rounded-xl border border-border bg-bg px-3 text-[13px] text-ink outline-none focus:border-primary"
+      >
+        {OPTIONS_TYPE_ITEM.map((option) => (
+          <option key={option.valeur} value={option.valeur}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
   )
 }
