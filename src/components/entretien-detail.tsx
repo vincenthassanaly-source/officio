@@ -4,6 +4,7 @@ import { useState, type KeyboardEvent } from 'react'
 import dynamic from 'next/dynamic'
 import type { TypeEntretien, ItemEntretien, DocumentEntretien, SectionEntretien } from '@/lib/data/entretiens'
 import { EntretienMethodologie } from '@/components/entretien-methodologie'
+import type { EtatModeEntretien } from '@/components/entretien-mode-entretien'
 
 // Un seul onglet est visible à la fois : les sections autres que la
 // méthodologie (affichée par défaut à l'ouverture) sont chargées à la
@@ -45,6 +46,21 @@ export function EntretienDetail({
   const [onglet, setOnglet] = useState<OngletEntretien>('methodologie')
   const [modeEdition, setModeEdition] = useState(false)
 
+  // État du mode Entretien, gardé ici plutôt que dans le panneau Script : ce
+  // panneau est démonté quand on consulte Facturation ou Documents en plein
+  // entretien, et la progression ne doit pas s'y perdre. Volontairement en
+  // mémoire seulement (aucune écriture serveur, ni localStorage/sessionStorage) :
+  // perdue à la navigation ou au rechargement. La page monte ce composant avec
+  // key={type.id} : elle repart de zéro quand on change de type d'entretien.
+  const [coches, setCoches] = useState<ReadonlySet<string>>(() => new Set())
+  const [phasesOuvertes, setPhasesOuvertes] = useState<ReadonlySet<string> | null>(null)
+  const etatEntretien: EtatModeEntretien = {
+    coches,
+    phasesOuvertes,
+    onChangerCoches: setCoches,
+    onChangerPhasesOuvertes: setPhasesOuvertes,
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-3">
       {!type.actif && (
@@ -62,7 +78,7 @@ export function EntretienDetail({
             !modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
-          Consultation
+          Entretien
         </button>
         <button
           type="button"
@@ -88,7 +104,12 @@ export function EntretienDetail({
 
       <div id={`panneau-${onglet}`} role="tabpanel" aria-labelledby={`onglet-${onglet}`} className="flex flex-col gap-3">
         {onglet === 'methodologie' && (
-          <EntretienMethodologie typeEntretienId={type.id} items={items.methodologie} modeEdition={modeEdition} />
+          <EntretienMethodologie
+            typeEntretienId={type.id}
+            items={items.methodologie}
+            modeEdition={modeEdition}
+            etatEntretien={etatEntretien}
+          />
         )}
         {onglet === 'facturation' && (
           <EntretienItems typeEntretienId={type.id} items={items.facturation} modeEdition={modeEdition} />

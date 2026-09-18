@@ -1,6 +1,6 @@
 'use client'
 
-import { useOptimistic, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import {
   creerItemEntretien,
   modifierItemEntretien,
@@ -12,15 +12,19 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { reducerItemsEntretien } from '@/components/entretien-items-reducer'
 import { StepperEtapes, regrouperParEtape } from '@/components/entretien-etapes'
+import { ScriptModeEntretien, type EtatModeEntretien } from '@/components/entretien-mode-entretien'
+import { useEcranAllume } from '@/lib/use-ecran-allume'
 
 export function EntretienMethodologie({
   typeEntretienId,
   items,
   modeEdition,
+  etatEntretien,
 }: {
   typeEntretienId: string
   items: ItemEntretien[]
   modeEdition: boolean
+  etatEntretien: EtatModeEntretien
 }) {
   const [contenuNouveau, setContenuNouveau] = useState('')
   const [phaseNouvelle, setPhaseNouvelle] = useState('')
@@ -32,10 +36,15 @@ export function EntretienMethodologie({
   const toast = useToast()
 
   const [itemsOptimistes, appliquerOptimiste] = useOptimistic(items, reducerItemsEntretien)
-  const tries = [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre)
+  const tries = useMemo(() => [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre), [itemsOptimistes])
 
-  const { general, groupes } = regrouperParEtape(tries)
-  const phasesExistantes = groupes.map((g) => g.phase)
+  // Regroupement du mode Édition uniquement (le mode Entretien a le sien).
+  const { general, groupes } = useMemo(() => regrouperParEtape(tries), [tries])
+  const phasesExistantes = useMemo(() => groupes.map((g) => g.phase), [groupes])
+
+  // Écran maintenu allumé pendant le mode Entretien : ce composant n'est monté
+  // que sur l'onglet Script, le verrou est donc aussi libéré au changement d'onglet.
+  useEcranAllume(!modeEdition)
 
   function ajouter() {
     const contenu = contenuNouveau.trim()
@@ -118,14 +127,6 @@ export function EntretienMethodologie({
   }
 
   function ligneItem(item: ItemEntretien, index: number, groupe: ItemEntretien[]) {
-    if (!modeEdition) {
-      return (
-        <div key={item.id} className="rounded-xl bg-bg p-2.5">
-          <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{item.contenu}</p>
-        </div>
-      )
-    }
-
     if (enEdition === item.id) {
       return (
         <div key={item.id} className="flex flex-col gap-2 rounded-xl border border-primary p-2">
@@ -220,11 +221,16 @@ export function EntretienMethodologie({
     <section className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card">
       <h2 className="text-[13.5px] font-bold text-ink">Script de l’entretien</h2>
 
-      {tries.length === 0 && (
-        <p className="py-4 text-center text-[12.5px] text-muted">Aucune étape renseignée pour l’instant.</p>
+      {modeEdition ? (
+        <>
+          {tries.length === 0 && (
+            <p className="py-4 text-center text-[12.5px] text-muted">Aucune étape renseignée pour l’instant.</p>
+          )}
+          <StepperEtapes general={general} groupes={groupes} rendreItem={ligneItem} />
+        </>
+      ) : (
+        <ScriptModeEntretien items={tries} etat={etatEntretien} />
       )}
-
-      <StepperEtapes general={general} groupes={groupes} rendreItem={ligneItem} />
 
       {modeEdition && (
         <>
