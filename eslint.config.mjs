@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Deno runtime (Supabase Edge Functions), pas du Next.js/Node.
     "supabase/functions/**",
+    // Skills installés au niveau projet (scripts tiers, dont des fichiers minifiés) :
+    // pas du code applicatif, on ne les lint pas.
+    ".claude/**",
   ]),
 ]);
 
