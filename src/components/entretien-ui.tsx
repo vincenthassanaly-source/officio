@@ -32,6 +32,9 @@ export type NomIcone =
   | 'script'
   | 'euro'
   | 'organiser'
+  | 'question'
+  | 'explication'
+  | 'alerte'
 
 const TRACES: Record<NomIcone, ReactNode> = {
   crayon: (
@@ -100,6 +103,27 @@ const TRACES: Record<NomIcone, ReactNode> = {
       <path d="M4 10h12" />
       <path d="M4 14h9" />
       <path d="M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2" />
+    </>
+  ),
+  question: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <path d="M12 17h.01" />
+    </>
+  ),
+  explication: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 16v-4" />
+      <path d="M12 8h.01" />
+    </>
+  ),
+  alerte: (
+    <>
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+      <path d="M12 9v4" />
+      <path d="M12 17h.01" />
     </>
   ),
   organiser: (

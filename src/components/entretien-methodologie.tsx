@@ -230,7 +230,7 @@ export function EntretienMethodologie({
 
   return (
     <section className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card">
-      <h2 className="text-[13.5px] font-bold text-ink">Script de l’entretien</h2>
+      {modeEdition && <h2 className="text-[15px] font-bold text-ink">Script de l’entretien</h2>}
 
       {modeEdition ? (
         <>

@@ -1,36 +1,37 @@
 import type { TypeItemEntretien } from '@/lib/data/entretiens'
+import { Icone, type NomIcone } from '@/components/entretien-ui'
 
 type TypeItemRenseigne = NonNullable<TypeItemEntretien>
 
 // Le type d'un item n'est jamais porté par la couleur seule : chaque type a
 // une icône ET un libellé texte, en plus de sa couleur. Uniquement des
-// tokens de globals.css. Contrastes WCAG mesurés : texte du badge en `ink`
-// (≥ 14:1 sur chaque fond), icônes et bordures ≥ 3:1 (rec 3,7:1 sur
-// rec-soft, green 3,4:1 sur green-soft, primary 4,9:1 sur primary-soft).
+// tokens de globals.css. Contrastes WCAG mesurés : texte en `ink` (≥ 14:1 sur
+// chaque fond), icônes et bordures ≥ 3:1 (rec 3,7:1 sur rec-soft, green
+// 3,4:1 sur green-soft, primary 4,9:1 sur primary-soft).
 const META: Record<
   TypeItemRenseigne,
-  { badge: string; actionFaite: string; classeBadge: string; classeIcone: string; classeBordure: string }
+  { badge: string; actionFaite: string; classeFond: string; classeIcone: string; icone: NomIcone }
 > = {
   question: {
     badge: 'Question à poser',
     actionFaite: 'Question posée',
-    classeBadge: 'bg-primary-soft',
+    classeFond: 'bg-primary-soft',
     classeIcone: 'text-primary',
-    classeBordure: 'border-l-4 border-primary',
+    icone: 'question',
   },
   explication: {
     badge: 'À expliquer',
     actionFaite: 'Point expliqué',
-    classeBadge: 'bg-green-soft',
+    classeFond: 'bg-green-soft',
     classeIcone: 'text-green',
-    classeBordure: 'border-l-4 border-green',
+    icone: 'explication',
   },
   alerte: {
     badge: 'Signal d’alerte',
     actionFaite: 'Signal vérifié',
-    classeBadge: 'border border-rec bg-surface',
+    classeFond: 'border border-rec bg-surface',
     classeIcone: 'text-rec',
-    classeBordure: 'border-l-4 border-rec',
+    icone: 'alerte',
   },
 }
 
@@ -53,71 +54,67 @@ export function typeItemDepuisValeur(valeur: string): TypeItemEntretien {
   return valeur === 'question' || valeur === 'explication' || valeur === 'alerte' ? valeur : null
 }
 
-// Classes de la ligne d'un item en mode Entretien. Non typé : rendu neutre
-// d'origine. Coché : fond neutre et texte `muted` (5,2:1 sur bg, toujours
+// Classes de la ligne d'un item en mode Entretien. Non typé, question et
+// explication : fond neutre (le badge porte le type). Alerte : l'élément le
+// plus marqué de l'écran (fond teinté et bordure de 2 px sur tout le
+// contour). Coché : fond neutre et texte `muted` (5,2:1 sur bg, toujours
 // lisible) — y compris pour l'alerte, dont le fond teinté serait sinon sous
-// 4,5:1 avec du texte `muted` (4,3:1). Le trait latéral du type reste.
+// 4,5:1 avec du texte `muted` (4,3:1) ; son badge reste. La bordure
+// transparente garde les lignes strictement alignées.
 export function classesLigneItem(type: TypeItemEntretien, coche: boolean): string {
-  if (!type) return 'bg-bg'
-  const { classeBordure } = META[type]
   if (type === 'alerte' && !coche) return 'border-2 border-rec bg-rec-soft'
-  return `bg-bg ${classeBordure}`
+  return 'border-2 border-transparent bg-bg'
 }
 
-function IconeType({ type }: { type: TypeItemRenseigne }) {
-  return (
-    <svg
-      aria-hidden="true"
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="shrink-0"
-    >
-      {type === 'question' && (
-        <>
-          <circle cx="12" cy="12" r="10" />
-          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-          <path d="M12 17h.01" />
-        </>
-      )}
-      {type === 'explication' && (
-        <>
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 16v-4" />
-          <path d="M12 8h.01" />
-        </>
-      )}
-      {type === 'alerte' && (
-        <>
-          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-          <path d="M12 9v4" />
-          <path d="M12 17h.01" />
-        </>
-      )}
-    </svg>
-  )
-}
-
-// Badge « type » : icône + libellé texte (+ consigne d'orientation pour
-// l'alerte, le type le plus marqué visuellement).
-export function BadgeTypeItem({ type }: { type: TypeItemRenseigne }) {
+// Badge « type » : icône + libellé texte.
+// - « pastille » (défaut) : sur sa propre ligne, avec la consigne d'orientation
+//   pour l'alerte (mode Édition).
+// - « inline » : compact, à poser devant le texte de l'item (question et
+//   explication en mode Entretien : évite une ligne de badge par item sur un
+//   script de 45 questions).
+export function BadgeTypeItem({
+  type,
+  variante = 'pastille',
+}: {
+  type: TypeItemRenseigne
+  variante?: 'pastille' | 'inline'
+}) {
   const meta = META[type]
+
+  if (variante === 'inline') {
+    return (
+      <span
+        className={`mr-1.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 align-baseline text-[12px] font-semibold leading-tight text-ink ${meta.classeFond}`}
+      >
+        <Icone nom={meta.icone} taille={14} className={meta.classeIcone} />
+        {meta.badge}
+      </span>
+    )
+  }
+
   return (
     <span
-      className={`inline-flex w-fit max-w-full items-center gap-1.5 rounded-xl px-2.5 py-1 text-[12px] font-semibold leading-tight text-ink ${meta.classeBadge}`}
+      className={`inline-flex w-fit max-w-full items-center gap-1.5 rounded-xl px-2.5 py-1 text-[12px] font-semibold leading-tight text-ink ${meta.classeFond}`}
     >
-      <span className={meta.classeIcone}>
-        <IconeType type={type} />
-      </span>
+      <Icone nom={meta.icone} taille={16} className={meta.classeIcone} />
       <span>
         {meta.badge}
         {type === 'alerte' && <span className="font-bold"> · à orienter vers le médecin</span>}
       </span>
+    </span>
+  )
+}
+
+// En-tête d'un item d'alerte en mode Entretien : icône plus grande, libellé
+// en gras et consigne d'orientation sur sa propre ligne.
+export function EnteteAlerte() {
+  return (
+    <span className="flex flex-col gap-0.5 leading-tight text-ink">
+      <span className="inline-flex items-center gap-1.5 text-[14px] font-bold">
+        <Icone nom="alerte" taille={20} className="text-rec" />
+        {META.alerte.badge}
+      </span>
+      <span className="text-[13px] font-semibold">À orienter vers le médecin</span>
     </span>
   )
 }
