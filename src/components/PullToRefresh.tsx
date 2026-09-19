@@ -25,6 +25,10 @@ function trouverConteneurScrollable(el: HTMLElement | null): HTMLElement | Eleme
  * contain` (voir globals.css) pour désactiver le pull-to-refresh natif du
  * navigateur et éviter le conflit visuel avec cet indicateur custom.
  */
+function reductionMouvementDemandee(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 export function PullToRefresh({
   children,
   onRefresh,
@@ -100,13 +104,19 @@ export function PullToRefresh({
       onTouchMove={gererMouvementTouche}
       onTouchEnd={gererFinTouche}
     >
+      <span role="status" aria-live="polite" className="sr-only">
+        {rafraichissement ? 'Actualisation en cours…' : ''}
+      </span>
       <div
         className="flex shrink-0 items-center justify-center overflow-hidden"
-        style={{ height: distanceTiree, transition: tirageActif ? 'none' : 'height 200ms ease-out' }}
-        aria-hidden={distanceTiree === 0}
+        style={{
+          height: distanceTiree,
+          transition: tirageActif || reductionMouvementDemandee() ? 'none' : 'height 200ms ease-out',
+        }}
+        aria-hidden="true"
       >
         <div
-          className={`h-5 w-5 rounded-full border-2 ${rafraichissement ? 'animate-spin' : ''}`}
+          className={`h-5 w-5 rounded-full border-2 ${rafraichissement ? 'motion-safe:animate-spin' : ''}`}
           style={{
             borderColor: 'var(--color-border)',
             borderTopColor: 'var(--color-primary)',

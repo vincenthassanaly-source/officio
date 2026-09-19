@@ -39,6 +39,15 @@ function IconeMicro({ className }: { className?: string }) {
   )
 }
 
+// Remplace le glyphe « × » du bouton de retrait de l'aperçu.
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
 // Placé à droite de la barre de saisie du message (fil-de-messages.tsx),
 // juste avant le bouton d'envoi : le bouton rond reste à taille fixe (h-9
 // w-9, comme le bouton d'envoi) dans les trois états (repos/enregistrement/
@@ -145,17 +154,31 @@ export function ChampAudio({ onChange }: { onChange: (fichier: File | null) => v
     onChange(null)
   }
 
+  // Statut annoncé aux lecteurs d'écran (démarrage, arrêt, erreur) — le
+  // compteur visuel, mis à jour toutes les 250 ms, resterait purement
+  // visuel dans cette même région pour ne pas spammer d'annonces.
+  const statutAnnonce = erreur
+    ? erreur
+    : apercu
+      ? 'Message vocal enregistré.'
+      : enregistrement
+        ? 'Enregistrement en cours.'
+        : ''
+
   if (apercu) {
     return (
       <div className="flex shrink-0 items-center gap-1.5">
+        <span role="status" aria-live="polite" className="sr-only">
+          {statutAnnonce}
+        </span>
         <audio controls src={apercu} className="h-9 w-32" />
         <button
           type="button"
           onClick={retirer}
           aria-label="Retirer le message vocal"
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rec text-[11px] font-bold text-white"
+          className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          ×
+          <IconFermer className="h-4 w-4" />
         </button>
       </div>
     )
@@ -163,24 +186,29 @@ export function ChampAudio({ onChange }: { onChange: (fichier: File | null) => v
 
   return (
     <div className="relative shrink-0">
+      <span role="status" aria-live="polite" className="sr-only">
+        {statutAnnonce}
+      </span>
       {enregistrement && (
-        <span className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-rec">
+        <span aria-hidden="true" className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[12px] font-semibold text-rec">
           {formatCompteur(ecoule)}
         </span>
       )}
       <button
         type="button"
         onClick={enregistrement ? arreter : demarrer}
-        aria-label={enregistrement ? 'Arrêter l’enregistrement' : 'Enregistrer un vocal'}
+        aria-label={enregistrement ? `Arrêter l’enregistrement, ${formatCompteur(ecoule)}` : 'Enregistrer un vocal'}
         aria-pressed={enregistrement}
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white ${
-          enregistrement ? 'animate-pulse bg-rec' : 'bg-primary'
+        className={`-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+          enregistrement ? 'motion-safe:animate-pulse' : ''
         }`}
       >
-        <IconeMicro className="h-[18px] w-[18px]" />
+        <span className={`flex h-9 w-9 items-center justify-center rounded-full ${enregistrement ? 'bg-rec' : 'bg-primary'}`}>
+          <IconeMicro className="h-[18px] w-[18px]" />
+        </span>
       </button>
       {erreur && (
-        <p className="absolute right-0 top-full mt-1 w-44 text-right text-[10px] text-rec">{erreur}</p>
+        <p className="absolute right-0 top-full z-10 mt-1 w-44 text-right text-[12px] text-rec">{erreur}</p>
       )}
     </div>
   )

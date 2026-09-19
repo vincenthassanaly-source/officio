@@ -39,6 +39,52 @@ import { LightboxImage } from '@/components/lightbox-image'
 const FILTRE_TOUTES = 'toutes'
 const DELAI_APPUI_LONG_MS = 500
 
+// Mêmes traits (viewBox 24x24, stroke currentColor, strokeWidth 2, traits
+// arrondis) que les autres icônes du fichier (IconStylo/IconCorbeille plus
+// bas) — remplace le glyphe Unicode « ↑ » du bouton d'envoi.
+function IconEnvoyer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 19V5M5 12l7-7 7 7" />
+    </svg>
+  )
+}
+
+// Remplace le glyphe « × » du bouton de fermeture de ModaleEditionMessage.
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+// Bouton « Voir les actions du message » (alternative à l'appui long) —
+// trois points, motif standard pour révéler des actions secondaires.
+function IconOptions({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="5" r="1.75" />
+      <circle cx="12" cy="12" r="1.75" />
+      <circle cx="12" cy="19" r="1.75" />
+    </svg>
+  )
+}
+
+// Remplace l'émoji « 👍 » du bouton de pouce — même trait que les icônes
+// ci-dessus. Dupliquée dans taches-list.tsx (bouton de pouce identique)
+// plutôt que factorisée, pour ne pas coupler les deux fichiers sur un
+// détail d'implémentation (même convention que IconAppareilPhoto entre
+// champ-photo.tsx et champ-photos.tsx).
+function IconPouce({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 10v12" />
+      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+    </svg>
+  )
+}
+
 const CATEGORIES: { value: Categorie; label: string; className: string }[] = [
   { value: 'info', label: 'Info', className: 'bg-primary-soft text-primary' },
   { value: 'urgent', label: 'Urgent', className: 'bg-rec-soft text-rec' },
@@ -238,17 +284,21 @@ export function FilDeMessages({
       {messages.length > 0 && (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
+            <label htmlFor="recherche-messages" className="sr-only">
+              Rechercher dans les messages
+            </label>
             <input
+              id="recherche-messages"
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
               placeholder="Rechercher dans les messages…"
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+              className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
             />
             {filtresActifs && (
               <button
                 type="button"
                 onClick={reinitialiserFiltres}
-                className="shrink-0 text-[11.5px] font-semibold text-muted"
+                className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-lg px-2 text-[12px] font-semibold text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Réinitialiser
               </button>
@@ -259,26 +309,34 @@ export function FilDeMessages({
             <button
               type="button"
               onClick={() => setFiltreCategorie(FILTRE_TOUTES)}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold ${
-                filtreCategorie === FILTRE_TOUTES
-                  ? 'border-primary bg-primary text-white'
-                  : 'border-border bg-surface text-muted'
-              }`}
+              className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              Toutes
+              <span
+                className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
+                  filtreCategorie === FILTRE_TOUTES
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-border bg-surface text-muted'
+                }`}
+              >
+                Toutes
+              </span>
             </button>
             {CATEGORIES.map((c) => (
               <button
                 type="button"
                 key={c.value}
                 onClick={() => setFiltreCategorie(c.value)}
-                className={`shrink-0 rounded-full border px-3 py-1.5 text-[11.5px] font-semibold ${
-                  filtreCategorie === c.value
-                    ? 'border-primary bg-primary text-white'
-                    : 'border-border bg-surface text-muted'
-                }`}
+                className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                {c.label}
+                <span
+                  className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
+                    filtreCategorie === c.value
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-border bg-surface text-muted'
+                  }`}
+                >
+                  {c.label}
+                </span>
               </button>
             ))}
           </div>
@@ -321,7 +379,7 @@ export function FilDeMessages({
               {changeDeJour && (
                 <div className="flex items-center gap-2.5 py-1">
                   <span className="h-px flex-1 bg-border" />
-                  <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-muted">
+                  <span className="shrink-0 text-[12px] font-bold uppercase tracking-wide text-muted">
                     {formatSeparateurJour(m.created_at)}
                   </span>
                   <span className="h-px flex-1 bg-border" />
@@ -382,18 +440,26 @@ export function FilDeMessages({
               key={c.value}
               type="button"
               onClick={() => setCategorie(c.value)}
-              className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
-                categorie === c.value ? c.className : 'bg-bg text-muted'
-              }`}
+              className="-my-3.5 flex min-h-11 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              {c.label}
+              <span
+                className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
+                  categorie === c.value ? c.className : 'bg-bg text-muted'
+                }`}
+              >
+                {c.label}
+              </span>
             </button>
           ))}
         </div>
         <input type="hidden" name="categorie" value={categorie} />
         <div className="flex items-end gap-2">
+          <label htmlFor="contenu-message" className="sr-only">
+            Écrire un message
+          </label>
           <textarea
             ref={textareaRef}
+            id="contenu-message"
             name="contenu"
             value={contenu}
             onChange={(e) => {
@@ -410,9 +476,12 @@ export function FilDeMessages({
           <button
             type="submit"
             disabled={isPending || (!contenu.trim() && !audio && photos.length === 0)}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-lg text-white disabled:opacity-50"
+            aria-label="Envoyer le message"
+            className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
           >
-            ↑
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
+              <IconEnvoyer className="h-[18px] w-[18px]" />
+            </span>
           </button>
         </div>
       </form>
@@ -553,19 +622,33 @@ function MessageItem({
           <div className="truncate text-[13.5px] font-semibold text-ink">
             {m.auteur?.nom_complet ?? 'Ancien collègue'}
           </div>
-          <div className="text-[11px] text-muted">{formatDateRelative(m.created_at)}</div>
+          <div className="text-[12px] text-muted">{formatDateRelative(m.created_at)}</div>
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${cat.className}`}>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${cat.className}`}>
           {cat.label}
         </span>
+        {/* Les icônes d'action s'affichent aussi après un appui long sur la
+            carte (voir demarrerAppuiLong) : ce bouton en est l'alternative
+            visible, accessible au clavier et au lecteur d'écran — le geste
+            reste disponible en plus, pas à la place. */}
+        {estAuteur && !iconesVisibles && (
+          <button
+            type="button"
+            onClick={() => onAppuiLong(m.id)}
+            aria-label="Voir les actions du message"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <IconOptions className="h-4 w-4" />
+          </button>
+        )}
         {iconesVisibles && (
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 items-center">
             <button
               type="button"
               disabled={isPending}
               onClick={() => onEditer(m)}
               aria-label="Modifier le message"
-              className="text-muted hover:text-primary disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
             >
               <IconStylo className="h-4 w-4" />
             </button>
@@ -574,7 +657,7 @@ function MessageItem({
               disabled={isPending}
               onClick={supprimer}
               aria-label="Supprimer le message"
-              className="text-muted hover:text-rec disabled:opacity-50"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
             >
               <IconCorbeille className="h-4 w-4" />
             </button>
@@ -605,30 +688,32 @@ function MessageItem({
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-between border-t border-border pt-2.5">
-        <div className="flex items-center gap-2">
-          <div className="flex">
-            {m.lecteurs.map((l, i) => {
-              const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
-              return (
-                <div
-                  key={l.profil_id}
-                  className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
-                  style={{ zIndex: m.lecteurs.length - i }}
-                >
-                  {l.initiales}
-                </div>
-              )
-            })}
-          </div>
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-2.5">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+          {m.lecteurs.length > 0 && (
+            <div className="flex" title={`Lu par ${m.lecteurs.length} personne${m.lecteurs.length > 1 ? 's' : ''}`}>
+              {m.lecteurs.map((l, i) => {
+                const c = couleurs.get(l.profil_id) ?? COULEUR_PAR_DEFAUT
+                return (
+                  <div
+                    key={l.profil_id}
+                    className={`-ml-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface text-[12px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+                    style={{ zIndex: m.lecteurs.length - i }}
+                  >
+                    {l.initiales}
+                  </div>
+                )
+              })}
+            </div>
+          )}
           {m.pouces.length > 0 && (
-            <div className="flex">
+            <div className="flex" title={`Pouce de ${m.pouces.length} personne${m.pouces.length > 1 ? 's' : ''}`}>
               {m.pouces.map((p, i) => {
                 const c = couleurs.get(p.profil_id) ?? COULEUR_PAR_DEFAUT
                 return (
                   <div
                     key={p.profil_id}
-                    className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+                    className={`-ml-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface text-[12px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
                     style={{ zIndex: m.pouces.length - i }}
                   >
                     {p.initiales}
@@ -638,8 +723,12 @@ function MessageItem({
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2.5">
-          {dejaLu && <span className="text-[11px] font-semibold text-muted">Lu</span>}
+        <div className="flex shrink-0 items-center gap-2.5">
+          {/* Distinction lu/non lu jamais portée par la seule couleur : un
+              texte visible pour « lu », et une absence de texte (plutôt
+              qu'un badge coloré) pour « non lu » — cohérent avec l'auteur,
+              qui voit déjà qui a lu via les avatars ci-dessus. */}
+          {dejaLu && <span className="text-[12px] font-semibold text-muted">Lu</span>}
           {/* Plus de `disabled` : la bascule est optimiste, et le isPending du
               fil est partagé par tous les messages — un pouce y désactivait
               les boutons de toutes les autres cartes. */}
@@ -659,11 +748,11 @@ function MessageItem({
             }
             aria-label={monPouce ? 'Retirer mon pouce' : 'Mettre un pouce'}
             aria-pressed={monPouce}
-            className={`shrink-0 text-base leading-none transition-transform active:scale-90 ${
-              monPouce ? 'opacity-100' : 'opacity-35 grayscale hover:opacity-70 hover:grayscale-0'
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-safe:active:scale-90 ${
+              monPouce ? 'text-primary' : 'text-muted hover:text-primary'
             }`}
           >
-            👍
+            <IconPouce className="h-[18px] w-[18px]" />
           </button>
         </div>
       </div>
@@ -725,8 +814,13 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
       >
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-sm font-bold text-ink">Modifier le message</h2>
-          <button type="button" onClick={onFerme} aria-label="Fermer sans enregistrer" className="text-muted">
-            ×
+          <button
+            type="button"
+            onClick={onFerme}
+            aria-label="Fermer sans enregistrer"
+            className="-m-2.5 flex h-11 w-11 items-center justify-center rounded-full text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <IconFermer className="h-4 w-4" />
           </button>
         </div>
         {message.audioUrl && (

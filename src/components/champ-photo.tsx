@@ -25,6 +25,15 @@ function IconAppareilPhoto({ className }: { className?: string }) {
   )
 }
 
+// Remplace le glyphe « × » du bouton de retrait.
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
 // Sélecteur de photo réutilisé par les formulaires de création de tâche
 // (taches-list.tsx, fab-creation-rapide.tsx) et par la modale d'édition de
 // tâche (taches-list.tsx) : compression client-side avant de remonter le
@@ -91,9 +100,11 @@ export function ChampPhoto({
             type="button"
             onClick={retirer}
             aria-label="Retirer la photo"
-            className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rec text-[10px] font-bold text-white"
+            className="absolute -right-3.5 -top-3.5 flex h-11 w-11 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            ×
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rec text-white">
+              <IconFermer className="h-3 w-3" />
+            </span>
           </button>
           {agrandie && <LightboxImage src={apercu} onFerme={() => setAgrandie(false)} />}
         </div>
@@ -102,9 +113,11 @@ export function ChampPhoto({
           type="button"
           onClick={() => inputRef.current?.click()}
           aria-label="Ajouter une photo"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white"
+          className="-m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          <IconAppareilPhoto className="h-[18px] w-[18px]" />
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white">
+            <IconAppareilPhoto className="h-[18px] w-[18px]" />
+          </span>
         </button>
       )}
     </div>
