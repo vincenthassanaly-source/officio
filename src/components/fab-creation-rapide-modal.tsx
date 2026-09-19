@@ -367,15 +367,19 @@ export default function FabCreationRapideModal({
   usePiegeFocus(true, boiteRef)
 
   return (
+    // Ferme au clic sur l'arrière-plan : le <div> englobant porte le
+    // onClick, le panneau interne l'arrête via stopPropagation — même
+    // motif que MenuPlusPanel/FenetreAujourdhui (voir le rapport du Lot 2).
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby={idTitre}
+      onClick={onFermer}
       className="fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 lg:items-center"
     >
-      <button type="button" aria-label="Fermer" onClick={onFermer} className="absolute inset-0" />
       <div
         ref={boiteRef}
+        onClick={(e) => e.stopPropagation()}
         className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
       >
         <button

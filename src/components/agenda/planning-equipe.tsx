@@ -604,13 +604,19 @@ export function PlanningEquipe({
       </div>
 
       {creneauDetail && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center">
-          <button type="button" aria-label="Fermer" onClick={fermerDetail} className="absolute inset-0" />
+        // Ferme au clic sur l'arrière-plan : le <div> englobant porte le
+        // onClick, le panneau interne l'arrête via stopPropagation — même
+        // motif que MenuPlusPanel/FenetreAujourdhui (voir le rapport).
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center"
+          onClick={fermerDetail}
+        >
           <div
             ref={detailRef}
             role="dialog"
             aria-modal="true"
             aria-label="Détail du créneau"
+            onClick={(e) => e.stopPropagation()}
             className="relative w-full rounded-t-3xl bg-surface p-4 lg:max-w-sm lg:rounded-3xl"
           >
             <button

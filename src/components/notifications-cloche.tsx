@@ -133,17 +133,12 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
 
       {ouvert && (
         <>
-          {/* Capte les clics en dehors du panneau pour le fermer — même
-              idiome que le bouton `absolute inset-0` du modal dans
-              chaussures-catalogue.tsx, adapté en `fixed` pour un panneau
-              qui ne couvre pas tout l'écran (pas de listener mousedown à
-              gérer/nettoyer). */}
-          <button
-            type="button"
-            aria-label="Fermer les notifications"
-            onClick={() => setOuvert(false)}
-            className="fixed inset-0 z-40"
-          />
+          {/* Capte les clics en dehors du panneau pour le fermer — un <div>
+              non focusable plutôt qu'un <button> (même motif que
+              MenuPlusPanel/FenetreAujourdhui) : évite un arrêt de tabulation
+              sans retour visuel. Échap et retour physique restent gérés par
+              useFermerAvecRetour ci-dessus. */}
+          <div aria-hidden="true" onClick={() => setOuvert(false)} className="fixed inset-0 z-40" />
           <div
             style={{ top: position.top, right: position.right }}
             className="fixed z-50 max-h-[70vh] w-[320px] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface shadow-lg"

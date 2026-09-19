@@ -204,10 +204,10 @@ export function RechercheGlobale() {
       {/* Capte les clics en dehors du panneau pour le fermer — même idiome
           que NotificationsCloche, mais l'input reste au-dessus (z-50) : à la
           différence d'un bouton déclencheur, il doit rester utilisable
-          (continuer à taper) pendant que le panneau est ouvert. */}
-      {ouvert && (
-        <button type="button" aria-label="Fermer la recherche" onClick={fermer} className="fixed inset-0 z-40" />
-      )}
+          (continuer à taper) pendant que le panneau est ouvert. <div> non
+          focusable plutôt qu'un <button> (voir le rapport du Lot 2) : Échap
+          et retour physique restent gérés par useFermerAvecRetour. */}
+      {ouvert && <div aria-hidden="true" onClick={fermer} className="fixed inset-0 z-40" />}
     </div>
   )
 }

@@ -343,13 +343,12 @@ export function FilDeMessages({
         </div>
       )}
 
+      {/* Ferme au clic en dehors d'une carte de message : un <div> non
+          focusable plutôt qu'un <button> — même motif que MenuPlusPanel/
+          FenetreAujourdhui, évite un arrêt de tabulation sans retour visuel
+          (voir le rapport). */}
       {idIconesVisibles !== null && (
-        <button
-          type="button"
-          aria-label="Fermer les actions du message"
-          onClick={() => setIdIconesVisibles(null)}
-          className="fixed inset-0 z-40"
-        />
+        <div aria-hidden="true" onClick={() => setIdIconesVisibles(null)} className="fixed inset-0 z-40" />
       )}
 
       <div className="flex flex-1 flex-col gap-3">
