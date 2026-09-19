@@ -6,9 +6,29 @@ import type { PatientCno } from '@/lib/data/cno'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
+import { IconCno } from '@/components/nav-icons'
 
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+
+const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
+// Remplace les glyphes « + »/« × » du bouton bascule du formulaire.
+function IconAjouter({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
 
 function formatDate(dateIso: string) {
   return new Date(dateIso).toLocaleDateString('fr-FR', {
@@ -45,24 +65,30 @@ function QuantiteEditable({
 
   if (enEdition) {
     return (
-      <input
-        type="number"
-        step="1"
-        min="0"
-        autoFocus
-        value={valeur}
-        onChange={(e) => setValeur(e.target.value)}
-        onFocus={(e) => e.currentTarget.select()}
-        onBlur={enregistrer}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') e.currentTarget.blur()
-          if (e.key === 'Escape') {
-            setValeur(String(patient.quantite_restante))
-            setEnEdition(false)
-          }
-        }}
-        className="w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold text-ink outline-none"
-      />
+      <div className="flex flex-col items-center gap-0.5">
+        <span className="text-[12px] font-semibold uppercase tracking-wide text-muted">Compl.</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          enterKeyHint="done"
+          step="1"
+          min="0"
+          autoFocus
+          value={valeur}
+          onChange={(e) => setValeur(e.target.value)}
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={enregistrer}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur()
+            if (e.key === 'Escape') {
+              setValeur(String(patient.quantite_restante))
+              setEnEdition(false)
+            }
+          }}
+          aria-label={`Compléments restants pour ${patient.nom_patient}`}
+          className={`w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold text-ink outline-none ${CLASSE_FOCUS}`}
+        />
+      </div>
     )
   }
 
@@ -70,9 +96,13 @@ function QuantiteEditable({
     <button
       type="button"
       onClick={() => setEnEdition(true)}
-      className="flex h-8 min-w-10 items-center justify-center rounded-lg bg-primary-soft px-2 text-[15px] font-bold text-primary"
+      aria-label={`Modifier les compléments restants de ${patient.nom_patient}, actuellement ${patient.quantite_restante}`}
+      className={`-m-1.5 flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg p-1.5 ${CLASSE_FOCUS}`}
     >
-      {patient.quantite_restante}
+      <span className="text-[12px] font-semibold uppercase tracking-wide text-muted">Compl.</span>
+      <span className="flex h-7 min-w-10 items-center justify-center rounded-lg bg-primary-soft px-2 text-[14.5px] font-bold text-primary">
+        {patient.quantite_restante}
+      </span>
     </button>
   )
 }
@@ -80,14 +110,23 @@ function QuantiteEditable({
 function ChampsFormulaire() {
   return (
     <>
-      <input name="nom_patient" required placeholder="Nom du patient" className={CHAMP_CLASS} />
+      <input
+        name="nom_patient"
+        required
+        placeholder="Nom du patient"
+        aria-label="Nom du patient"
+        className={CHAMP_CLASS}
+      />
       <input
         type="number"
+        inputMode="numeric"
+        enterKeyHint="done"
         name="quantite_restante"
         step="1"
         min="0"
         defaultValue={0}
         placeholder="Compléments restants"
+        aria-label="Compléments restants"
         className={CHAMP_CLASS}
       />
     </>
@@ -159,14 +198,17 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher un patient…"
+          aria-label="Rechercher un patient"
           className={`flex-1 ${CHAMP_CLASS}`}
         />
         <button
           type="button"
           onClick={() => setFormOuvert((v) => !v)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-lg leading-none text-white"
+          aria-label={formOuvert ? 'Fermer le formulaire' : 'Ajouter un patient'}
+          aria-expanded={formOuvert}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white ${CLASSE_FOCUS}`}
         >
-          {formOuvert ? '×' : '+'}
+          {formOuvert ? <IconFermer className="h-4 w-4" /> : <IconAjouter className="h-5 w-5" />}
         </button>
       </div>
 
@@ -189,7 +231,7 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+            className={`min-h-11 rounded-xl bg-primary text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Créer la fiche
           </button>
@@ -197,11 +239,16 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
       )}
 
       {visibles.length === 0 && (
-        <p className="py-10 text-center text-sm text-muted">
-          {patientsOptimistes.length === 0
-            ? 'Aucune fiche pour l’instant — crée la première avec le bouton +.'
-            : 'Aucun patient ne correspond.'}
-        </p>
+        <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-soft text-muted">
+            <IconCno className="h-6 w-6" />
+          </div>
+          <p className="max-w-[220px] text-sm text-muted">
+            {patientsOptimistes.length === 0
+              ? 'Aucune fiche pour l’instant — crée la première avec le bouton d’ajout.'
+              : 'Aucun patient ne correspond à la recherche.'}
+          </p>
+        </div>
       )}
 
       <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
@@ -212,19 +259,21 @@ export function CnoListe({ patients }: { patients: PatientCno[] }) {
           >
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13.5px] font-semibold text-ink">{p.nom_patient}</div>
-              <div className="mt-0.5 text-[11px] text-muted">Mis à jour le {formatDate(p.derniere_maj)}</div>
+              <div className="mt-0.5 text-[12px] text-muted">Mis à jour le {formatDate(p.derniere_maj)}</div>
             </div>
             <QuantiteEditable patient={p} onEnregistrerQuantite={enregistrerQuantite} />
             <button
               type="button"
               onClick={() => demanderSuppression(p.id, p.nom_patient)}
-              aria-label="Supprimer"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec"
+              aria-label={`Supprimer la fiche de ${p.nom_patient}`}
+              className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 6h18" />
-                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
-              </svg>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+                </svg>
+              </span>
             </button>
           </div>
         ))}
