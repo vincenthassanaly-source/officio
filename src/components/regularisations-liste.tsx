@@ -13,9 +13,29 @@ import { formatDateCourte, toISODate } from '@/lib/dates'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { vibrer } from '@/lib/haptics'
+import { IconRegularisation } from '@/components/nav-icons'
 
 export const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+
+export const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
+// Remplace les glyphes « + »/« × » du bouton bascule du formulaire.
+function IconAjouter({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
 
 // Exportée pour être réutilisée par agenda-vue-globale.tsx (même critère
 // de retard que dans cette liste).
@@ -30,6 +50,10 @@ export function ChampsFormulaire({
   regularisation?: Regularisation
   dateRegularisationParDefaut?: string
 }) {
+  const idBase = regularisation?.id ?? 'nouveau'
+  const idDateOrdonnance = `${idBase}-date-ordonnance`
+  const idDateRegularisation = `${idBase}-date-regularisation`
+
   return (
     <>
       <div className="flex gap-2">
@@ -38,6 +62,7 @@ export function ChampsFormulaire({
           defaultValue={regularisation?.patient_prenom}
           required
           placeholder="Prénom"
+          aria-label="Prénom du patient"
           className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
         />
         <input
@@ -45,13 +70,17 @@ export function ChampsFormulaire({
           defaultValue={regularisation?.patient_nom}
           required
           placeholder="Nom"
+          aria-label="Nom du patient"
           className={`flex-1 min-w-0 ${CHAMP_CLASS}`}
         />
       </div>
       <div className="flex gap-2">
         <div className="min-w-0 flex-1">
-          <label className="mb-1 block text-[11px] font-semibold text-muted">Date ordonnance</label>
+          <label htmlFor={idDateOrdonnance} className="mb-1 block text-[12px] font-semibold text-muted">
+            Date ordonnance
+          </label>
           <input
+            id={idDateOrdonnance}
             type="date"
             name="date_ordonnance"
             defaultValue={regularisation?.date_ordonnance ?? undefined}
@@ -59,8 +88,11 @@ export function ChampsFormulaire({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <label className="mb-1 block text-[11px] font-semibold text-muted">À régulariser le</label>
+          <label htmlFor={idDateRegularisation} className="mb-1 block text-[12px] font-semibold text-muted">
+            À régulariser le
+          </label>
           <input
+            id={idDateRegularisation}
             type="date"
             name="date_regularisation"
             defaultValue={regularisation?.date_regularisation ?? dateRegularisationParDefaut}
@@ -73,6 +105,7 @@ export function ChampsFormulaire({
         name="note"
         defaultValue={regularisation?.note ?? ''}
         placeholder="Note (optionnel)"
+        aria-label="Note"
         rows={2}
         className={`resize-none ${CHAMP_CLASS}`}
       />
@@ -130,19 +163,23 @@ function CarteRegularisation({
           <button
             type="submit"
             disabled={isPending}
-            className="flex-1 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+            className={`min-h-11 flex-1 rounded-xl bg-primary text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Enregistrer
           </button>
           <button
             type="button"
             onClick={onAnnulerEdition}
-            className="rounded-xl border border-border px-4 py-2.5 text-[13.5px] font-semibold text-muted"
+            className={`min-h-11 rounded-xl border border-border px-4 text-[13.5px] font-semibold text-muted ${CLASSE_FOCUS}`}
           >
             Annuler
           </button>
         </div>
-        <button type="button" onClick={onSupprimer} className="text-xs font-semibold text-rec">
+        <button
+          type="button"
+          onClick={onSupprimer}
+          className={`min-h-11 self-start text-[12px] font-semibold text-rec ${CLASSE_FOCUS}`}
+        >
           Supprimer cette régularisation
         </button>
       </form>
@@ -166,7 +203,7 @@ function CarteRegularisation({
           <div className="truncate text-[13.5px] font-semibold text-ink">
             {r.patient_prenom} {r.patient_nom}
           </div>
-          <div className="mt-0.5 text-[11px] text-muted">
+          <div className="mt-0.5 text-[12px] text-muted">
             {r.date_ordonnance ? `Ordonnance du ${formatDateCourte(r.date_ordonnance)}` : 'Date ordonnance non renseignée'}
           </div>
         </div>
@@ -174,8 +211,8 @@ function CarteRegularisation({
           <div className={`font-heading text-[14px] ${enRetard ? 'text-rec' : 'text-ink'}`}>
             {formatDateCourte(r.date_regularisation)}
           </div>
-          {facture && <span className="text-[10px] font-bold text-muted">Facturé</span>}
-          {!facture && enRetard && <span className="text-[10px] font-bold text-rec">En retard</span>}
+          {facture && <span className="text-[12px] font-bold text-muted">Facturé</span>}
+          {!facture && enRetard && <span className="text-[12px] font-bold text-rec">En retard</span>}
         </div>
       </div>
 
@@ -186,7 +223,7 @@ function CarteRegularisation({
           type="button"
           onClick={onBasculerFacture}
           disabled={isPending}
-          className={`flex-1 rounded-xl py-2 text-[12.5px] font-semibold disabled:opacity-60 ${
+          className={`min-h-11 flex-1 rounded-xl text-[12.5px] font-semibold disabled:opacity-60 ${CLASSE_FOCUS} ${
             facture ? 'border border-border text-muted' : 'bg-primary text-white'
           }`}
         >
@@ -195,13 +232,15 @@ function CarteRegularisation({
         <button
           type="button"
           onClick={onModifier}
-          aria-label="Modifier"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-muted"
+          aria-label={`Modifier la régularisation de ${r.patient_prenom} ${r.patient_nom}`}
+          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-soft text-muted">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </span>
         </button>
       </div>
     </div>
@@ -304,6 +343,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher un patient…"
+          aria-label="Rechercher un patient"
           className={`flex-1 ${CHAMP_CLASS}`}
         />
         <button
@@ -312,9 +352,11 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
             setFormOuvert((v) => !v)
             setEnEdition(null)
           }}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-lg leading-none text-white"
+          aria-label={formOuvert ? 'Fermer le formulaire' : 'Ajouter une régularisation'}
+          aria-expanded={formOuvert}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-white ${CLASSE_FOCUS}`}
         >
-          {formOuvert ? '×' : '+'}
+          {formOuvert ? <IconFermer className="h-4 w-4" /> : <IconAjouter className="h-5 w-5" />}
         </button>
       </div>
 
@@ -340,7 +382,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+            className={`min-h-11 rounded-xl bg-primary text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Ajouter
           </button>
@@ -348,9 +390,14 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
       )}
 
       {regularisationsOptimistes.length === 0 && (
-        <p className="py-10 text-center text-sm text-muted">
-          Aucune régularisation pour l’instant — ajoute la première avec le bouton +.
-        </p>
+        <div className="flex flex-col items-center gap-3 py-10 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-soft text-muted">
+            <IconRegularisation className="h-6 w-6" />
+          </div>
+          <p className="max-w-[220px] text-sm text-muted">
+            Aucune régularisation pour l’instant — ajoute la première avec le bouton d’ajout.
+          </p>
+        </div>
       )}
 
       {regularisationsOptimistes.length > 0 && visibles.length === 0 && (
@@ -359,7 +406,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
 
       {enRetard.length > 0 && (
         <div className="flex flex-col gap-2">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-rec">En retard · {enRetard.length}</div>
+          <div className="text-[12px] font-bold uppercase tracking-wide text-rec">En retard · {enRetard.length}</div>
           <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
             {enRetard.map((r) => renderCarte(r, true))}
           </div>
@@ -369,7 +416,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
       {reste.length > 0 && (
         <div className="flex flex-col gap-2">
           {enRetard.length > 0 && (
-            <div className="text-[11px] font-bold uppercase tracking-wide text-muted">À venir</div>
+            <div className="text-[12px] font-bold uppercase tracking-wide text-muted">À venir</div>
           )}
           <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
             {reste.map((r) => renderCarte(r, false))}
@@ -383,7 +430,7 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
             type="button"
             onClick={() => setArchiveOuverte((o) => !o)}
             aria-expanded={archiveOuverte}
-            className="flex items-center justify-between gap-2 text-left"
+            className={`flex min-h-11 items-center justify-between gap-2 text-left ${CLASSE_FOCUS}`}
           >
             <span className="text-[13.5px] font-semibold text-ink">Régularisations archivées ({archivees.length})</span>
             <IconChevron

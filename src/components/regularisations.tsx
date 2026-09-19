@@ -39,7 +39,7 @@ export function Regularisations({
         <button
           type="button"
           onClick={() => allerVersVue('liste')}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             vue === 'liste' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -48,7 +48,7 @@ export function Regularisations({
         <button
           type="button"
           onClick={() => allerVersVue('calendrier')}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             vue === 'calendrier' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >

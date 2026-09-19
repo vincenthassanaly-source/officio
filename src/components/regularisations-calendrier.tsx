@@ -2,10 +2,34 @@
 
 import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import { ajouterRegularisation, marquerAFaire, marquerFacture } from '@/app/actions/regularisations'
-import { ChampsFormulaire } from '@/components/regularisations-liste'
+import { ChampsFormulaire, CLASSE_FOCUS } from '@/components/regularisations-liste'
 import type { Regularisation, StatutRegularisation } from '@/lib/data/regularisations'
 import { formatDateLongue, formatJourCourt, formatMoisAnnee, getMonthGridDates, toISODate } from '@/lib/dates'
 import { vibrer } from '@/lib/haptics'
+
+function IconChevronGauche({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  )
+}
+
+function IconChevronDroite({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  )
+}
+
+function IconAjouter({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
 
 export function RegularisationsCalendrier({
   regularisations,
@@ -58,14 +82,18 @@ export function RegularisationsCalendrier({
           type="button"
           onClick={onMoisPrecedent}
           aria-label="Mois précédent"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-semibold text-muted hover:text-ink"
+          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-muted hover:text-ink ${CLASSE_FOCUS}`}
         >
-          ‹
+          <IconChevronGauche className="h-4 w-4" />
         </button>
         <div className="flex flex-col items-center gap-0.5">
           <span className="text-[13px] font-semibold text-ink">{formatMoisAnnee(moisAffiche)}</span>
           {!estMoisActuel && (
-            <button type="button" onClick={onAujourdhui} className="text-[11px] font-semibold text-primary">
+            <button
+              type="button"
+              onClick={onAujourdhui}
+              className={`flex min-h-11 items-center px-2 text-[12px] font-semibold text-primary ${CLASSE_FOCUS}`}
+            >
               Aujourd&rsquo;hui
             </button>
           )}
@@ -74,15 +102,15 @@ export function RegularisationsCalendrier({
           type="button"
           onClick={onMoisSuivant}
           aria-label="Mois suivant"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-semibold text-muted hover:text-ink"
+          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-muted hover:text-ink ${CLASSE_FOCUS}`}
         >
-          ›
+          <IconChevronDroite className="h-4 w-4" />
         </button>
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center">
         {grille.slice(0, 7).map((d) => (
-          <div key={toISODate(d)} className="text-[9.5px] font-semibold uppercase text-muted">
+          <div key={toISODate(d)} className="text-[12px] font-semibold uppercase text-muted">
             {formatJourCourt(d)}
           </div>
         ))}
@@ -110,14 +138,24 @@ export function RegularisationsCalendrier({
                 setJourSelectionne(iso)
                 setFormOuvert(false)
               }}
-              className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] ${
-                !dansMoisAffiche ? 'text-muted/40' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
+              aria-label={`${formatDateLongue(iso)}${compteAFaire > 0 ? `, ${compteAFaire} régularisation${compteAFaire > 1 ? 's' : ''} à faire` : ''}`}
+              className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] ${CLASSE_FOCUS} ${
+                !dansMoisAffiche ? 'text-muted/40' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
             >
-              <span>{d.getDate()}</span>
+              {/* Marqueur « aujourd'hui » net : pastille pleine sous le
+                  quantième, même motif que l'Agenda (Lot 2, A4/A7) plutôt
+                  qu'une simple couleur de texte. */}
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                  estAujourdhui ? 'bg-primary font-bold text-white' : ''
+                }`}
+              >
+                {d.getDate()}
+              </span>
               {compteAFaire > 0 && (
                 <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold ${classeBadge}`}
+                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${classeBadge}`}
                 >
                   {compteAFaire}
                 </span>
@@ -137,7 +175,7 @@ export function RegularisationsCalendrier({
                 setJourSelectionne(null)
                 setFormOuvert(false)
               }}
-              className="text-[11px] font-semibold text-muted"
+              className={`min-h-11 px-2 text-[12px] font-semibold text-muted ${CLASSE_FOCUS}`}
             >
               Fermer
             </button>
@@ -154,7 +192,7 @@ export function RegularisationsCalendrier({
                     <div className="truncate text-[13px] font-semibold text-ink">
                       {r.patient_prenom} {r.patient_nom}
                     </div>
-                    {r.note && <div className="truncate text-[11px] text-muted">{r.note}</div>}
+                    {r.note && <div className="truncate text-[12px] text-muted">{r.note}</div>}
                   </div>
                   {/* Optimiste : plus de `disabled`, le libellé du bouton
                       bascule dès le clic. */}
@@ -168,7 +206,7 @@ export function RegularisationsCalendrier({
                         await (facture ? marquerAFaire(r.id) : marquerFacture(r.id))
                       })
                     }
-                    className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold ${
+                    className={`min-h-11 shrink-0 rounded-lg px-2.5 text-[12px] font-semibold ${CLASSE_FOCUS} ${
                       facture ? 'border border-border text-muted' : 'bg-primary text-white'
                     }`}
                   >
@@ -194,14 +232,14 @@ export function RegularisationsCalendrier({
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex-1 rounded-xl bg-primary py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+                  className={`min-h-11 flex-1 rounded-xl bg-primary text-[13px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
                 >
                   Ajouter
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormOuvert(false)}
-                  className="rounded-xl border border-border px-4 py-2.5 text-[13px] font-semibold text-muted"
+                  className={`min-h-11 rounded-xl border border-border px-4 text-[13px] font-semibold text-muted ${CLASSE_FOCUS}`}
                 >
                   Annuler
                 </button>
@@ -211,9 +249,10 @@ export function RegularisationsCalendrier({
             <button
               type="button"
               onClick={() => setFormOuvert(true)}
-              className="self-start text-[12.5px] font-semibold text-primary"
+              className={`flex min-h-11 items-center gap-1.5 self-start text-[12.5px] font-semibold text-primary ${CLASSE_FOCUS}`}
             >
-              + Ajouter une régularisation ce jour
+              <IconAjouter className="h-4 w-4" />
+              Ajouter une régularisation ce jour
             </button>
           )}
         </div>
