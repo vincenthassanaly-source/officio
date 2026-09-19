@@ -107,15 +107,25 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
         type="button"
         onClick={toggle}
         aria-label="Notifications"
+        // Cercle visible inchangé (36 px, cohérent avec les boutons voisins du
+        // header/de la sidebar) ; cible tactile 44 px via -m-1 + p-1 (marge
+        // négative compensée par un padding égal, même principe que
+        // LienRetour/le bouton de fermeture des toasts).
         className={
           avecFond
-            ? 'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-ink'
-            : 'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-neutral-soft hover:text-ink'
+            ? 'relative -m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+            : 'relative -m-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1 text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
         }
       >
-        <IconCloche className="h-[18px] w-[18px]" />
+        <span
+          className={`flex h-9 w-9 items-center justify-center rounded-full ${
+            avecFond ? 'bg-neutral-soft' : 'hover:bg-neutral-soft'
+          }`}
+        >
+          <IconCloche className="h-[18px] w-[18px]" />
+        </span>
         {nombreNonLues > 0 && (
-          <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rec px-1 text-[9px] font-bold text-white">
+          <span className="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rec px-1 text-[12px] font-bold text-white">
             {nombreNonLues > 9 ? '9+' : nombreNonLues}
           </span>
         )}
@@ -151,7 +161,7 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
                     key={n.id}
                     type="button"
                     onClick={() => ouvrirNotification(n)}
-                    className={`flex flex-col gap-0.5 border-b border-border px-3.5 py-3 text-left last:border-0 ${
+                    className={`flex min-h-11 flex-col gap-0.5 border-b border-border px-3.5 py-3 text-left last:border-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary ${
                       n.lu ? '' : 'bg-primary-soft'
                     }`}
                   >
@@ -160,7 +170,7 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
                       <span className="truncate text-[13px] font-semibold text-ink">{n.titre}</span>
                     </div>
                     <p className="truncate text-[12px] text-muted">{n.corps}</p>
-                    <span className="text-[10.5px] text-muted">{formatDateRelative(n.created_at)}</span>
+                    <span className="text-[12px] text-muted">{formatDateRelative(n.created_at)}</span>
                   </button>
                 ))}
               </div>

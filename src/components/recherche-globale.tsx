@@ -127,7 +127,14 @@ export function RechercheGlobale() {
   return (
     <div className="relative">
       <div
-        className={`relative flex items-center gap-2.5 rounded-[20px] bg-surface px-4 py-3 shadow-card ${
+        // onClick sur le conteneur : le texte de l'input ne fait que 24 px de
+        // haut (line-height), bien en-dessous des 44 px de la cible tactile
+        // affichée par le padding du conteneur — sans ce relais, taper en haut/
+        // bas de la pastille (hors des 24 px du texte) ne donnait pas le focus.
+        // focus-within plutôt qu'un `outline-none` sur l'input (qui ne montrait
+        // plus aucun focus clavier) : anneau porté par la pastille entière.
+        onClick={() => inputRef.current?.focus()}
+        className={`relative flex cursor-text items-center gap-2.5 rounded-[20px] bg-surface px-4 py-3 shadow-card focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${
           ouvert ? 'z-50' : ''
         }`}
       >
@@ -166,7 +173,7 @@ export function RechercheGlobale() {
                   const Icone = ICONES[groupe.cle] ?? IconLiaison
                   return (
                     <div key={groupe.cle} className="flex flex-col">
-                      <div className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                      <div className="flex items-center gap-1.5 px-2 py-1 text-[12px] font-semibold uppercase tracking-wide text-muted">
                         <Icone className="h-3.5 w-3.5 shrink-0" />
                         {groupe.label}
                       </div>
@@ -175,13 +182,13 @@ export function RechercheGlobale() {
                           key={r.id}
                           type="button"
                           onClick={() => choisirResultat(r.url)}
-                          className="rounded-lg px-2.5 py-2 text-left text-[13px] text-ink hover:bg-neutral-soft"
+                          className="min-h-11 rounded-lg px-2.5 py-3 text-left text-[13px] text-ink hover:bg-neutral-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                         >
                           <span className="block truncate">{r.label}</span>
                         </button>
                       ))}
                       {groupe.total > groupe.resultats.length && (
-                        <p className="px-2.5 py-1 text-[11px] text-muted">
+                        <p className="px-2.5 py-1 text-[12px] text-muted">
                           +{groupe.total - groupe.resultats.length} autres
                         </p>
                       )}

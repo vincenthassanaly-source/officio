@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { IconLiaison, IconRegularisation, IconNote } from '@/components/nav-icons'
 import { ChampPhoto } from '@/components/champ-photo'
 import { ChampAudio } from '@/components/champ-audio'
@@ -10,6 +10,8 @@ import { ajouterRegularisation } from '@/app/actions/regularisations'
 import { creerNote } from '@/app/actions/notes'
 import { ChampsFormulaire } from '@/components/regularisations-liste'
 import { toISODate } from '@/lib/dates'
+import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import type { Categorie } from '@/lib/data/messages'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import type { VueFabCreationRapide } from '@/components/fab-creation-rapide'
@@ -52,53 +54,53 @@ function MenuChoix({
       <button
         type="button"
         onClick={() => onChoisir('message')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left"
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
           <IconLiaison className="h-5 w-5" />
         </div>
         <div>
           <div className="text-[14px] font-semibold text-ink">Nouveau message</div>
-          <div className="text-[11.5px] text-muted">Écrire au cahier de liaison</div>
+          <div className="text-[12px] text-muted">Écrire au cahier de liaison</div>
         </div>
       </button>
       <button
         type="button"
         onClick={() => onChoisir('tache')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left"
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
           <IconTache className="h-5 w-5" />
         </div>
         <div>
           <div className="text-[14px] font-semibold text-ink">Nouvelle tâche</div>
-          <div className="text-[11.5px] text-muted">Assigner un rappel à l&rsquo;équipe</div>
+          <div className="text-[12px] text-muted">Assigner un rappel à l&rsquo;équipe</div>
         </div>
       </button>
       <button
         type="button"
         onClick={() => onChoisir('regularisation')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left"
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-soft text-purple">
           <IconRegularisation className="h-5 w-5" />
         </div>
         <div>
           <div className="text-[14px] font-semibold text-ink">Nouvelle régularisation</div>
-          <div className="text-[11.5px] text-muted">Enregistrer une ordonnance à régulariser</div>
+          <div className="text-[12px] text-muted">Enregistrer une ordonnance à régulariser</div>
         </div>
       </button>
       <button
         type="button"
         onClick={() => onChoisir('note')}
-        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left"
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary-dark">
           <IconNote className="h-5 w-5" />
         </div>
         <div>
           <div className="text-[14px] font-semibold text-ink">Nouvelle note</div>
-          <div className="text-[11.5px] text-muted">Partager une note avec l&rsquo;équipe</div>
+          <div className="text-[12px] text-muted">Partager une note avec l&rsquo;équipe</div>
         </div>
       </button>
     </div>
@@ -129,15 +131,22 @@ function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
       </h2>
       <div className="flex gap-1.5">
         {CATEGORIES.map((c) => (
+          // Bouton englobant à 44 px (padding compensé par une marge
+          // négative) ; le pastille visible à l'intérieur garde sa taille de
+          // puce compacte — même principe que LienRetour.
           <button
             key={c.value}
             type="button"
             onClick={() => setCategorie(c.value)}
-            className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
-              categorie === c.value ? c.className : 'bg-bg text-muted'
-            }`}
+            className="-my-3.5 flex min-h-11 items-center rounded-full px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            {c.label}
+            <span
+              className={`rounded-full px-3 py-1.5 text-[12px] font-semibold motion-safe:transition ${
+                categorie === c.value ? c.className : 'bg-bg text-muted'
+              }`}
+            >
+              {c.label}
+            </span>
           </button>
         ))}
       </div>
@@ -156,7 +165,7 @@ function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
       <button
         type="submit"
         disabled={isPending || (!contenu.trim() && !audio)}
-        className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+        className="rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
       >
         Envoyer
       </button>
@@ -216,6 +225,7 @@ function FormulaireTache({
         <input
           type="date"
           name="echeance"
+          aria-label="Date d'échéance"
           className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
         {/* Facultative : si renseignée, un rappel push + in-app arrive pile
@@ -225,6 +235,7 @@ function FormulaireTache({
         <input
           type="time"
           name="echeance_heure"
+          aria-label="Heure d'échéance"
           className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
         />
       </div>
@@ -235,7 +246,7 @@ function FormulaireTache({
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+        className="rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
       >
         Ajouter la tâche
       </button>
@@ -263,7 +274,7 @@ function FormulaireRegularisation({ onCree }: { onCree: () => void }) {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+        className="rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
       >
         Ajouter la régularisation
       </button>
@@ -310,7 +321,7 @@ function FormulaireNote({ onCree }: { onCree: () => void }) {
       <button
         type="submit"
         disabled={isPending || !titre.trim() || !contenu.trim()}
-        className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+        className="rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
       >
         Ajouter la note
       </button>
@@ -347,6 +358,14 @@ export default function FabCreationRapideModal({
     note: 'fab-creation-titre-note',
   }[vue]
 
+  const boiteRef = useRef<HTMLDivElement>(null)
+  // Toujours montée seulement quand ouverte (voir {vue !== 'ferme' && <FabCreationRapideModal .../>}
+  // dans fab-creation-rapide.tsx), comme ModaleEditionTache : `true` en
+  // permanence, le nettoyage (retour du focus, déverrouillage du scroll)
+  // s'exécute au démontage.
+  useFermerAvecRetour(true, onFermer)
+  usePiegeFocus(true, boiteRef)
+
   return (
     <div
       role="dialog"
@@ -355,14 +374,19 @@ export default function FabCreationRapideModal({
       className="fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-black/40 lg:items-center"
     >
       <button type="button" aria-label="Fermer" onClick={onFermer} className="absolute inset-0" />
-      <div className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl">
+      <div
+        ref={boiteRef}
+        className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
+      >
         <button
           type="button"
           onClick={onFermer}
           aria-label="Fermer"
-          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white"
+          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         >
-          ×
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
         </button>
 
         {vue === 'menu' && <MenuChoix onChoisir={onChoisir} />}
