@@ -41,6 +41,15 @@ function IconChevron({ className }: { className?: string }) {
   )
 }
 
+// Remplace le glyphe « × » du bouton de suppression.
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
 export function Suggestions({
   suggestions,
   profilActuelId,
@@ -131,7 +140,11 @@ export function Suggestions({
         }}
         className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
       >
+        <label htmlFor="message-nouvelle-suggestion" className="sr-only">
+          Une idée pour améliorer l&rsquo;application
+        </label>
         <textarea
+          id="message-nouvelle-suggestion"
           name="message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -142,7 +155,7 @@ export function Suggestions({
         <button
           type="submit"
           disabled={isPending || !message.trim()}
-          className="self-end rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+          className="min-h-11 self-end rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
         >
           Envoyer
         </button>
@@ -175,11 +188,11 @@ export function Suggestions({
             type="button"
             onClick={() => setArchiveOuverte((o) => !o)}
             aria-expanded={archiveOuverte}
-            className="flex items-center justify-between gap-2 text-left"
+            className="flex min-h-11 items-center justify-between gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <span className="text-[13.5px] font-semibold text-ink">Archivé ({suggestionsArchivees.length})</span>
             <IconChevron
-              className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
+              className={`h-4 w-4 shrink-0 text-muted motion-safe:transition-transform motion-safe:duration-200 ${
                 archiveOuverte ? 'rotate-180' : ''
               }`}
             />
@@ -253,14 +266,19 @@ function CarteSuggestion({
       }`}
     >
       <div className="mb-2 flex items-center gap-2.5">
-        <input
-          type="checkbox"
-          checked={suggestion.fait}
-          disabled={isPending}
-          onChange={() => onBasculerFait(suggestion)}
-          aria-label={suggestion.fait ? 'Marquer comme non traitée' : 'Marquer comme traitée'}
-          className="h-4 w-4 shrink-0 accent-[var(--color-primary)]"
-        />
+        {/* Case à cocher élargie à 44 px via padding invisible + marge
+            négative (même principe que LienRetour) : le carré visible reste
+            à 16 px. */}
+        <label className="-m-3.5 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center p-3.5">
+          <input
+            type="checkbox"
+            checked={suggestion.fait}
+            disabled={isPending}
+            onChange={() => onBasculerFait(suggestion)}
+            aria-label={suggestion.fait ? 'Marquer comme non traitée' : 'Marquer comme traitée'}
+            className="h-4 w-4 shrink-0 accent-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          />
+        </label>
         <div
           className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(155deg,rgba(255,255,255,.4),rgba(255,255,255,0)_60%)] text-xs font-semibold ${couleurAuteur.fond} ${couleurAuteur.texte}`}
         >
@@ -270,7 +288,7 @@ function CarteSuggestion({
           <div className="truncate text-[13.5px] font-semibold text-ink">
             {suggestion.auteur?.nom_complet ?? 'Ancien collègue'}
           </div>
-          <div className="text-[11px] text-muted">{formatDate(suggestion.created_at)}</div>
+          <div className="text-[12px] text-muted">{formatDate(suggestion.created_at)}</div>
         </div>
         {suggestion.auteur?.id === profilActuelId && (
           <button
@@ -278,9 +296,9 @@ function CarteSuggestion({
             disabled={isPending}
             onClick={() => onDemanderSuppression(suggestion.id)}
             aria-label="Supprimer la suggestion"
-            className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+            className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
           >
-            ×
+            <IconFermer className="h-4 w-4" />
           </button>
         )}
       </div>
