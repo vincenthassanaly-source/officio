@@ -18,6 +18,29 @@ import { vibrer } from '@/lib/haptics'
 import { ChampPhotos } from '@/components/champ-photos'
 import { LightboxImage } from '@/components/lightbox-image'
 
+// Remplace le glyphe « × » du bouton de suppression.
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+// Alternative visible à l'appui long qui ouvre l'édition (demarrerAppuiLong
+// dans CarteNote) — trois points, accessible au clavier et au lecteur
+// d'écran ; le geste reste disponible en plus. Même motif que
+// fil-de-messages.tsx (IconOptions), dupliqué plutôt que factorisé.
+function IconOptions({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="5" r="1.75" />
+      <circle cx="12" cy="12" r="1.75" />
+      <circle cx="12" cy="19" r="1.75" />
+    </svg>
+  )
+}
+
 function formatDate(iso: string) {
   const date = new Date(iso)
   const now = new Date()
@@ -143,7 +166,11 @@ export function Notes({
         }}
         className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
       >
+        <label htmlFor="titre-nouvelle-note" className="sr-only">
+          Titre de la note
+        </label>
         <input
+          id="titre-nouvelle-note"
           type="text"
           name="titre"
           value={titre}
@@ -151,7 +178,11 @@ export function Notes({
           placeholder="Titre de la note"
           className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
         />
+        <label htmlFor="contenu-nouvelle-note" className="sr-only">
+          Contenu de la note
+        </label>
         <textarea
+          id="contenu-nouvelle-note"
           name="contenu"
           value={contenu}
           onChange={(e) => setContenu(e.target.value)}
@@ -163,13 +194,17 @@ export function Notes({
         <button
           type="submit"
           disabled={isPending || !titre.trim() || !contenu.trim()}
-          className="self-end rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-50"
+          className="min-h-11 self-end rounded-xl bg-primary px-4 py-2 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
         >
           Ajouter
         </button>
       </form>
 
+      <label htmlFor="recherche-notes" className="sr-only">
+        Rechercher une note
+      </label>
       <input
+        id="recherche-notes"
         type="text"
         value={recherche}
         onChange={(e) => setRecherche(e.target.value)}
@@ -300,18 +335,32 @@ function CarteNote({
           <div className="truncate text-[13.5px] font-semibold text-ink">
             {note.auteur?.nom_complet ?? 'Ancien collègue'}
           </div>
-          <div className="text-[11px] text-muted">{formatDate(note.created_at)}</div>
+          <div className="text-[12px] text-muted">{formatDate(note.created_at)}</div>
         </div>
         {estAuteur && (
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => onSupprimer(note.id)}
-            aria-label="Supprimer la note"
-            className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
-          >
-            ×
-          </button>
+          <>
+            {/* Alternative visible à l'appui long (demarrerAppuiLong ci-dessous)
+                qui ouvre l'édition : accessible au clavier/lecteur d'écran, le
+                geste reste disponible en plus. */}
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => onEditer(note)}
+              aria-label="Modifier la note"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+            >
+              <IconOptions className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              disabled={isPending}
+              onClick={() => onSupprimer(note.id)}
+              aria-label="Supprimer la note"
+              className="-mr-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
+            >
+              <IconFermer className="h-4 w-4" />
+            </button>
+          </>
         )}
       </div>
       <div className="mb-1 text-[14.5px] font-semibold text-ink">{note.titre}</div>
@@ -393,11 +442,20 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
       >
         <div className="mb-1 flex items-center justify-between">
           <h2 className="text-sm font-bold text-ink">Modifier la note</h2>
-          <button type="button" onClick={onFerme} aria-label="Fermer sans enregistrer" className="text-muted">
-            ×
+          <button
+            type="button"
+            onClick={onFerme}
+            aria-label="Fermer sans enregistrer"
+            className="-m-2.5 flex h-11 w-11 items-center justify-center rounded-full text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <IconFermer className="h-4 w-4" />
           </button>
         </div>
+        <label htmlFor="titre-edition-note" className="sr-only">
+          Titre de la note
+        </label>
         <input
+          id="titre-edition-note"
           type="text"
           name="titre"
           required
@@ -405,7 +463,11 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
           placeholder="Titre de la note"
           className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
         />
+        <label htmlFor="contenu-edition-note" className="sr-only">
+          Contenu de la note
+        </label>
         <textarea
+          id="contenu-edition-note"
           name="contenu"
           required
           defaultValue={note.contenu}
@@ -416,7 +478,7 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
         <button
           type="submit"
           disabled={isPending}
-          className="mt-1 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
         >
           Enregistrer
         </button>
