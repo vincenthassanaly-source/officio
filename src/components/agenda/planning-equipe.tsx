@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useOptimistic, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
 import { creerCreneau, modifierCreneau, supprimerCreneau, type RecurrenceCreneau } from '@/app/actions/agenda'
 import type { Creneau, TypeCreneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
@@ -9,8 +9,27 @@ import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { formatDureeHeures, heureEnDecimal } from '@/lib/duree-creneaux'
 import { useToast } from '@/components/ui/toast-provider'
+
+// Remplace le glyphe « + »/« × » du bouton qui ouvre/ferme le formulaire.
+function IconAjouter({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+// Remplace le glyphe « × » du bouton de fermeture du panneau de détail.
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
 
 const LIBELLE_TYPE: Record<TypeCreneau, string> = {
   travail: 'Travail',
@@ -74,6 +93,7 @@ export function PlanningEquipe({
   const [creneauDetail, setCreneauDetail] = useState<Creneau | null>(null)
   const [edition, setEdition] = useState(false)
   const [typeEdition, setTypeEdition] = useState<TypeCreneau>('travail')
+  const detailRef = useRef<HTMLDivElement>(null)
 
   function fermerDetail() {
     setCreneauDetail(null)
@@ -81,6 +101,7 @@ export function PlanningEquipe({
   }
 
   useFermerAvecRetour(creneauDetail !== null, fermerDetail)
+  usePiegeFocus(creneauDetail !== null, detailRef)
 
   function ouvrirModification(c: Creneau) {
     setTypeEdition(c.type)
@@ -248,10 +269,10 @@ export function PlanningEquipe({
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex flex-wrap gap-x-3 gap-y-1.5">
         {equipe.map((m) => (
-          <span key={m.id} className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
+          <span key={m.id} className="flex items-center gap-1.5 text-[12px] font-medium text-ink">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
-            <span className="text-[10px] font-normal text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
+            <span className="text-[12px] font-normal text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
           </span>
         ))}
       </div>
@@ -263,9 +284,18 @@ export function PlanningEquipe({
           setTypeForm('travail')
           setRecurrenceForm('aucune')
         }}
-        className="self-start text-xs font-semibold text-primary"
+        aria-expanded={formOuvert}
+        className="-my-3.5 flex min-h-11 items-center gap-1 self-start px-1 text-[13px] font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        {formOuvert ? '× Annuler' : '+ Ajouter un créneau'}
+        {formOuvert ? (
+          <>
+            <IconFermer className="h-3.5 w-3.5" /> Annuler
+          </>
+        ) : (
+          <>
+            <IconAjouter className="h-3.5 w-3.5" /> Ajouter un créneau
+          </>
+        )}
       </button>
 
       {formOuvert && (
@@ -279,7 +309,11 @@ export function PlanningEquipe({
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
           <div className="flex gap-2">
+            <label htmlFor="profil-nouveau-creneau" className="sr-only">
+              Membre de l&rsquo;équipe
+            </label>
             <select
+              id="profil-nouveau-creneau"
               name="profil_id"
               defaultValue={equipe[0]?.id}
               className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
@@ -290,7 +324,11 @@ export function PlanningEquipe({
                 </option>
               ))}
             </select>
+            <label htmlFor="date-nouveau-creneau" className="sr-only">
+              Date
+            </label>
             <select
+              id="date-nouveau-creneau"
               name="date"
               defaultValue={toISODate(weekDates[0])}
               className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
@@ -304,7 +342,11 @@ export function PlanningEquipe({
           </div>
           {typeForm !== 'conge' && (
             <div className="flex gap-2">
+              <label htmlFor="recurrence-nouveau-creneau" className="sr-only">
+                Récurrence
+              </label>
               <select
+                id="recurrence-nouveau-creneau"
                 name="recurrence"
                 value={recurrenceForm}
                 onChange={(e) => setRecurrenceForm(e.target.value as RecurrenceCreneau)}
@@ -326,9 +368,13 @@ export function PlanningEquipe({
             </div>
           )}
           {typeForm !== 'conge' && recurrenceForm !== 'aucune' && (
-            <p className="text-[11px] text-muted">Jusqu&apos;à la date choisie ci-dessus (incluse).</p>
+            <p className="text-[12px] text-muted">Jusqu&apos;à la date choisie ci-dessus (incluse).</p>
           )}
+          <label htmlFor="type-nouveau-creneau" className="sr-only">
+            Type de créneau
+          </label>
           <select
+            id="type-nouveau-creneau"
             name="type"
             value={typeForm}
             onChange={(e) => setTypeForm(e.target.value as TypeCreneau)}
@@ -340,8 +386,11 @@ export function PlanningEquipe({
           </select>
           {typeForm === 'conge' && (
             <div>
-              <label className="mb-1 block text-[11px] font-semibold text-muted">Jusqu&apos;au (optionnel)</label>
+              <label htmlFor="date-fin-nouveau-creneau" className="mb-1 block text-[12px] font-semibold text-muted">
+                Jusqu&apos;au (optionnel)
+              </label>
               <input
+                id="date-fin-nouveau-creneau"
                 type="date"
                 name="date_fin"
                 className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
@@ -354,17 +403,23 @@ export function PlanningEquipe({
                 type="time"
                 name="heure_debut"
                 required
+                aria-label="Heure de début"
                 className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
               />
               <input
                 type="time"
                 name="heure_fin"
                 required
+                aria-label="Heure de fin"
                 className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
               />
             </div>
           )}
+          <label htmlFor="note-nouveau-creneau" className="sr-only">
+            Note
+          </label>
           <input
+            id="note-nouveau-creneau"
             name="note"
             placeholder="Note (ex: motif du congé)"
             className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
@@ -372,7 +427,7 @@ export function PlanningEquipe({
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+            className="min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
           >
             Ajouter
           </button>
@@ -381,31 +436,48 @@ export function PlanningEquipe({
 
       <div className="grid grid-cols-[28px_repeat(7,1fr)] gap-x-1">
         <div />
-        {weekDates.map((d) => (
-          <div key={toISODate(d)} className="text-center">
-            <div className="text-[9.5px] font-semibold uppercase text-muted">{formatJourCourt(d)}</div>
-            <div className="font-heading text-[13px] text-ink">{d.getDate()}</div>
-          </div>
-        ))}
+        {weekDates.map((d) => {
+          const estAujourdhui = toISODate(d) === toISODate(new Date())
+          return (
+            <div key={toISODate(d)} className="text-center">
+              <div className={`text-[12px] font-semibold uppercase ${estAujourdhui ? 'text-primary' : 'text-muted'}`}>
+                {formatJourCourt(d)}
+              </div>
+              <div
+                className={`font-heading text-[13px] ${
+                  estAujourdhui ? 'inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white' : 'text-ink'
+                }`}
+              >
+                {d.getDate()}
+              </div>
+            </div>
+          )
+        })}
 
         <div />
         {weekDates.map((d) => {
           const iso = toISODate(d)
           const badges = creneaux.filter((c) => c.date === iso && c.type === 'repos')
           return (
-            <div key={iso} className="flex flex-wrap justify-center gap-0.5 py-1">
+            <div key={iso} className="flex flex-wrap justify-center gap-1 py-1">
               {badges.map((c) => {
                 const membre = equipe.find((m) => m.id === c.profil_id)
                 return (
+                  // Cible tactile 44 px via padding invisible + marge négative
+                  // (même principe que LienRetour) : le badge visible reste
+                  // compact, la grille reste dense (voir le rapport, compromis
+                  // documenté pour cette vue).
                   <button
                     type="button"
                     key={c.id}
                     onClick={() => setCreneauDetail(c)}
                     disabled={isPending}
                     title={`${membre?.nom_complet ?? ''} — Repos (cliquer pour le détail)`}
-                    className="rounded bg-neutral-soft px-1 py-0.5 text-[8px] font-bold text-neutral-text"
+                    className="-m-1.5 flex h-11 w-11 items-center justify-center p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   >
-                    {membre?.initiales ?? '?'}
+                    <span className="rounded bg-neutral-soft px-1 py-0.5 text-[12px] font-bold text-neutral-text">
+                      {membre?.initiales ?? '?'}
+                    </span>
                   </button>
                 )
               })}
@@ -426,13 +498,21 @@ export function PlanningEquipe({
                   ? formatJourCourt(weekDates[b.colDebut])
                   : `${formatJourCourt(weekDates[b.colDebut])} – ${formatJourCourt(weekDates[b.colFin])}`
               return (
+                // Compromis documenté (grille dense, voir le rapport) : la
+                // bande de congé garde sa hauteur de 22 px pour préserver
+                // l'empilement façon mini-Gantt (plusieurs congés simultanés
+                // sur des lignes distinctes) — l'agrandir à 44 px doublerait
+                // la hauteur de chaque ligne. Le détail complet (nom, dates)
+                // reste disponible en un tap via creneauDetail ci-dessous, et
+                // au clavier/lecteur d'écran via aria-label sur ce bouton.
                 <button
                   type="button"
                   key={b.cle}
                   onClick={() => setCreneauDetail(b.creneauReference)}
                   disabled={isPending}
+                  aria-label={`${membre?.nom_complet ?? ''} — Congé, ${plage}, voir le détail`}
                   title={`${membre?.nom_complet ?? ''} — Congé (${plage}, cliquer pour le détail)`}
-                  className={`flex h-[22px] min-w-0 items-center justify-center rounded-full px-2 text-[10px] font-semibold disabled:opacity-70 ${couleurMembre(b.profilId).fond} ${couleurMembre(b.profilId).texte}`}
+                  className={`flex h-[22px] min-w-0 items-center justify-center rounded-full px-2 text-[12px] font-semibold disabled:opacity-70 ${couleurMembre(b.profilId).fond} ${couleurMembre(b.profilId).texte}`}
                   style={{ gridColumn: `${b.colDebut + 2} / ${b.colFin + 3}`, gridRow: b.ligne + 1 }}
                 >
                   <span className="min-w-0 truncate">{nom}</span>
@@ -446,6 +526,7 @@ export function PlanningEquipe({
           {graduations.map((h) => (
             <div
               key={h}
+              aria-hidden="true"
               className="absolute right-0.5 -translate-y-1/2 text-[8.5px] text-muted"
               style={{ top: (h - heureMin) * PX_PAR_HEURE }}
             >
@@ -475,6 +556,17 @@ export function PlanningEquipe({
                   style={{ top: (h - heureMin) * PX_PAR_HEURE }}
                 />
               ))}
+              {/* Compromis documenté (grille dense, voir le rapport) : la
+                  hauteur et la largeur de ces blocs sont proportionnelles à
+                  la durée du créneau et au nombre de personnes ce jour-là —
+                  les agrandir à 44 px de cible / 12 px de texte romprait la
+                  vue d'ensemble des horaires qui fait l'intérêt de ce
+                  planning, et risquerait de faire chevaucher les zones de
+                  tap de deux créneaux consécutifs pour la même personne.
+                  Garanti à la place : bouton natif (donc atteignable et
+                  activable au clavier), nom complet et horaires complets via
+                  aria-label/title, et un panneau de détail à taille normale
+                  au tap/à l'activation. */}
               {travailJour.map((c) => {
                 const debut = heureEnDecimal(c.heure_debut!)
                 const fin = heureEnDecimal(c.heure_fin!)
@@ -483,16 +575,18 @@ export function PlanningEquipe({
                 const membre = equipe.find((m) => m.id === c.profil_id)
                 const index = profilsJour.indexOf(c.profil_id)
                 const largeur = 100 / nbColonnes
-                const tailleTexte = nbColonnes >= 4 ? 'text-[6.5px]' : nbColonnes === 3 ? 'text-[7px]' : 'text-[8px]'
+                const tailleTexte = nbColonnes >= 4 ? 'text-[7px]' : nbColonnes === 3 ? 'text-[7.5px]' : 'text-[8.5px]'
                 const afficherHoraire = hauteur > 26 && nbColonnes <= 2
+                const libelleComplet = `${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)}, voir le détail`
                 return (
                   <button
                     type="button"
                     key={c.id}
                     onClick={() => setCreneauDetail(c)}
                     disabled={isPending}
+                    aria-label={libelleComplet}
                     title={`${membre?.nom_complet ?? ''} — ${formatHeure(c.heure_debut!)}-${formatHeure(c.heure_fin!)} (cliquer pour le détail)`}
-                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left font-semibold leading-tight disabled:opacity-70 ${tailleTexte} ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
+                    className={`absolute overflow-hidden rounded-md px-1 py-0.5 text-left font-semibold leading-tight focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:opacity-70 ${tailleTexte} ${couleurMembre(c.profil_id).fond} ${couleurMembre(c.profil_id).texte}`}
                     style={{ top, height: hauteur, left: `calc(${index * largeur}% + 2px)`, width: `calc(${largeur}% - 4px)` }}
                   >
                     <div className="truncate">{membre?.initiales ?? '?'}</div>
@@ -512,14 +606,22 @@ export function PlanningEquipe({
       {creneauDetail && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center">
           <button type="button" aria-label="Fermer" onClick={fermerDetail} className="absolute inset-0" />
-          <div className="relative w-full rounded-t-3xl bg-surface p-4 lg:max-w-sm lg:rounded-3xl">
+          <div
+            ref={detailRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Détail du créneau"
+            className="relative w-full rounded-t-3xl bg-surface p-4 lg:max-w-sm lg:rounded-3xl"
+          >
             <button
               type="button"
               onClick={fermerDetail}
               aria-label="Fermer"
-              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-neutral-soft text-ink"
+              className="absolute right-3 top-3 -m-2 flex h-11 w-11 items-center justify-center rounded-full p-2 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              ×
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-soft">
+                <IconFermer className="h-3.5 w-3.5" />
+              </span>
             </button>
 
             {(() => {
@@ -541,8 +643,12 @@ export function PlanningEquipe({
                       <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(c.profil_id).fond}`} />
                       <span className="text-[13.5px] font-semibold text-ink">{membre?.nom_complet ?? 'Employé'}</span>
                     </div>
-                    <p className="text-[11.5px] text-muted">{formatDateLongue(c.date)}</p>
+                    <p className="text-[12px] text-muted">{formatDateLongue(c.date)}</p>
+                    <label htmlFor="type-edition-creneau" className="sr-only">
+                      Type de créneau
+                    </label>
                     <select
+                      id="type-edition-creneau"
                       name="type"
                       value={typeEdition}
                       onChange={(e) => setTypeEdition(e.target.value as TypeCreneau)}
@@ -558,6 +664,7 @@ export function PlanningEquipe({
                           type="time"
                           name="heure_debut"
                           required
+                          aria-label="Heure de début"
                           defaultValue={c.heure_debut ?? ''}
                           className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
                         />
@@ -565,12 +672,17 @@ export function PlanningEquipe({
                           type="time"
                           name="heure_fin"
                           required
+                          aria-label="Heure de fin"
                           defaultValue={c.heure_fin ?? ''}
                           className="flex-1 min-w-0 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
                         />
                       </div>
                     )}
+                    <label htmlFor="note-edition-creneau" className="sr-only">
+                      Note
+                    </label>
                     <input
+                      id="note-edition-creneau"
                       name="note"
                       placeholder="Note (ex: motif du congé)"
                       defaultValue={c.note ?? ''}
@@ -580,14 +692,14 @@ export function PlanningEquipe({
                       <button
                         type="button"
                         onClick={() => setEdition(false)}
-                        className="flex-1 rounded-xl border border-border py-2.5 text-[13px] font-semibold text-ink"
+                        className="min-h-11 flex-1 rounded-xl border border-border py-2.5 text-[13px] font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                       >
                         Annuler
                       </button>
                       <button
                         type="submit"
                         disabled={isPending}
-                        className="flex-1 rounded-xl bg-primary py-2.5 text-[13px] font-semibold text-white disabled:opacity-60"
+                        className="min-h-11 flex-1 rounded-xl bg-primary py-2.5 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
                       >
                         Enregistrer
                       </button>
@@ -604,7 +716,7 @@ export function PlanningEquipe({
                   </div>
                   <p className="text-[12.5px] text-muted">{formatDateLongue(c.date)}</p>
                   <div className="rounded-xl bg-bg px-3 py-2.5">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                    <p className="text-[12px] font-semibold uppercase tracking-wide text-muted">
                       {LIBELLE_TYPE[c.type]}
                     </p>
                     {c.type === 'travail' && c.heure_debut && c.heure_fin && (
@@ -618,7 +730,7 @@ export function PlanningEquipe({
                     <button
                       type="button"
                       onClick={() => ouvrirModification(c)}
-                      className="flex-1 rounded-xl border border-border py-2.5 text-[13px] font-semibold text-ink"
+                      className="min-h-11 flex-1 rounded-xl border border-border py-2.5 text-[13px] font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     >
                       Modifier
                     </button>
@@ -626,7 +738,7 @@ export function PlanningEquipe({
                       type="button"
                       onClick={() => demanderSuppression(c)}
                       disabled={isPending}
-                      className="flex-1 rounded-xl bg-rec-soft py-2.5 text-[13px] font-semibold text-rec disabled:opacity-60"
+                      className="min-h-11 flex-1 rounded-xl bg-rec-soft py-2.5 text-[13px] font-semibold text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
                     >
                       Supprimer
                     </button>

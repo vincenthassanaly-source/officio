@@ -7,6 +7,24 @@ import { dueInfo, formatHeureCourte } from '@/components/taches-list'
 import { estEnRetard } from '@/components/regularisations-liste'
 import Link from 'next/link'
 
+// Remplace le glyphe « × » du bouton de suppression d'un rendez-vous.
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+// Remplace le glyphe « ✓ » de la case cochée.
+function IconCoche({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  )
+}
+
 const CATEGORIES: { value: CategorieRdv; label: string; className: string }[] = [
   { value: 'rdv', label: 'Rendez-vous', className: 'bg-accent-soft text-accent' },
   { value: 'livraison', label: 'Logistique', className: 'bg-primary-soft text-primary' },
@@ -95,20 +113,20 @@ export function ItemLigne({
       <div className="flex gap-3">
         <div className="w-12 shrink-0 pt-1 text-right">
           <div className="font-mono text-[13px] font-medium text-ink">{r.heure_debut.slice(0, 5)}</div>
-          <div className="text-[10px] text-muted">{r.duree_minutes} min</div>
+          <div className="text-[12px] text-muted">{r.duree_minutes} min</div>
         </div>
         <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
           <div className="flex items-start justify-between gap-2">
             <div className="text-sm font-semibold text-ink">{r.titre}</div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${cat.className}`}>{cat.label}</span>
+            <div className="flex shrink-0 items-center gap-1">
+              <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold ${cat.className}`}>{cat.label}</span>
               <button
                 type="button"
                 onClick={() => onSupprimerRdv(r.id)}
-                className="text-muted hover:text-rec"
+                className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 aria-label="Supprimer"
               >
-                ×
+                <IconFermer className="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -125,27 +143,27 @@ export function ItemLigne({
     return (
       <div className="flex gap-3">
         <div className="w-12 shrink-0 pt-1 text-right">
-          <div className="text-[10px] text-muted">Journée</div>
+          <div className="text-[12px] text-muted">Journée</div>
         </div>
         <div className="flex flex-1 items-center gap-2 rounded-[20px] bg-surface shadow-card p-3.5">
           <button
             type="button"
             onClick={() => onToggleTache(t)}
             aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-            className="flex h-8 w-8 shrink-0 items-center justify-center"
+            className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <div
               className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
                 t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
               }`}
             >
-              {t.statut === 'fait' && <span className="text-xs font-bold text-white">✓</span>}
+              {t.statut === 'fait' && <IconCoche className="h-3 w-3 text-white" />}
             </div>
           </button>
           <button
             type="button"
             onClick={() => onEditerTache(t)}
-            className="flex min-w-0 flex-1 items-center justify-between gap-2 text-left"
+            className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <div
               className={`min-w-0 flex-1 text-sm font-semibold ${
@@ -156,12 +174,12 @@ export function ItemLigne({
             </div>
             {t.assigne && (
               <span
-                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
               >
                 {t.assigne.initiales}
               </span>
             )}
-            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
+            <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${due.className}`}>
               {t.echeance_heure ? `Tâche · ${formatHeureCourte(t.echeance_heure)}` : 'Tâche'}
             </span>
           </button>
@@ -180,16 +198,20 @@ export function ItemLigne({
       : 'bg-primary-soft text-primary'
 
   return (
-    <Link href="/regularisations" onClick={onNaviguer} className="flex gap-3">
+    <Link
+      href="/regularisations"
+      onClick={onNaviguer}
+      className="flex gap-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+    >
       <div className="w-12 shrink-0 pt-1 text-right">
-        <div className="text-[10px] text-muted">Journée</div>
+        <div className="text-[12px] text-muted">Journée</div>
       </div>
       <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="text-sm font-semibold text-ink">
             {r.patient_prenom} {r.patient_nom}
           </div>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${badgeClass}`}>
+          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${badgeClass}`}>
             Régularisation
           </span>
         </div>

@@ -128,11 +128,11 @@ export function AgendaVueGlobale({
               type="button"
               key={iso}
               onClick={() => selectionnerJour(iso)}
-              className={`flex w-11 shrink-0 flex-col items-center rounded-2xl border py-2 ${
+              className={`flex min-h-11 w-11 shrink-0 flex-col items-center justify-center rounded-2xl border py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 actif ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-ink'
               }`}
             >
-              <span className={`text-[10px] font-semibold uppercase ${actif ? 'text-accent-soft' : 'text-muted'}`}>
+              <span className={`text-[12px] font-semibold uppercase ${actif ? 'text-accent-soft' : 'text-muted'}`}>
                 {formatJourCourt(d)}
               </span>
               <span className="mt-0.5 font-heading text-base">{d.getDate()}</span>
@@ -164,7 +164,7 @@ export function AgendaVueGlobale({
                   {formatJourCourt(d)} {d.getDate()}
                 </span>
                 {estAujourdhui && (
-                  <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-white">
+                  <span className="rounded-full bg-primary px-2 py-0.5 text-[12px] font-bold text-white">
                     Aujourd&rsquo;hui
                   </span>
                 )}

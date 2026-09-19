@@ -22,6 +22,23 @@ const SEUIL_SWIPE_HORIZONTAL_PX = 50
 // annule la détection pour ce geste.
 const TOLERANCE_SWIPE_VERTICAL_PX = 60
 
+// Remplace les glyphes « ‹ »/« › » des flèches de période.
+function IconChevronGauche({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m15 18-6-6 6-6" />
+    </svg>
+  )
+}
+
+function IconChevronDroite({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  )
+}
+
 function moisISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
@@ -214,9 +231,9 @@ export function Agenda({
           type="button"
           onClick={() => (vue === 'mois' ? allerVersMois(-1) : allerVersSemaine(-7))}
           aria-label={vue === 'mois' ? 'Mois précédent' : 'Semaine précédente'}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-semibold text-muted hover:text-ink"
+          className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          ‹
+          <IconChevronGauche className="h-5 w-5" />
         </button>
         <div className="flex flex-col items-center gap-0.5">
           <span className="text-[12.5px] font-semibold text-ink">
@@ -234,7 +251,7 @@ export function Agenda({
                   router.replace('/agenda')
                 }
               }}
-              className="text-[11px] font-semibold text-primary"
+              className="-my-3.5 flex min-h-11 items-center px-1 text-[12px] font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               Aujourd&rsquo;hui
             </button>
@@ -244,17 +261,17 @@ export function Agenda({
           type="button"
           onClick={() => (vue === 'mois' ? allerVersMois(1) : allerVersSemaine(7))}
           aria-label={vue === 'mois' ? 'Mois suivant' : 'Semaine suivante'}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-lg font-semibold text-muted hover:text-ink"
+          className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg p-1.5 text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          ›
+          <IconChevronDroite className="h-5 w-5" />
         </button>
       </div>
 
-      <div className="mb-3 flex shrink-0 rounded-xl bg-track p-1">
+      <div className="mb-3 flex shrink-0 gap-1 rounded-xl bg-track p-1">
         <button
           type="button"
           onClick={() => allerVersVue('semaine')}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             vue === 'semaine' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -263,7 +280,7 @@ export function Agenda({
         <button
           type="button"
           onClick={() => allerVersVue('mois')}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             vue === 'mois' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -271,11 +288,11 @@ export function Agenda({
         </button>
       </div>
 
-      <div className="mb-4 flex shrink-0 rounded-xl bg-track p-1">
+      <div className="mb-4 flex shrink-0 gap-1 rounded-xl bg-track p-1">
         <button
           type="button"
           onClick={() => setOnglet('globale')}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             onglet === 'globale' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -284,7 +301,7 @@ export function Agenda({
         <button
           type="button"
           onClick={() => setOnglet('planning')}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+          className={`min-h-11 flex-1 rounded-lg text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             onglet === 'planning' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >

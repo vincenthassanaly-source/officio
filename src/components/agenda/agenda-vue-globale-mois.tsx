@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useOptimistic, useState, useSyncExternalStore, useTransition } from 'react'
+import { useMemo, useOptimistic, useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
 import { supprimerRendezVous } from '@/app/actions/agenda'
@@ -12,6 +12,7 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { formatDateLongue, formatJourCourt, getMonthGridDates, toISODate } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { useToast } from '@/components/ui/toast-provider'
 import { ItemLigne, regrouperItemsParJour, type ItemAgenda } from './agenda-item-ligne'
 
@@ -99,7 +100,7 @@ export function AgendaVueGlobaleMois({
     <div className="flex flex-1 flex-col gap-3">
       <div className="grid grid-cols-7 gap-1 text-center">
         {grille.slice(0, 7).map((d) => (
-          <div key={toISODate(d)} className="text-[9.5px] font-semibold uppercase text-muted">
+          <div key={toISODate(d)} className="text-[12px] font-semibold uppercase text-muted">
             {formatJourCourt(d)}
           </div>
         ))}
@@ -118,11 +119,19 @@ export function AgendaVueGlobaleMois({
               type="button"
               key={iso}
               onClick={() => setJourSelectionne(iso)}
-              className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] ${
+              className={`relative flex aspect-square min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl text-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 !dansMoisAffiche ? 'text-muted/40' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
             >
+              {/* Marqueur « aujourd'hui » : pastille pleine sous le quantième,
+                  pas seulement le texte en couleur (compromis grille dense —
+                  voir planning-equipe.tsx et le rapport). */}
+              {estAujourdhui && <span aria-hidden="true" className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />}
               <span>{d.getDate()}</span>
+              {/* Compromis documenté (grille dense, voir le rapport) : pastille
+                  de compte à 9 px dans une cellule de ~45 px — un texte à 12 px
+                  ne tiendrait plus dans le cercle. Le nombre exact reste lisible
+                  dans le panneau de détail ouvert au tap (taille normale). */}
               {items.length > 0 && (
                 <span
                   className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold ${
@@ -205,6 +214,7 @@ function ModaleDetailJour({
   // après hydratation pour éviter un mismatch SSR/hydratation (voir
   // sabonnerSansChangement plus haut).
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
+  const conteneurRef = useRef<HTMLDivElement>(null)
 
   // Toujours montée seulement quand ouverte (voir {jourSelectionne && <ModaleDetailJour .../>}
   // dans AgendaVueGlobaleMois) : `ouvert` vaut donc toujours true tant que ce
@@ -212,6 +222,7 @@ function ModaleDetailJour({
   // (clic sur une tâche via onEditerTache) : les deux hooks s'empilent
   // correctement, un retour fermant d'abord l'édition puis ce panneau.
   const signalerNavigation = useFermerAvecRetour(true, onFerme)
+  usePiegeFocus(true, conteneurRef)
 
   if (!monte) return null
 
@@ -221,6 +232,10 @@ function ModaleDetailJour({
       onClick={onFerme}
     >
       <div
+        ref={conteneurRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Rendez-vous du ${formatDateLongue(iso)}`}
         onClick={(e) => e.stopPropagation()}
         className="panneau-entree flex max-h-[85vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
@@ -230,7 +245,7 @@ function ModaleDetailJour({
             type="button"
             onClick={onFerme}
             aria-label="Fermer"
-            className="text-[11px] font-semibold text-muted"
+            className="-my-3.5 -mr-2 flex min-h-11 items-center px-2 text-[12px] font-semibold text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Fermer
           </button>

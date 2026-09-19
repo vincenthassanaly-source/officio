@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useSyncExternalStore } from 'react'
+import { useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import type { Creneau } from '@/lib/data/plannings'
@@ -9,6 +9,7 @@ import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { COULEUR_PAR_DEFAUT } from '@/lib/avatar-couleur'
 import { formatDateLongue, formatHeure, formatJourCourt, getMonthGridDates, getWeekDates, toISODate } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { formatDureeHeures, heureEnDecimal } from '@/lib/duree-creneaux'
 
 const LIBELLE_TYPE: Record<Creneau['type'], string> = {
@@ -85,17 +86,17 @@ export function PlanningEquipeMois({
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex flex-wrap gap-x-3 gap-y-1.5">
         {equipe.map((m) => (
-          <span key={m.id} className="flex items-center gap-1.5 text-[11px] font-medium text-ink">
+          <span key={m.id} className="flex items-center gap-1.5 text-[12px] font-medium text-ink">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
-            <span className="text-[10px] font-normal text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
+            <span className="text-[12px] font-normal text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
           </span>
         ))}
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center">
         {grille.slice(0, 7).map((d) => (
-          <div key={toISODate(d)} className="text-[9.5px] font-semibold uppercase text-muted">
+          <div key={toISODate(d)} className="text-[12px] font-semibold uppercase text-muted">
             {formatJourCourt(d)}
           </div>
         ))}
@@ -116,10 +117,11 @@ export function PlanningEquipeMois({
               type="button"
               key={iso}
               onClick={() => setJourSelectionne(iso)}
-              className={`flex aspect-square flex-col items-center justify-center gap-1 rounded-xl text-[12px] ${
+              className={`relative flex aspect-square min-h-11 flex-col items-center justify-center gap-1 rounded-xl text-[12px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 !dansMoisAffiche ? 'text-muted/40' : estAujourdhui ? 'font-bold text-primary' : 'text-ink'
               } ${estSelectionne ? 'bg-track' : ''}`}
             >
+              {estAujourdhui && <span aria-hidden="true" className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />}
               <span>{d.getDate()}</span>
               {creneauxJour.length > 0 && (
                 <span className="flex flex-wrap items-center justify-center gap-0.5 px-1">
@@ -134,6 +136,10 @@ export function PlanningEquipeMois({
                       />
                     )
                   })}
+                  {/* Compromis documenté (grille dense, voir le rapport) :
+                      indicateur "+n" à 8 px dans une cellule de ~45 px — la
+                      liste complète reste à taille normale dans le panneau de
+                      détail ouvert au tap. */}
                   {reste > 0 && <span className="text-[8px] font-semibold text-muted">+{reste}</span>}
                 </span>
               )}
@@ -193,10 +199,12 @@ function ModaleDetailJour({
   // après hydratation pour éviter un mismatch SSR/hydratation (voir
   // sabonnerSansChangement plus haut).
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
+  const conteneurRef = useRef<HTMLDivElement>(null)
 
   // Toujours montée seulement quand ouverte (voir {jourSelectionne && <ModaleDetailJour .../>}
   // ci-dessus) : `ouvert` vaut donc toujours true tant que ce composant existe.
   const signalerNavigation = useFermerAvecRetour(true, onFerme)
+  usePiegeFocus(true, conteneurRef)
 
   if (!monte) return null
 
@@ -206,6 +214,10 @@ function ModaleDetailJour({
       onClick={onFerme}
     >
       <div
+        ref={conteneurRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Planning du ${formatDateLongue(iso)}`}
         onClick={(e) => e.stopPropagation()}
         className="flex max-h-[85vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
@@ -215,7 +227,7 @@ function ModaleDetailJour({
             type="button"
             onClick={onFerme}
             aria-label="Fermer"
-            className="text-[11px] font-semibold text-muted"
+            className="-my-3.5 -mr-2 flex min-h-11 items-center px-2 text-[12px] font-semibold text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Fermer
           </button>
@@ -235,7 +247,7 @@ function ModaleDetailJour({
                     <div className="truncate text-[13px] font-semibold text-ink">
                       {membre?.nom_complet ?? 'Employé'}
                     </div>
-                    <div className="text-[11px] text-muted">
+                    <div className="text-[12px] text-muted">
                       {LIBELLE_TYPE[c.type]}
                       {c.type === 'travail' && c.heure_debut && c.heure_fin
                         ? ` · ${formatHeure(c.heure_debut)}-${formatHeure(c.heure_fin)}`
@@ -257,7 +269,7 @@ function ModaleDetailJour({
             signalerNavigation()
             onVoirCetteSemaine()
           }}
-          className="self-start text-[12.5px] font-semibold text-primary"
+          className="-my-3.5 flex min-h-11 items-center self-start px-1 text-[12.5px] font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Voir cette semaine
         </button>
