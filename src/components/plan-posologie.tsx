@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { reinitialiserPlanPosologie } from '@/app/actions/plan-posologie'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import type { LigneMedicament } from '@/lib/data/plan-posologie'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
@@ -65,6 +66,7 @@ export function PlanPosologie({
   const [lignes, setLignes] = useState<LigneMedicament[]>(() =>
     lignesInitiales.length > 0 ? lignesInitiales : [nouvelleLigne()]
   )
+  const [confirmationReinitialisationOuverte, setConfirmationReinitialisationOuverte] = useState(false)
 
   function ajouterLigne() {
     setLignes((l) => [...l, nouvelleLigne()])
@@ -83,6 +85,14 @@ export function PlanPosologie({
   async function reinitialiser() {
     setLignes([nouvelleLigne()])
     await reinitialiserPlanPosologie()
+  }
+
+  function demanderReinitialisation() {
+    if (lignesRenseignees.length === 0) {
+      reinitialiser()
+      return
+    }
+    setConfirmationReinitialisationOuverte(true)
   }
 
   return (
@@ -172,12 +182,24 @@ export function PlanPosologie({
           </button>
           <button
             type="button"
-            onClick={reinitialiser}
+            onClick={demanderReinitialisation}
             className={`min-h-11 self-start rounded-xl border border-border px-4 text-[13px] font-semibold text-ink ${CLASSE_FOCUS}`}
           >
             Réinitialiser
           </button>
         </div>
+
+        <ModaleConfirmation
+          ouvert={confirmationReinitialisationOuverte}
+          titre="Effacer toutes les lignes saisies ?"
+          description="Le plan de posologie en cours sera vidé. Cette action est irréversible."
+          texteConfirmer="Réinitialiser"
+          onConfirmer={() => {
+            setConfirmationReinitialisationOuverte(false)
+            reinitialiser()
+          }}
+          onAnnuler={() => setConfirmationReinitialisationOuverte(false)}
+        />
       </div>
 
       {/* Aperçu imprimable : rendu en temps réel à l'écran, et seul élément

@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -44,6 +45,7 @@ export function HuilesEssentiellesPosologie() {
   const [dureeValeur, setDureeValeur] = useState('')
   const [dureeUnite, setDureeUnite] = useState<UniteDuree>('jours')
   const [gouttesParMl, setGouttesParMl] = useState(GOUTTES_PAR_ML_DEFAUT)
+  const [confirmationReinitialisationOuverte, setConfirmationReinitialisationOuverte] = useState(false)
 
   function reinitialiser() {
     setGouttesParPrise('')
@@ -51,6 +53,20 @@ export function HuilesEssentiellesPosologie() {
     setDureeValeur('')
     setDureeUnite('jours')
     setGouttesParMl(GOUTTES_PAR_ML_DEFAUT)
+  }
+
+  function demanderReinitialisation() {
+    const aDuContenu =
+      gouttesParPrise !== '' ||
+      prisesParJour !== '' ||
+      dureeValeur !== '' ||
+      dureeUnite !== 'jours' ||
+      gouttesParMl !== GOUTTES_PAR_ML_DEFAUT
+    if (!aDuContenu) {
+      reinitialiser()
+      return
+    }
+    setConfirmationReinitialisationOuverte(true)
   }
 
   const resultat = useMemo(() => {
@@ -192,11 +208,23 @@ export function HuilesEssentiellesPosologie() {
 
       <button
         type="button"
-        onClick={reinitialiser}
+        onClick={demanderReinitialisation}
         className={`flex min-h-11 items-center self-start text-xs font-semibold text-muted hover:text-rec ${CLASSE_FOCUS}`}
       >
         Réinitialiser
       </button>
+
+      <ModaleConfirmation
+        ouvert={confirmationReinitialisationOuverte}
+        titre="Effacer toutes les lignes saisies ?"
+        description="Les champs de posologie saisis seront vidés. Cette action est irréversible."
+        texteConfirmer="Réinitialiser"
+        onConfirmer={() => {
+          setConfirmationReinitialisationOuverte(false)
+          reinitialiser()
+        }}
+        onAnnuler={() => setConfirmationReinitialisationOuverte(false)}
+      />
     </div>
   )
 }

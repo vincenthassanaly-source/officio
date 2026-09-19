@@ -1,6 +1,7 @@
 'use client'
 
 import { useId, useMemo, useState } from 'react'
+import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import type { HuileEssentielle } from '@/lib/data/huiles-essentielles'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
@@ -233,6 +234,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
   const [mode, setMode] = useState<'melange' | 'flacons_separes'>('melange')
   const [nbGelules, setNbGelules] = useState(0)
   const [nbGelulesVegetales, setNbGelulesVegetales] = useState(0)
+  const [confirmationReinitialisationOuverte, setConfirmationReinitialisationOuverte] = useState(false)
 
   function ajouterLigne() {
     setLignes((l) => [...l, nouvelleLigne()])
@@ -251,6 +253,19 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
     setMode('melange')
     setNbGelules(0)
     setNbGelulesVegetales(0)
+  }
+
+  function demanderReinitialisation() {
+    const aDuContenu =
+      lignes.some((l) => l.huileId !== '' || l.volumeMl.trim() !== '') ||
+      mode !== 'melange' ||
+      nbGelules > 0 ||
+      nbGelulesVegetales > 0
+    if (!aDuContenu) {
+      reinitialiser()
+      return
+    }
+    setConfirmationReinitialisationOuverte(true)
   }
 
   const detail = useMemo(() => {
@@ -405,11 +420,23 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
 
       <button
         type="button"
-        onClick={reinitialiser}
+        onClick={demanderReinitialisation}
         className={`flex min-h-11 items-center self-start text-xs font-semibold text-muted hover:text-rec ${CLASSE_FOCUS}`}
       >
         Réinitialiser
       </button>
+
+      <ModaleConfirmation
+        ouvert={confirmationReinitialisationOuverte}
+        titre="Effacer toutes les lignes saisies ?"
+        description="Le mélange en cours (huiles, volumes et gélules) sera vidé. Cette action est irréversible."
+        texteConfirmer="Réinitialiser"
+        onConfirmer={() => {
+          setConfirmationReinitialisationOuverte(false)
+          reinitialiser()
+        }}
+        onAnnuler={() => setConfirmationReinitialisationOuverte(false)}
+      />
     </div>
   )
 }
