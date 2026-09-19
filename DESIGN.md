@@ -1,0 +1,205 @@
+---
+name: Officio
+description: PWA de gestion d'équipe pour pharmacie d'officine
+colors:
+  bg: "oklch(98% 0.004 260)"
+  surface: "#ffffff"
+  primary: "oklch(52% 0.19 275)"
+  primary-light: "oklch(66% 0.14 275)"
+  primary-dark: "oklch(38% 0.16 275)"
+  primary-soft: "oklch(94% 0.03 275)"
+  ink: "oklch(21% 0.02 265)"
+  muted: "oklch(52% 0.02 265)"
+  border: "oklch(91% 0.006 260)"
+  track: "oklch(93% 0.01 265)"
+  accent: "oklch(58% 0.14 70)"
+  accent-soft: "oklch(94% 0.06 80)"
+  rec: "oklch(58% 0.2 25)"
+  rec-soft: "oklch(94% 0.06 25)"
+  purple: "oklch(52% 0.15 300)"
+  purple-soft: "oklch(92% 0.06 300)"
+  green: "oklch(58% 0.14 150)"
+  green-soft: "oklch(94% 0.05 150)"
+  brun: "oklch(48% 0.09 45)"
+  brun-soft: "oklch(93% 0.03 55)"
+  neutral-soft: "oklch(93% 0.01 265)"
+  neutral-text: "oklch(65% 0.01 265)"
+typography:
+  heading:
+    fontFamily: "Space Grotesk, system-ui, sans-serif"
+    fontWeight: 600
+  body:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "13.5px"
+    fontWeight: 400
+    lineHeight: 1.4
+  label:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "11px"
+    fontWeight: 700
+    letterSpacing: "0.02em"
+rounded:
+  sm: "8px"
+  md: "12px"
+  lg: "20px"
+  xl: "24px"
+  full: "9999px"
+spacing:
+  xs: "4px"
+  sm: "8px"
+  md: "12px"
+  lg: "16px"
+  xl: "24px"
+components:
+  button-primary:
+    backgroundColor: "{colors.primary}"
+    textColor: "#ffffff"
+    rounded: "{rounded.md}"
+    padding: "12px 16px"
+  button-destructive:
+    backgroundColor: "{colors.rec}"
+    textColor: "#ffffff"
+    rounded: "{rounded.md}"
+    padding: "12px 16px"
+  button-secondary:
+    backgroundColor: "transparent"
+    textColor: "{colors.muted}"
+    rounded: "{rounded.md}"
+    padding: "12px 16px"
+  card:
+    backgroundColor: "{colors.surface}"
+    rounded: "{rounded.lg}"
+    padding: "16px"
+---
+
+# Design System : Officio
+
+## Overview
+
+**Creative North Star : « L'outil de comptoir »**
+
+Officio est une interface de travail, pas une vitrine : elle doit s'effacer devant la tâche pendant qu'un membre de l'équipe est debout au comptoir, souvent interrompu. La densité d'information est réelle (listes, badges, compteurs) mais reste lisible grâce à une échelle typographique fine (de 10 px à 16 px) et des cartes blanches très légèrement ombrées sur un fond gris-bleu presque neutre. Le seul accent chromatique franc (`primary`, un indigo) est réservé aux actions et à l'état actif ; le rouge (`rec`) est réservé sans exception à l'alerte et à la suppression.
+
+Rejets confirmés par le code existant et par le brief du Lot 1 : pas de bordures latérales colorées (`border-l-4`) sur cartes/listes/alertes, pas de glyphes Unicode en guise d'icônes (icônes dessinées en trait, `viewBox="0 0 24 24"`, `strokeWidth="2"`), pas de nouvelle police, pas de dégradé de texte.
+
+**Key Characteristics :**
+- Cartes blanches arrondies (`shadow-card`, un ombrage double très doux) sur fond `bg` légèrement teinté.
+- Une seule famille de boutons (plein/`primary`, destructif/`rec`, fantôme/bordé), rayon `rounded-xl` (12 px) presque partout.
+- Space Grotesk pour les titres (poids 600/700), Inter pour tout le reste, y compris les données denses.
+- Feedback tactile global : tout élément interactif (`a`, `button`, `[role=button]`) rétrécit légèrement au tap (`scale(0.95)`), désactivé en `prefers-reduced-motion`.
+- Cibles tactiles ≥ 44 px partout où l'utilisateur peut taper, y compris quand l'élément visible est plus petit (marges négatives compensant un padding invisible — voir Composants).
+
+## Colors
+
+Palette `oklch`, restreinte : un seul accent d'action (`primary`), un vocabulaire sémantique de couleurs « douces » (`-soft`) pour les fonds de badge/alerte, et un rouge strictement réservé à l'alerte.
+
+### Primary
+- **Indigo primaire** (`oklch(52% 0.19 275)`, `--color-primary`) : actions principales (boutons pleins, liens actifs, onglet actif de la navigation, focus). `primary-light`/`primary-dark` sont des variantes de contraste, `primary-soft` (`oklch(94% 0.03 275)`) sert de fond pour badges/état actif discret (pill de la bottom nav, ligne de notification non lue).
+
+### Secondary
+- **Accent orangé** (`oklch(58% 0.14 70)`, `--color-accent`) : échéances proches (« Demain », « Aujourd'hui »), signalétique secondaire non critique. `accent-soft` (`oklch(94% 0.06 80)`) pour les fonds associés.
+- **Vert** (`oklch(58% 0.14 150)`, `--color-green`) : succès, état « terminé », toast de succès.
+- **Violet** (`oklch(52% 0.15 300)`, `--color-purple`) et **brun** (`oklch(48% 0.09 45)`, `--color-brun`) : couleurs de tuiles de modules secondaires (`MODULES_SECONDAIRES`) et d'avatars d'équipe, sans rôle sémantique fixe au-delà de la distinction visuelle entre modules/personnes.
+
+### Neutral
+- **Fond de page** (`oklch(98% 0.004 260)`, `--color-bg`) : quasi blanc, légèrement bleuté.
+- **Surface** (`#ffffff`) : fond des cartes, modales, panneaux.
+- **Encre** (`oklch(21% 0.02 265)`, `--color-ink`) : texte principal.
+- **Atténué** (`oklch(52% 0.02 265)`, `--color-muted`) : texte secondaire, libellés, icônes inactives.
+- **Bordure** (`oklch(91% 0.006 260)`, `--color-border`) : traits de séparation, contours de champs et de boutons fantômes.
+- **Neutre doux** (`oklch(93% 0.01 265)`, `--color-neutral-soft`) : fond au survol/actif des liens de navigation, fond d'avatar par défaut.
+
+### Named Rules
+**La règle du rouge unique.** `rec`/`rec-soft` ne sert qu'à l'alerte et à la suppression (bouton destructif, badge d'alerte pharmaceutique, pastille de notification urgente). Aucune autre utilisation, même décorative.
+
+## Typography
+
+**Display/Headings Font :** Space Grotesk (`--font-space-grotesk`, poids 500/600/700), avec repli système sans-serif.
+**Body Font :** Inter (`--font-inter`, poids 400/500/600/700), avec repli système sans-serif.
+
+**Character :** une seule famille assure presque tout le texte (Inter) ; Space Grotesk n'apparaît que sur les titres de page et d'en-têtes de panneau/modale — un accent d'identité ponctuel, pas une deuxième voix typographique généralisée (cohérent avec le mode Operate : « one family is often right »).
+
+### Hierarchy
+Échelle fine et dense, en px arbitraires plutôt qu'une échelle rem classique — observée telle quelle dans le code, à ne pas « nettoyer » vers des valeurs rondes sans raison :
+- **Titre de page** (`font-heading`, `text-2xl`, `text-ink`) : un seul `<h1>` par page, ex. `<h1 className="mb-4 font-heading text-2xl text-ink">`.
+- **Titre de panneau/modale** (`font-heading`, `text-lg`, poids 600) : en-têtes de sheet (FAB, menu « Plus »).
+- **Titre de carte/section** (`text-sm`, poids 700, ou `text-[11px]` majuscules + `tracking-wide` pour un libellé de groupe type « Tâches », « Messages non lus »).
+- **Corps** (`text-[13px]`–`text-[13.5px]`, poids 400–600 selon le contexte) : texte courant des listes, boutons, cartes. Mesure de ligne non contrainte (contenu dense en colonne étroite mobile-first, pas de prose longue).
+- **Label/méta** (`text-[10px]`–`text-[12.5px]`, `text-muted`) : dates, compteurs, sous-texte, badges.
+- **Champ de saisie** (`text-[16px]` obligatoire) : la seule taille qui ne descend jamais en dessous de 16 px, pour éviter le zoom automatique iOS Safari au focus.
+
+### Named Rules
+**La règle des 16 px de saisie.** Tout `<input>`/`<textarea>`/`<select>` reste à `text-[16px]` (jamais `text-sm` ni une taille arbitraire inférieure), y compris quand le reste du formulaire est plus dense.
+
+## Layout
+
+Mobile-first, conteneur centré `max-w-2xl` sur mobile/tablette, bascule en disposition sidebar + contenu (`max-w-4xl`) à partir du breakpoint `lg` (1024 px). Navigation : bottom nav fixe sur mobile (`lg:hidden`), sidebar fixe à gauche sur desktop (`hidden lg:flex`). Le contenu défile au niveau du document (`html`/`body`), jamais dans un conteneur interne à `overflow-y: auto` — les éléments `position: sticky` en dépendent (voir Composants, Cartes/Conteneurs). Le wrapper mobile utilise `overflow-x-clip` (jamais `overflow-x-hidden`, qui transformerait ce wrapper en faux conteneur de défilement — voir le rapport du Lot 1).
+
+Espacement : petits pas serrés (`gap-1`/`gap-1.5`/`gap-2` = 4–8 px) à l'intérieur d'un composant, respiration plus large (`gap-3`/`gap-4`, `p-4`) entre composants et sections. Zone de contenu : `px-4 py-4` mobile, `px-10 py-8` desktop. Dégagement permanent sous le contenu mobile pour la bottom nav : `pb-[calc(4.5rem+env(safe-area-inset-bottom))]`.
+
+## Elevation & Depth
+
+Système hybride léger : cartes et sheets utilisent une seule ombre douce (`shadow-card`), jamais de bordure en plus d'une ombre sur le même élément (pas de carte fantôme bordée + ombrée). Les boutons fantômes/secondaires portent une bordure fine (`border-border`) sans ombre. Les panneaux flottants (notifications, résultats de recherche) utilisent une ombre plus prononcée (`shadow-lg`) car ils se détachent d'un fond potentiellement chargé.
+
+### Shadow Vocabulary
+- **Carte** (`--shadow-card` : `0 1px 2px rgba(30,20,80,.04), 0 10px 24px -14px rgba(40,30,110,.16)`) : cartes de contenu, modales/sheets, tuiles de module.
+- **Flottant** (`shadow-lg`) : panneaux ancrés en position calculée (notifications), menus contextuels.
+- **FAB** (`shadow-lg`) : bouton d'action flottant, seul élément dont l'élévation signale une action toujours accessible plutôt qu'un simple conteneur.
+
+### Named Rules
+**La règle une-ombre-ou-une-bordure.** Un élément porte `shadow-card` OU une bordure `border-border`, jamais les deux sur le même conteneur (évite la « carte fantôme »).
+
+## Shapes
+
+Rayon large et cohérent, jamais anguleux : `rounded-xl` (12 px) domine sur boutons/champs/petits badges, `rounded-[20px]` sur cartes et sheets (bas d'écran sur mobile : `rounded-t-[20px]`, tous coins à partir de `sm:`), `rounded-full` sur avatars, pastilles et boutons-icônes circulaires. Pas de coins vifs (`rounded-none`) hors cas isolé et non représentatif. Contours : `border` fine 1 px `border-border`, jamais de bordure latérale colorée (`border-l-*`) — anti-pattern explicitement écarté.
+
+## Components
+
+### Buttons
+- **Shape :** `rounded-xl` (12 px), hauteur minimale 44 px (`py-3` avec un texte `text-[13.5px]` atteint ~44–46 px).
+- **Primaire :** fond `bg-primary`, texte blanc, poids 600 (`font-semibold`).
+- **Destructif :** fond `bg-rec`, texte blanc — jamais utilisé pour autre chose qu'une action destructive/de suppression.
+- **Secondaire/fantôme :** fond transparent, bordure `border-border`, texte `text-muted`.
+- **Choix (liste d'options, ex. sheet de confirmation à choix multiples) :** fond `-soft` de la couleur sémantique (`bg-primary-soft text-primary` ou `bg-rec-soft text-rec`).
+- **Hover/Focus :** anneau de focus visible (`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`) — à généraliser à tous les boutons/liens interactifs (constat transverse, voir DESIGN.md → Do's and Don'ts). Retour tactile global au tap (`active:scale-95`, `prefers-reduced-motion` respecté).
+- **Bouton-icône compact (cible tactile invisible) :** quand l'icône visible doit rester petite (ex. fermeture de toast, lien « Retour »), la cible de 44 px est obtenue par un padding compensé par une marge négative égale, jamais en agrandissant l'icône elle-même.
+
+### Cards / Containers
+- **Corner Style :** `rounded-[20px]` (cartes de contenu, sheets/modales), `rounded-2xl` (panneau de notifications).
+- **Background :** `bg-surface` (blanc plein), jamais de dégradé.
+- **Shadow Strategy :** `shadow-card` (voir Elevation & Depth) ; pas de bordure en plus.
+- **Internal Padding :** `p-3.5` à `p-4` selon la densité du contenu.
+- **Sticky :** les barres/bandeaux qui doivent rester visibles au défilement (onglets, progression, formulaire d'envoi) utilisent `position: sticky` directement contre le défilement du document — nécessite `overflow-x-clip` (jamais `overflow-x-hidden`) sur tout ancêtre.
+
+### Inputs / Fields
+- **Style :** `rounded-xl`, `border border-border`, fond `bg-bg`, texte `text-[16px]` obligatoire (règle des 16 px, voir Typography), `<label>` ou `aria-label` toujours présent (jamais un placeholder seul en guise de libellé).
+- **Focus :** `focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary` (motif établi dans le module Entretiens, à généraliser).
+- **Erreur/Désactivé :** pas de motif dédié observé à ce jour dans le code hors module Entretiens ; à établir au fil des lots suivants plutôt qu'inventé ici.
+
+### Navigation
+- **Bottom nav (mobile, `lg:hidden`) :** barre fixe en bas, 5 onglets (4 liens directs + « Plus »), icône 20 px + libellé `text-xs`, pill `bg-primary-soft` animée (`transform`/`width`, mesurée en JS) derrière l'onglet actif, hauteur ≈ 50 px (déjà ≥ 44 px).
+- **Sidebar (desktop, `hidden lg:flex`) :** liste verticale de liens, icône 18 px + libellé `text-sm`, fond `bg-primary-soft` sur l'item actif, `hover:bg-neutral-soft` sinon.
+- **Panneau « Plus » :** grille 2 colonnes de tuiles carrées (icône dans un carré `rounded-xl` teinté par module + libellé), même sheet que les modales (`rounded-t-[20px]`, remonte du bas sur mobile).
+- **Indicateur de navigation :** fine barre `h-[3px]` en haut de la zone de contenu, feedback immédiat au tap avant la réponse serveur — purement décoratif (`aria-hidden`), n'affecte aucune donnée.
+
+### Modale de confirmation (composant signature)
+Remplace `window.confirm()` partout dans l'app : sheet remontant du bas sur mobile (centrée à partir de `sm:`), rendue via `createPortal(..., document.body)` pour échapper à tout ancêtre `transform`. Piège à focus complet (Tab/Shift+Tab bouclent dans la boîte), Échap, retour du focus à l'élément déclencheur à la fermeture, verrouillage du scroll de la page tant qu'elle est ouverte (`document.body.style.overflow = 'hidden'`). Deux variantes : Annuler/Confirmer, ou une liste de choix (ex. « cette occurrence »/« toute la série »).
+
+### Toasts (composant signature)
+Fil `aria-live="polite"` positionné au-dessus de la bottom nav et de la safe-area (`bottom-[calc(4.5rem+0.75rem+env(safe-area-inset-bottom))]` sur mobile, ancré en bas-droite sur desktop), 3 types sémantiques (`succes`/`erreur`/`info`, teintes `-soft` correspondantes), `role="alert"` pour une erreur sinon `role="status"`, durée d'affichage plus longue pour une erreur (5 s vs 3,5 s).
+
+## Do's and Don'ts
+
+### Do :
+- **Do** utiliser les tokens sémantiques de `globals.css` (`bg-primary`, `text-muted`, etc.), jamais une couleur en dur.
+- **Do** garantir une cible tactile ≥ 44 px pour tout élément interactif, y compris via un padding invisible compensé par une marge négative quand l'élément visible doit rester petit.
+- **Do** dessiner les icônes en SVG trait (`viewBox 24x24`, `strokeWidth 2`, `currentColor`) plutôt qu'utiliser un glyphe Unicode.
+- **Do** rendre les modales/sheets via `createPortal(..., document.body)`, avec détection de montage côté client (`useSyncExternalStore`) pour éviter un mismatch d'hydratation.
+- **Do** garder les animations en `motion-safe:`/respecter `prefers-reduced-motion` (déjà la norme dans `globals.css`).
+
+### Don't :
+- **Don't** utiliser de bordure latérale colorée (`border-l-4` ou similaire) sur une carte, une ligne de liste ou une alerte.
+- **Don't** utiliser `rec`/`rec-soft` (rouge) pour autre chose qu'une alerte ou une action destructive.
+- **Don't** poser `overflow-x-hidden` sur un conteneur qui a des descendants `position: sticky` ou qui enveloppe une page qui pourrait en avoir un jour — utiliser `overflow-x-clip`.
+- **Don't** descendre un champ de saisie sous `text-[16px]`.
+- **Don't** introduire une deuxième police d'affichage : Space Grotesk (titres) et Inter (tout le reste) suffisent.
