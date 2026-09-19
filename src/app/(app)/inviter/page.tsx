@@ -25,11 +25,11 @@ export default async function InviterPage() {
       <h1 className="mb-4 font-heading text-2xl text-ink">Mon équipe</h1>
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Équipe</div>
+          <div className="text-[12px] font-bold uppercase tracking-wide text-muted">Équipe</div>
           <MembresOfficine membres={membres} profilActuelId={profil?.id ?? ''} couleurs={couleurs} />
         </div>
         <div className="flex flex-col gap-2">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Inviter un collègue</div>
+          <div className="text-[12px] font-bold uppercase tracking-wide text-muted">Inviter un collègue</div>
           <InviterCard officineId={officine.id} code={officine.code_invitation} />
         </div>
       </div>

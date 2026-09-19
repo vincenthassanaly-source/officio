@@ -30,10 +30,18 @@ export function InviterCard({ officineId, code }: { officineId: string; code: st
           toast({ type: 'succes', message: "Lien d'invitation copié." })
           setTimeout(() => setCopie(false), 2000)
         }}
-        className="rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98]"
+        className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
-        {copie ? 'Lien copié ✓' : 'Copier le lien d’invitation'}
+        {copie && (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        )}
+        {copie ? 'Lien copié' : 'Copier le lien d’invitation'}
       </button>
+      <p role="status" aria-live="polite" className="sr-only">
+        {copie ? "Lien d'invitation copié." : ''}
+      </p>
 
       <button
         type="button"
@@ -51,7 +59,7 @@ export function InviterCard({ officineId, code }: { officineId: string; code: st
             }
           })
         }
-        className="text-xs font-semibold text-muted hover:text-rec disabled:opacity-60"
+        className="-my-3.5 self-start rounded-lg px-1 py-3.5 text-left text-xs font-semibold text-muted hover:text-rec disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         Régénérer le code (l&rsquo;ancien lien cessera de fonctionner)
       </button>
