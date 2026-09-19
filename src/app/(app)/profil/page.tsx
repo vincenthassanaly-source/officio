@@ -44,7 +44,7 @@ export default async function ProfilPage() {
         <form action={signOut}>
           <button
             type="submit"
-            className="w-full rounded-[20px] bg-surface p-4 text-left text-sm font-semibold text-muted shadow-card hover:text-ink"
+            className="w-full rounded-[20px] bg-surface p-4 text-left text-sm font-semibold text-muted shadow-card hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Se déconnecter
           </button>

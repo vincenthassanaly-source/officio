@@ -94,8 +94,8 @@ export function OfficineSwitcher({
         aria-expanded={ouvert}
         className={
           avecLogo
-            ? 'flex min-w-0 shrink-0 items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-neutral-soft disabled:opacity-60'
-            : 'flex min-w-0 shrink-0 items-center gap-1 rounded-full bg-surface py-1.5 pl-3 pr-2.5 shadow-card disabled:opacity-60'
+            ? 'flex min-h-11 min-w-0 shrink-0 items-center gap-2 rounded-full py-2 pl-1 pr-2.5 hover:bg-neutral-soft disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+            : 'flex min-h-11 min-w-0 shrink-0 items-center gap-1 rounded-full bg-surface py-2 pl-3 pr-2.5 shadow-card disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
         }
       >
         {logo}
@@ -120,14 +120,16 @@ export function OfficineSwitcher({
       {ouvert && (
         <>
           {/* Capte les clics en dehors du panneau pour le fermer — voir
-              NotificationsCloche pour le même idiome. */}
-          <button
-            type="button"
-            aria-label="Fermer le sélecteur d'officine"
+              DESIGN.md → Backdrop de sheet/panneau : un <div> non focusable,
+              jamais un <button> (arrêt de tabulation sans retour visuel). */}
+          <div
+            aria-hidden="true"
             onClick={() => setOuvert(false)}
             className="fixed inset-0 z-40"
           />
           <div
+            role="listbox"
+            aria-label="Officines"
             style={{ top: position.top, left: position.left }}
             className="fixed z-50 w-[220px] max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-surface p-1.5 shadow-lg"
           >
@@ -137,14 +139,20 @@ export function OfficineSwitcher({
                 <button
                   key={a.officine_id}
                   type="button"
+                  role="option"
+                  aria-selected={active}
                   onClick={() => choisir(a.officine_id)}
                   disabled={isPending}
-                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] font-semibold disabled:opacity-60 ${
+                  className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-2.5 py-3 text-left text-[13px] font-semibold disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                     active ? 'bg-primary-soft text-primary' : 'text-ink hover:bg-neutral-soft'
                   }`}
                 >
                   <span className="min-w-0 flex-1 truncate">{a.officine_nom}</span>
-                  {active && <span className="shrink-0">✓</span>}
+                  {active && (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  )}
                 </button>
               )
             })}
