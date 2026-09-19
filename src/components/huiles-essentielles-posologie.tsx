@@ -2,8 +2,10 @@
 
 import { useMemo, useState } from 'react'
 
+const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 const TAILLES_FLACON_ML = [5, 10, 15, 30, 50, 100]
 const GOUTTES_PAR_ML_DEFAUT = '20'
@@ -72,52 +74,63 @@ export function HuilesEssentiellesPosologie() {
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex flex-col gap-3 rounded-[20px] bg-surface shadow-card p-3">
         <div className="flex flex-col gap-1.5">
-          <label className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">
+          <label htmlFor="he-posologie-gouttes-prise" className="text-[12px] font-semibold uppercase tracking-wide text-muted">
             Gouttes par prise
           </label>
           <input
+            id="he-posologie-gouttes-prise"
             type="number"
             min="0"
             step="0.5"
             value={gouttesParPrise}
             onChange={(e) => setGouttesParPrise(e.target.value)}
             placeholder="ex : 2"
+            inputMode="decimal"
+            enterKeyHint="next"
             className={CHAMP_CLASS}
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">
+          <label htmlFor="he-posologie-prises-jour" className="text-[12px] font-semibold uppercase tracking-wide text-muted">
             Prises par jour
           </label>
           <input
+            id="he-posologie-prises-jour"
             type="number"
             min="0"
             step="1"
             value={prisesParJour}
             onChange={(e) => setPrisesParJour(e.target.value)}
             placeholder="ex : 3"
+            inputMode="numeric"
+            enterKeyHint="next"
             className={CHAMP_CLASS}
           />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">
+          <label htmlFor="he-posologie-duree" className="text-[12px] font-semibold uppercase tracking-wide text-muted">
             Durée du traitement
           </label>
           <div className="flex gap-2">
             <input
+              id="he-posologie-duree"
               type="number"
               min="0"
               step="1"
               value={dureeValeur}
               onChange={(e) => setDureeValeur(e.target.value)}
               placeholder="ex : 10"
+              aria-label="Durée du traitement"
+              inputMode="numeric"
+              enterKeyHint="next"
               className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
             />
             <select
               value={dureeUnite}
               onChange={(e) => setDureeUnite(e.target.value as UniteDuree)}
+              aria-label="Unité de durée"
               className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
             >
               <option value="jours">Jours</option>
@@ -128,18 +141,21 @@ export function HuilesEssentiellesPosologie() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">
+          <label htmlFor="he-posologie-gouttes-ml" className="text-[12px] font-semibold uppercase tracking-wide text-muted">
             Gouttes par mL
           </label>
           <input
+            id="he-posologie-gouttes-ml"
             type="number"
             min="1"
             step="1"
             value={gouttesParMl}
             onChange={(e) => setGouttesParMl(e.target.value)}
+            inputMode="numeric"
+            enterKeyHint="done"
             className={CHAMP_CLASS}
           />
-          <p className="text-[11px] leading-relaxed text-muted">
+          <p className="text-[12px] leading-relaxed text-muted">
             Approximation courante — varie selon le compte-gouttes utilisé.
           </p>
         </div>
@@ -177,7 +193,7 @@ export function HuilesEssentiellesPosologie() {
       <button
         type="button"
         onClick={reinitialiser}
-        className="self-start text-xs font-semibold text-muted hover:text-rec"
+        className={`flex min-h-11 items-center self-start text-xs font-semibold text-muted hover:text-rec ${CLASSE_FOCUS}`}
       >
         Réinitialiser
       </button>
