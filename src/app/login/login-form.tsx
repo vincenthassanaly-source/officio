@@ -66,6 +66,10 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
 
   const pending = modeAjout ? pendingAjout : pendingConnexion
   const erreur = modeAjout ? resultatAjout?.erreur : state && 'error' in state ? state.error : undefined
+  const classeChamp = (enErreur: boolean) =>
+    `rounded-xl border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus-visible:outline-2 focus-visible:outline-primary ${
+      enErreur ? 'border-rec focus-visible:border-rec' : 'border-border focus-visible:border-primary'
+    }`
 
   return (
     <form action={modeAjout ? soumettreAjout : action} className="flex flex-col gap-4">
@@ -79,9 +83,15 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           type="email"
           required
           autoComplete="email"
+          inputMode="email"
+          enterKeyHint="next"
+          autoCapitalize="none"
+          spellCheck={false}
+          aria-invalid={erreur ? true : undefined}
+          aria-describedby={erreur ? 'login-erreur' : undefined}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+          className={classeChamp(Boolean(erreur))}
           placeholder="prenom@pharmacie-romevillage.fr"
         />
       </div>
@@ -96,20 +106,29 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           type="password"
           required
           autoComplete="current-password"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+          enterKeyHint="go"
+          aria-invalid={erreur ? true : undefined}
+          aria-describedby={erreur ? 'login-erreur' : undefined}
+          className={classeChamp(Boolean(erreur))}
           placeholder="••••••••"
         />
       </div>
 
-      {erreur && <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{erreur}</p>}
+      {erreur && (
+        <p id="login-erreur" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">
+          {erreur}
+        </p>
+      )}
       {modeAjout && resultatAjout?.succes && (
-        <p className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary">{resultatAjout.succes}</p>
+        <p role="status" className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary">
+          {resultatAjout.succes}
+        </p>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+        className="mt-2 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         {pending ? (modeAjout ? 'Ajout…' : 'Connexion…') : modeAjout ? 'Ajouter ce compte' : 'Se connecter'}
       </button>

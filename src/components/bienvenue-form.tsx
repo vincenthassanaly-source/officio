@@ -16,8 +16,9 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
       <div className="flex shrink-0 rounded-xl bg-track p-1">
         <button
           type="button"
+          aria-pressed={onglet === 'creer'}
           onClick={() => setOnglet('creer')}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+          className={`min-h-11 flex-1 rounded-lg py-2 text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             onglet === 'creer' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -25,8 +26,9 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
         </button>
         <button
           type="button"
+          aria-pressed={onglet === 'rejoindre'}
           onClick={() => setOnglet('rejoindre')}
-          className={`flex-1 rounded-lg py-2 text-[13px] font-semibold transition ${
+          className={`min-h-11 flex-1 rounded-lg py-2 text-[13px] font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             onglet === 'rejoindre' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -37,35 +39,46 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
       {onglet === 'creer' ? (
         <form action={actionCreer} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted">
+            <label htmlFor="nom_officine" className="text-xs font-semibold uppercase tracking-wide text-muted">
               Nom de la pharmacie
             </label>
             <input
+              id="nom_officine"
               name="nom_officine"
               required
+              enterKeyHint="next"
               placeholder="Pharmacie du Centre"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus:border-primary"
+              aria-invalid={etatCreer?.error ? true : undefined}
+              aria-describedby={etatCreer?.error ? 'bienvenue-creer-erreur' : undefined}
+              className={`rounded-xl border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus-visible:outline-2 focus-visible:outline-primary ${etatCreer?.error ? 'border-rec focus-visible:border-rec' : 'border-border focus-visible:border-primary'}`}
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted">
+            <label htmlFor="nom_complet_creer" className="text-xs font-semibold uppercase tracking-wide text-muted">
               Ton nom complet
             </label>
             <input
+              id="nom_complet_creer"
               name="nom_complet"
               required
+              autoComplete="name"
+              enterKeyHint="done"
               placeholder="Prénom Nom"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus:border-primary"
+              aria-invalid={etatCreer?.error ? true : undefined}
+              aria-describedby={etatCreer?.error ? 'bienvenue-creer-erreur' : undefined}
+              className={`rounded-xl border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus-visible:outline-2 focus-visible:outline-primary ${etatCreer?.error ? 'border-rec focus-visible:border-rec' : 'border-border focus-visible:border-primary'}`}
             />
           </div>
           <p className="text-[12px] text-muted">Tu seras responsable de cette officine.</p>
           {etatCreer?.error && (
-            <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatCreer.error}</p>
+            <p id="bienvenue-creer-erreur" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">
+              {etatCreer.error}
+            </p>
           )}
           <button
             type="submit"
             disabled={pendingCreer}
-            className="mt-1 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+            className="mt-1 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             {pendingCreer ? 'Création…' : 'Créer mon officine'}
           </button>
@@ -73,35 +86,48 @@ export function BienvenueForm({ inviteInitial }: { inviteInitial?: string }) {
       ) : (
         <form action={actionRejoindre} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted">
+            <label htmlFor="code_invitation" className="text-xs font-semibold uppercase tracking-wide text-muted">
               Code d&rsquo;invitation
             </label>
             <input
+              id="code_invitation"
               name="code"
               required
               defaultValue={inviteInitial}
+              autoCapitalize="characters"
+              autoComplete="off"
+              enterKeyHint="next"
               placeholder="ABC123EF"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] uppercase text-ink outline-none focus:border-primary"
+              aria-invalid={etatRejoindre?.error ? true : undefined}
+              aria-describedby={etatRejoindre?.error ? 'bienvenue-rejoindre-erreur' : undefined}
+              className={`rounded-xl border bg-surface px-4 py-3 text-[16px] uppercase text-ink outline-none focus-visible:outline-2 focus-visible:outline-primary ${etatRejoindre?.error ? 'border-rec focus-visible:border-rec' : 'border-border focus-visible:border-primary'}`}
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold uppercase tracking-wide text-muted">
+            <label htmlFor="nom_complet_rejoindre" className="text-xs font-semibold uppercase tracking-wide text-muted">
               Ton nom complet
             </label>
             <input
+              id="nom_complet_rejoindre"
               name="nom_complet"
               required
+              autoComplete="name"
+              enterKeyHint="done"
               placeholder="Prénom Nom"
-              className="rounded-xl border border-border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus:border-primary"
+              aria-invalid={etatRejoindre?.error ? true : undefined}
+              aria-describedby={etatRejoindre?.error ? 'bienvenue-rejoindre-erreur' : undefined}
+              className={`rounded-xl border bg-surface px-4 py-3 text-[16px] text-ink outline-none focus-visible:outline-2 focus-visible:outline-primary ${etatRejoindre?.error ? 'border-rec focus-visible:border-rec' : 'border-border focus-visible:border-primary'}`}
             />
           </div>
           {etatRejoindre?.error && (
-            <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{etatRejoindre.error}</p>
+            <p id="bienvenue-rejoindre-erreur" role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">
+              {etatRejoindre.error}
+            </p>
           )}
           <button
             type="submit"
             disabled={pendingRejoindre}
-            className="mt-1 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+            className="mt-1 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             {pendingRejoindre ? 'Connexion…' : 'Rejoindre cette officine'}
           </button>

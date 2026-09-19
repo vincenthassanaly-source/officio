@@ -11,7 +11,7 @@ export default async function InscriptionPage({
   return (
     <main className="flex min-h-screen items-center justify-center bg-bg px-6">
       <div className="w-full max-w-sm rounded-3xl border border-border bg-surface p-8 shadow-sm">
-        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light">
+        <p className="font-mono text-[12px] uppercase tracking-[0.12em] text-primary-light">
           Officio
         </p>
         <h1 className="mt-1 mb-1 font-heading text-2xl text-ink">Créer un compte</h1>
@@ -24,7 +24,10 @@ export default async function InscriptionPage({
         <InscriptionForm invite={invite} />
         <p className="mt-5 text-center text-[13px] text-muted">
           Déjà un compte ?{' '}
-          <Link href="/login" className="font-semibold text-primary">
+          <Link
+            href="/login"
+            className="rounded font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
             Se connecter
           </Link>
         </p>
