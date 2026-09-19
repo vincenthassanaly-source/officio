@@ -37,6 +37,24 @@ function estImage(typeFichier: string) {
   return typeFichier.startsWith('image/')
 }
 
+const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
+function IconAjouter({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
 export function DocumentsList({ documents }: { documents: Document[] }) {
   const [filtre, setFiltre] = useState<'tous' | CategorieDocument>('tous')
   const [formOuvert, setFormOuvert] = useState(false)
@@ -59,9 +77,10 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
           <button
             type="button"
             onClick={() => setFiltre('tous')}
-            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+            aria-pressed={filtre === 'tous'}
+            className={`flex min-h-11 shrink-0 items-center rounded-full border px-3 text-xs font-semibold ${
               filtre === 'tous' ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
-            }`}
+            } ${CLASSE_FOCUS}`}
           >
             Tous
           </button>
@@ -70,9 +89,10 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
               type="button"
               key={c.value}
               onClick={() => setFiltre(c.value)}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+              aria-pressed={filtre === c.value}
+              className={`flex min-h-11 shrink-0 items-center rounded-full border px-3 text-xs font-semibold ${
                 filtre === c.value ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
-              }`}
+              } ${CLASSE_FOCUS}`}
             >
               {c.label}
             </button>
@@ -81,9 +101,12 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
         <button
           type="button"
           onClick={() => setFormOuvert((v) => !v)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-lg leading-none text-white"
+          aria-label={formOuvert ? 'Fermer le formulaire' : 'Ajouter un document'}
+          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
         >
-          {formOuvert ? '×' : '+'}
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
+            {formOuvert ? <IconFermer className="h-4 w-4" /> : <IconAjouter className="h-4 w-4" />}
+          </span>
         </button>
       </div>
 
@@ -97,22 +120,30 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
-          <input
-            type="file"
-            name="fichier"
-            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-            required
-            className="text-[13px] text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-primary"
-          />
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="documents-fichier" className="text-[12px] font-semibold uppercase tracking-wide text-muted">
+              Fichier
+            </label>
+            <input
+              id="documents-fichier"
+              type="file"
+              name="fichier"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              required
+              className={`flex min-h-11 items-center text-[13px] text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary-soft file:px-3 file:py-3 file:text-[12px] file:font-semibold file:text-primary ${CLASSE_FOCUS}`}
+            />
+          </div>
           <input
             name="nom"
             placeholder="Nom du document (optionnel)"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            aria-label="Nom du document"
+            className={`rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
           />
           <select
             name="categorie"
             defaultValue="autre"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            aria-label="Catégorie du document"
+            className={`rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
           >
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
@@ -123,7 +154,7 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+            className={`rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             {isPending ? 'Envoi…' : 'Ajouter'}
           </button>
@@ -139,10 +170,11 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
             type="button"
             key={d.id}
             onClick={() => ouvrirDocument(d.chemin_stockage)}
-            className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5 text-left"
+            className={`flex min-h-11 items-center gap-3 rounded-[20px] bg-surface shadow-card p-3.5 text-left ${CLASSE_FOCUS}`}
           >
             <div
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[9px] font-bold text-white ${
+              aria-hidden="true"
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[12px] font-bold text-white ${
                 estImage(d.type_fichier) ? 'bg-primary' : 'bg-rec'
               }`}
             >
@@ -150,12 +182,14 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-[13.5px] font-semibold text-ink">{d.nom}</div>
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[12px] text-muted">
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${classNameCategorie(d.categorie)}`}
+                  className={`rounded-full px-2 py-0.5 text-[12px] font-bold ${classNameCategorie(d.categorie)}`}
                 >
                   {labelCategorie(d.categorie)}
                 </span>
+                <span>{estImage(d.type_fichier) ? 'Image' : 'PDF'}</span>
+                <span>·</span>
                 <span>{formatTaille(d.taille_octets)}</span>
                 <span>·</span>
                 <span>{d.ajoute_par?.nom_complet ?? 'Ancien collègue'}</span>
