@@ -233,7 +233,7 @@ export function BandeauEdition({ onTerminer }: { onTerminer: () => void }) {
       <Icone nom="crayon" taille={18} className="text-accent" />
       <p className="min-w-0 flex-1 leading-tight text-ink">
         <span className="block text-[13px] font-bold">Mode édition</span>
-        <span className="block text-[12px]">Modifications enregistrées aussitôt.</span>
+        <span className="block text-[12px]">Enregistré aussitôt.</span>
       </p>
       <button
         type="button"

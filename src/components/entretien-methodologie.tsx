@@ -159,7 +159,7 @@ export function EntretienMethodologie({
               autoFocus
               value={contenuEnEdition}
               onChange={(e) => setContenuEnEdition(e.target.value)}
-              rows={3}
+              rows={4}
               className={`${CLASSE_CHAMP} resize-y`}
             />
           </div>
@@ -265,7 +265,7 @@ export function EntretienMethodologie({
                 id="nouvelle-etape"
                 value={contenuNouveau}
                 onChange={(e) => setContenuNouveau(e.target.value)}
-                rows={3}
+                rows={4}
                 className={`${CLASSE_CHAMP} resize-y`}
               />
             </div>
