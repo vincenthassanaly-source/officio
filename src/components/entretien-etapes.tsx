@@ -37,7 +37,7 @@ export function StepperEtapes({
     <>
       {general.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          {aPhases && <h3 className="text-[12px] font-bold text-muted">Contenu général</h3>}
+          {aPhases && <h3 className="text-[15px] font-bold text-ink">Contenu général</h3>}
           {general.map((item, i) => rendreItem(item, i, general))}
         </div>
       )}
@@ -56,7 +56,7 @@ export function StepperEtapes({
                 {index + 1}
               </span>
               <div className="min-w-0 flex-1 pt-0.5">
-                <h3 className="mb-2 text-[13px] font-bold text-ink">{phase}</h3>
+                <h3 className="mb-2 text-[15px] font-bold leading-snug text-ink">{phase}</h3>
                 <div className="flex flex-col gap-1.5">
                   {itemsGroupe.map((item, i) => rendreItem(item, i, itemsGroupe))}
                 </div>

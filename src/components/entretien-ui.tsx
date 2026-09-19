@@ -184,6 +184,42 @@ export function BoutonIcone({
   )
 }
 
+// Début du contenu d'un item, pour nommer ses boutons (« Monter « Vous arrive-t-il… » »).
+export function extraitPourLabel(contenu: string, max = 40): string {
+  const propre = contenu.replace(/\s+/g, ' ').trim()
+  return propre.length > max ? `« ${propre.slice(0, max).trimEnd()}… »` : `« ${propre} »`
+}
+
+// Barre d'actions d'un item en mode Édition (script et facturation) : quatre
+// boutons de 44 px sous le contenu, au lieu de contrôles de 16 à 28 px
+// serrés sur le côté.
+export function BarreActionsItem({
+  extrait,
+  peutMonter,
+  peutDescendre,
+  onMonter,
+  onDescendre,
+  onModifier,
+  onSupprimer,
+}: {
+  extrait: string
+  peutMonter: boolean
+  peutDescendre: boolean
+  onMonter: () => void
+  onDescendre: () => void
+  onModifier: () => void
+  onSupprimer: () => void
+}) {
+  return (
+    <div className="mt-2 flex items-center justify-end gap-0.5 border-t border-border pt-1">
+      <BoutonIcone label={`Monter ${extrait}`} icone="haut" disabled={!peutMonter} onClick={onMonter} />
+      <BoutonIcone label={`Descendre ${extrait}`} icone="bas" disabled={!peutDescendre} onClick={onDescendre} />
+      <BoutonIcone label={`Modifier ${extrait}`} icone="crayon" onClick={onModifier} />
+      <BoutonIcone label={`Supprimer ${extrait}`} icone="corbeille" onClick={onSupprimer} />
+    </div>
+  )
+}
+
 // Bandeau du mode Édition : rend le mode identifiable à tout moment (il reste
 // collé sous la barre d'onglets) et donne la sortie en un tap. Teinte
 // `accent-soft` propre à ce mode, jamais utilisée en mode Entretien.

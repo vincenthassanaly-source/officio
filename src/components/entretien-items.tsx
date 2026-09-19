@@ -1,6 +1,6 @@
 'use client'
 
-import { useOptimistic, useState, useTransition } from 'react'
+import { useMemo, useOptimistic, useState, useTransition } from 'react'
 import {
   creerItemEntretien,
   modifierItemEntretien,
@@ -11,6 +11,13 @@ import type { ItemEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { reducerItemsEntretien } from '@/components/entretien-items-reducer'
+import {
+  BarreActionsItem,
+  CLASSE_BOUTON_PRIMAIRE,
+  CLASSE_BOUTON_SECONDAIRE,
+  CLASSE_CHAMP,
+  extraitPourLabel,
+} from '@/components/entretien-ui'
 
 export function EntretienItems({
   typeEntretienId,
@@ -31,7 +38,7 @@ export function EntretienItems({
   const toast = useToast()
 
   const [itemsOptimistes, appliquerOptimiste] = useOptimistic(items, reducerItemsEntretien)
-  const tries = [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre)
+  const tries = useMemo(() => [...itemsOptimistes].sort((a, b) => a.ordre - b.ordre), [itemsOptimistes])
 
   function ajouter() {
     const contenu = contenuNouveau.trim()
@@ -110,115 +117,116 @@ export function EntretienItems({
   }
 
   function ligneItem(item: ItemEntretien, index: number) {
+    const contenu = (
+      <>
+        {item.intitule && <p className="mb-1 text-[15px] font-bold leading-snug text-ink">{item.intitule}</p>}
+        <p className="whitespace-pre-wrap break-words text-[15px] leading-normal text-ink">{item.contenu}</p>
+      </>
+    )
+
     if (!modeEdition) {
       return (
-        <div key={item.id} className="rounded-xl bg-bg p-2.5">
-          {item.intitule && <p className="mb-1 text-[13.5px] font-bold text-ink">{item.intitule}</p>}
-          <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{item.contenu}</p>
-        </div>
+        <li key={item.id} className="rounded-xl bg-bg p-3">
+          {contenu}
+        </li>
       )
     }
 
     if (enEdition === item.id) {
+      const idIntitule = `intitule-${item.id}`
+      const idContenu = `detail-${item.id}`
       return (
-        <div key={item.id} className="flex flex-col gap-2 rounded-xl border border-primary p-2">
-          <input
-            value={intituleEnEdition}
-            onChange={(e) => setIntituleEnEdition(e.target.value)}
-            placeholder="Intitulé (ex. « AVK — 1er entretien »)"
-            className="rounded-lg border border-border bg-bg px-2.5 py-2 text-[13.5px] font-semibold text-ink outline-none focus:border-primary"
-          />
-          <textarea
-            value={contenuEnEdition}
-            onChange={(e) => setContenuEnEdition(e.target.value)}
-            rows={2}
-            className="flex-1 resize-none rounded-lg border border-border bg-bg px-2.5 py-2 text-[13.5px] text-ink outline-none focus:border-primary"
-          />
-          <div className="flex justify-end gap-1.5">
-            <button
-              type="button"
-              onClick={() => setEnEdition(null)}
-              className="flex min-h-11 items-center rounded-lg border border-border px-2.5 text-[11.5px] font-semibold text-muted"
-            >
-              Annuler
-            </button>
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={() => modifier(item.id)}
-              className="flex min-h-11 items-center rounded-lg bg-primary px-2.5 text-[11.5px] font-semibold text-white disabled:opacity-60"
-            >
-              OK
-            </button>
-          </div>
-        </div>
+        <li key={item.id}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              modifier(item.id)
+            }}
+            className="flex flex-col gap-3 rounded-xl border-2 border-primary bg-surface p-3"
+          >
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={idIntitule} className="text-[13px] font-semibold text-muted">
+                Intitulé (facultatif)
+              </label>
+              <input
+                id={idIntitule}
+                value={intituleEnEdition}
+                onChange={(e) => setIntituleEnEdition(e.target.value)}
+                autoComplete="off"
+                placeholder="Ex. « AVK — 1er entretien »"
+                className={`${CLASSE_CHAMP} font-semibold`}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor={idContenu} className="text-[13px] font-semibold text-muted">
+                Détail
+              </label>
+              <textarea
+                id={idContenu}
+                autoFocus
+                value={contenuEnEdition}
+                onChange={(e) => setContenuEnEdition(e.target.value)}
+                rows={3}
+                className={`${CLASSE_CHAMP} resize-y`}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setEnEdition(null)} className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}>
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={isPending || !contenuEnEdition.trim()}
+                className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}
+              >
+                {isPending ? 'Enregistrement…' : 'Enregistrer'}
+              </button>
+            </div>
+          </form>
+        </li>
       )
     }
 
     return (
-      <div key={item.id} className="flex items-start gap-2 rounded-xl bg-bg p-2.5">
-        <div className="flex shrink-0 flex-col gap-0.5 pt-0.5">
-          <button
-            type="button"
-            disabled={index === 0}
-            onClick={() => deplacer(index, -1)}
-            aria-label="Monter"
-            className="flex h-4 w-4 items-center justify-center text-[10px] text-muted disabled:opacity-25"
-          >
-            ▲
-          </button>
-          <button
-            type="button"
-            disabled={index === tries.length - 1}
-            onClick={() => deplacer(index, 1)}
-            aria-label="Descendre"
-            className="flex h-4 w-4 items-center justify-center text-[10px] text-muted disabled:opacity-25"
-          >
-            ▼
-          </button>
-        </div>
-        <div className="min-w-0 flex-1">
-          {item.intitule && <p className="mb-1 text-[13.5px] font-bold text-ink">{item.intitule}</p>}
-          <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{item.contenu}</p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            onClick={() => {
-              setEnEdition(item.id)
-              setContenuEnEdition(item.contenu)
-              setIntituleEnEdition(item.intitule ?? '')
-            }}
-            aria-label="Modifier"
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-neutral-soft text-muted"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setASupprimer(item.id)}
-            aria-label="Supprimer"
-            className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-rec"
-          >
-            ×
-          </button>
-        </div>
-      </div>
+      <li key={item.id} className="rounded-xl bg-bg p-3">
+        {contenu}
+        <BarreActionsItem
+          extrait={extraitPourLabel(item.intitule ?? item.contenu)}
+          peutMonter={index > 0}
+          peutDescendre={index < tries.length - 1}
+          onMonter={() => deplacer(index, -1)}
+          onDescendre={() => deplacer(index, 1)}
+          onModifier={() => {
+            setEnEdition(item.id)
+            setContenuEnEdition(item.contenu)
+            setIntituleEnEdition(item.intitule ?? '')
+          }}
+          onSupprimer={() => setASupprimer(item.id)}
+        />
+      </li>
     )
   }
 
   return (
-    <section className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card">
-      <h2 className="text-[13.5px] font-bold text-ink">Facturation</h2>
+    // En mode Édition : contour en tirets (accent), comme le script ; avec le
+    // bandeau collé sous les onglets, impossible de le confondre avec la lecture.
+    <section
+      className={`flex flex-col gap-3 rounded-[20px] bg-surface p-3.5 shadow-card ${
+        modeEdition ? 'border-2 border-dashed border-accent' : ''
+      }`}
+    >
+      <h2 className="text-[15px] font-bold text-ink">
+        Facturation <span className="font-semibold tabular-nums text-muted">({tries.length})</span>
+      </h2>
 
       {tries.length === 0 && (
-        <p className="py-4 text-center text-[12.5px] text-muted">Aucun point de facturation renseigné pour l’instant.</p>
+        <p className="py-4 text-center text-[13px] leading-relaxed text-muted">
+          Aucun point de facturation pour l’instant.
+          {modeEdition ? ' Ajoutez le premier ci-dessous.' : ' Passez en mode Édition pour en ajouter.'}
+        </p>
       )}
 
-      <div className="flex flex-col gap-1.5">{tries.map((item, i) => ligneItem(item, i))}</div>
+      {tries.length > 0 && <ul className="flex flex-col gap-2">{tries.map((item, i) => ligneItem(item, i))}</ul>}
 
       {modeEdition && (
         <>
@@ -227,30 +235,37 @@ export function EntretienItems({
               e.preventDefault()
               ajouter()
             }}
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-3 rounded-xl border border-border bg-bg p-3"
           >
-            <input
-              value={intituleNouveau}
-              onChange={(e) => setIntituleNouveau(e.target.value)}
-              placeholder="Intitulé (optionnel, ex. « AVK — 1er entretien »)"
-              className="rounded-xl border border-border bg-bg px-3 py-2 text-[13.5px] font-semibold text-ink outline-none focus:border-primary"
-            />
-            <div className="flex gap-2">
+            <h3 className="text-[15px] font-bold text-ink">Ajouter un point de facturation</h3>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="nouvel-intitule" className="text-[13px] font-semibold text-muted">
+                Intitulé (facultatif)
+              </label>
+              <input
+                id="nouvel-intitule"
+                value={intituleNouveau}
+                onChange={(e) => setIntituleNouveau(e.target.value)}
+                autoComplete="off"
+                placeholder="Ex. « AVK — 1er entretien »"
+                className={`${CLASSE_CHAMP} font-semibold`}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="nouveau-detail" className="text-[13px] font-semibold text-muted">
+                Détail (montant, code, condition…)
+              </label>
               <textarea
+                id="nouveau-detail"
                 value={contenuNouveau}
                 onChange={(e) => setContenuNouveau(e.target.value)}
-                placeholder="Détail (montant, code, condition…)"
-                rows={1}
-                className="flex-1 resize-none rounded-xl border border-border bg-bg px-3 py-2 text-[13.5px] text-ink outline-none focus:border-primary"
+                rows={3}
+                className={`${CLASSE_CHAMP} resize-y`}
               />
-              <button
-                type="submit"
-                disabled={isPending || !contenuNouveau.trim()}
-                className="flex min-h-11 shrink-0 items-center rounded-xl bg-primary px-3 text-[12.5px] font-semibold text-white disabled:opacity-50"
-              >
-                Ajouter
-              </button>
             </div>
+            <button type="submit" disabled={isPending || !contenuNouveau.trim()} className={CLASSE_BOUTON_PRIMAIRE}>
+              {isPending ? 'Ajout…' : 'Ajouter'}
+            </button>
           </form>
 
           <ModaleConfirmation
