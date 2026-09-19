@@ -47,6 +47,8 @@ async function compresserPhoto(fichier: File): Promise<File> {
   }
 }
 
+const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
 const BADGES: Record<NiveauConfiance, { label: string; className: string }> = {
   'très probable': { label: 'Très probable', className: 'bg-primary text-white' },
   possible: { label: 'Possible', className: 'bg-accent-soft text-accent' },
@@ -60,21 +62,22 @@ function CandidatCarte({ candidat, onOuvrir }: { candidat: CandidatChaussure; on
     <button
       type="button"
       onClick={onOuvrir}
-      className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-2.5 text-left"
+      aria-label={`${candidat.nom_modele} — confiance ${badge.label.toLowerCase()}`}
+      className={`flex min-h-11 items-center gap-3 rounded-[20px] bg-surface shadow-card p-2.5 text-left ${CLASSE_FOCUS}`}
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-neutral-soft">
         {candidat.photo_url ? (
-          <Image src={candidat.photo_url} alt={candidat.nom_modele} fill sizes="64px" className="object-cover" />
+          <Image src={candidat.photo_url} alt="" fill sizes="64px" className="object-cover" />
         ) : (
-          <div className="flex h-full items-center justify-center text-[9px] text-muted">Pas de photo</div>
+          <div className="flex h-full items-center justify-center text-[12px] text-muted">Pas de photo</div>
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1">
         <div className="text-[13px] font-semibold text-ink">{candidat.nom_modele}</div>
-        <div className="truncate text-[10.5px] font-medium uppercase tracking-wide text-muted">
+        <div className="truncate text-[12px] font-medium uppercase tracking-wide text-muted">
           {candidat.categorie}
         </div>
-        <span className={`w-fit rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.className}`}>
+        <span className={`w-fit rounded-full px-2 py-0.5 text-[12px] font-bold ${badge.className}`}>
           {badge.label}
         </span>
       </div>
@@ -242,7 +245,10 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-neutral-soft">
           <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
           {etatCameraEffectif === 'chargement' && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-sm font-medium text-white">
+            <div
+              role="status"
+              className="absolute inset-0 flex items-center justify-center bg-black/30 text-sm font-medium text-white"
+            >
               Ouverture de la caméra…
             </div>
           )}
@@ -250,7 +256,7 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
       )}
 
       {afficherRepli && (
-        <p className="rounded-xl bg-rec-soft px-3 py-2 text-sm text-rec">
+        <p role="alert" className="rounded-xl bg-rec-soft px-3 py-2 text-sm text-rec">
           Impossible d&apos;accéder à la caméra (permission refusée ou non disponible). Utilisez l&apos;appareil photo
           de votre téléphone à la place.
         </p>
@@ -268,7 +274,7 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
           type="button"
           onClick={capturerPhoto}
           disabled={isPending}
-          className="rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60"
+          className={`min-h-11 rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
         >
           Capturer
         </button>
@@ -279,7 +285,7 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={isPending}
-          className="rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60"
+          className={`min-h-11 rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
         >
           Prendre une photo de la chaussure
         </button>
@@ -290,15 +296,23 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
           type="button"
           onClick={reprendrePhoto}
           disabled={isPending}
-          className="rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60"
+          className={`min-h-11 rounded-xl border border-primary bg-primary px-4 py-3 text-center text-sm font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
         >
           Reprendre une photo
         </button>
       )}
 
-      {isPending && <p className="text-center text-sm text-muted">Analyse de la photo…</p>}
+      {isPending && (
+        <p role="status" className="text-center text-sm text-muted">
+          Analyse de la photo…
+        </p>
+      )}
 
-      {erreur && <p className="rounded-xl bg-rec-soft px-3 py-2 text-sm text-rec">{erreur}</p>}
+      {erreur && (
+        <p role="alert" className="rounded-xl bg-rec-soft px-3 py-2 text-sm text-rec">
+          {erreur}
+        </p>
+      )}
 
       {candidats && candidats.length === 0 && !isPending && (
         <p className="py-6 text-center text-sm text-muted">Aucun modèle ressemblant trouvé dans le catalogue.</p>
@@ -306,7 +320,7 @@ export function ChaussuresScanner({ onSelectionner }: { onSelectionner: (id: str
 
       {candidats && candidats.length > 0 && !isPending && (
         <div className="flex flex-col gap-2">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-muted">
+          <div className="text-[12px] font-bold uppercase tracking-wide text-muted">
             Modèles ressemblants, du plus au moins proche — parcourez la liste et confirmez le bon avant d&apos;ouvrir la fiche
           </div>
           {candidats.map((c) => (

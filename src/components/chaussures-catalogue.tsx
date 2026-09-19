@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import Image from 'next/image'
 import { modifierPrixChaussure } from '@/app/actions/chaussures'
 import { ChaussuresScanner } from '@/components/chaussures-scanner'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import type { ChaussureModele, ChaussureVariante, GenreChaussure } from '@/lib/data/chaussures'
 
@@ -19,6 +20,34 @@ type GenreFiltre = GenreChaussure | 'tous'
 const GENRE_TOUS: GenreFiltre = 'tous'
 
 const MONTANT_REMBOURSEMENT_SECU = 50
+
+const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+function IconScanner({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
 
 function formatPrix(prix: number | null) {
   if (prix === null) return null
@@ -66,7 +95,10 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
             setEnEdition(false)
           }
         }}
-        className="w-full rounded-lg border border-primary bg-bg px-2 py-1 text-[16px] font-semibold text-ink outline-none disabled:opacity-60"
+        aria-label={`Prix de ${chaussure.nom_modele}`}
+        inputMode="decimal"
+        enterKeyHint="done"
+        className={`w-full rounded-lg border border-primary bg-bg px-2 py-2.5 text-[16px] font-semibold text-ink outline-none disabled:opacity-60 ${CLASSE_FOCUS}`}
       />
     )
   }
@@ -77,9 +109,10 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
     <button
       type="button"
       onClick={() => setEnEdition(true)}
-      className={`rounded-lg px-2 py-1 text-left text-[13px] font-semibold ${
+      aria-label={`Modifier le prix de ${chaussure.nom_modele}${prixFormate ? `, actuellement ${prixFormate} euros` : ''}`}
+      className={`flex min-h-11 items-center rounded-lg px-2 text-left text-[13px] font-semibold ${
         prixFormate ? 'text-ink' : 'text-accent'
-      }`}
+      } ${CLASSE_FOCUS}`}
     >
       {prixFormate ? `${prixFormate} €` : 'Prix à définir'}
     </button>
@@ -91,7 +124,12 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
 
   return (
     <div className="flex flex-col overflow-hidden rounded-[20px] bg-surface shadow-card">
-      <button type="button" onClick={onOuvrir} className="relative aspect-square w-full bg-neutral-soft">
+      <button
+        type="button"
+        onClick={onOuvrir}
+        aria-label={`Voir la fiche de ${chaussure.nom_modele}`}
+        className={`relative aspect-square w-full bg-neutral-soft ${CLASSE_FOCUS}`}
+      >
         {chaussure.photo_url ? (
           <Image
             src={chaussure.photo_url}
@@ -105,19 +143,23 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
         )}
       </button>
       <div className="flex flex-col gap-1 p-2.5">
-        <button type="button" onClick={onOuvrir} className="truncate text-left text-[13px] font-semibold text-ink">
+        <button
+          type="button"
+          onClick={onOuvrir}
+          className={`flex min-h-11 items-center truncate text-left text-[13px] font-semibold text-ink ${CLASSE_FOCUS}`}
+        >
           {chaussure.nom_modele}
         </button>
-        <div className="truncate text-[10.5px] font-medium uppercase tracking-wide text-muted">
+        <div className="truncate text-[12px] font-medium uppercase tracking-wide text-muted">
           {chaussure.categorie}
         </div>
         {chaussure.reference && (
-          <div className="truncate font-mono text-[10px] text-muted">Réf. {chaussure.reference}</div>
+          <div className="truncate font-mono text-[12px] text-muted">Réf. {chaussure.reference}</div>
         )}
         <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
           <PrixEditable chaussure={chaussure} />
           {depassement !== null && (
-            <span className="text-[10px] font-semibold text-rec">+{formatPrix(depassement)} € à charge</span>
+            <span className="text-[12px] font-semibold text-rec">+{formatPrix(depassement)} € à charge</span>
           )}
         </div>
       </div>
@@ -152,6 +194,12 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
   const photos = chaussure.variantes.length > 0 ? chaussure.variantes : null
   const [couleurIndex, setCouleurIndex] = useState(0)
   const depassement = calculerDepassement(chaussure.prix)
+  const panneauRef = useRef<HTMLDivElement>(null)
+
+  // Sheet montée seulement quand elle est ouverte (le parent ne rend
+  // <ChaussureDetail> que si une fiche est sélectionnée) : ouvert=true en
+  // permanence, comme documenté dans usePiegeFocus pour ce cas.
+  usePiegeFocus(true, panneauRef)
 
   const groupesCouleurs = photos ? regrouperParPhoto(photos) : []
   const groupeActif = groupesCouleurs.find((g) => g.couleurs.includes(photos?.[couleurIndex]?.couleur ?? '')) ?? groupesCouleurs[0]
@@ -160,20 +208,27 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 lg:items-center">
-      <button
-        type="button"
-        aria-label="Fermer"
-        onClick={onFermer}
-        className="absolute inset-0"
-      />
-      <div className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl">
+      {/* Backdrop non focusable : un <button> resterait un arrêt de
+          tabulation sans retour visuel (voir DESIGN.md, Backdrop de
+          sheet/panneau). */}
+      <div aria-hidden="true" onClick={onFermer} className="absolute inset-0" />
+      <div
+        ref={panneauRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chaussure-detail-titre"
+        onClick={(e) => e.stopPropagation()}
+        className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
+      >
         <button
           type="button"
           onClick={onFermer}
           aria-label="Fermer"
-          className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white"
+          className={`absolute right-3 top-3 z-10 -m-1.5 flex h-11 w-11 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
         >
-          ×
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white">
+            <IconFermer className="h-4 w-4" />
+          </span>
         </button>
 
         <div className="relative aspect-square w-full shrink-0 bg-neutral-soft">
@@ -186,39 +241,44 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 
         <div className="flex flex-col gap-3 p-4">
           <div>
-            <div className="font-heading text-lg text-ink">{chaussure.nom_modele}</div>
-            <div className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted">
+            <h2 id="chaussure-detail-titre" className="font-heading text-lg text-ink">
+              {chaussure.nom_modele}
+            </h2>
+            <div className="mt-0.5 text-[12px] font-medium uppercase tracking-wide text-muted">
               {chaussure.categorie}
             </div>
             {chaussure.reference && (
-              <div className="mt-0.5 font-mono text-[11px] text-muted">Réf. {chaussure.reference}</div>
+              <div className="mt-0.5 font-mono text-[12px] text-muted">Réf. {chaussure.reference}</div>
             )}
           </div>
 
           {photos && photos.length > 1 && (
             <div className="flex flex-col gap-1.5">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-muted">
+              <div className="text-[12px] font-bold uppercase tracking-wide text-muted">
                 Couleurs · <span className="text-ink">{groupeActif?.couleurs.join(' / ')}</span>
               </div>
               <div className="flex gap-2 overflow-x-auto">
                 {groupesCouleurs.map((groupe) => {
                   const variante = photos[groupe.premierIndex]
+                  const nomCouleur = groupe.couleurs.join(' / ')
                   return (
                     <button
                       key={variante.id}
                       type="button"
                       onClick={() => setCouleurIndex(groupe.premierIndex)}
-                      className="flex w-14 shrink-0 flex-col items-center gap-1"
+                      aria-pressed={groupe === groupeActif}
+                      aria-label={`Couleur ${nomCouleur}`}
+                      className={`flex w-14 shrink-0 flex-col items-center gap-1 ${CLASSE_FOCUS}`}
                     >
                       <div
                         className={`relative h-14 w-14 overflow-hidden rounded-xl border-2 ${
                           groupe === groupeActif ? 'border-primary' : 'border-border'
                         }`}
                       >
-                        <Image src={variante.photo_url} alt={groupe.couleurs.join(' / ')} fill sizes="56px" className="object-cover" />
+                        <Image src={variante.photo_url} alt="" fill sizes="56px" className="object-cover" />
                       </div>
-                      <span className="w-full text-center text-[9.5px] font-medium capitalize leading-tight text-muted">
-                        {groupe.couleurs.join(' / ').toLowerCase()}
+                      <span className="w-full text-center text-[12px] font-medium capitalize leading-tight text-muted">
+                        {nomCouleur.toLowerCase()}
                       </span>
                     </button>
                   )
@@ -229,12 +289,12 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 
           {chaussure.pointures && chaussure.pointures.length > 0 && (
             <div className="flex flex-col gap-1.5">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Pointures</div>
+              <div className="text-[12px] font-bold uppercase tracking-wide text-muted">Pointures</div>
               <div className="flex flex-wrap gap-1.5">
                 {chaussure.pointures.map((pointure) => (
                   <span
                     key={pointure}
-                    className="rounded-full bg-neutral-soft px-2.5 py-1 text-[11.5px] font-semibold text-ink"
+                    className="rounded-full bg-neutral-soft px-2.5 py-1 text-[12px] font-semibold text-ink"
                   >
                     {pointure}
                   </span>
@@ -245,13 +305,13 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 
           {chaussure.description && (
             <div className="flex flex-col gap-1.5">
-              <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Description</div>
+              <div className="text-[12px] font-bold uppercase tracking-wide text-muted">Description</div>
               <p className="text-[13px] leading-relaxed text-ink">{chaussure.description}</p>
             </div>
           )}
 
           <div>
-            <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-muted">Prix</div>
+            <div className="mb-1 text-[12px] font-bold uppercase tracking-wide text-muted">Prix</div>
             <PrixEditable chaussure={chaussure} />
             {depassement !== null && (
               <p className="mt-1.5 rounded-lg bg-rec-soft px-2.5 py-1.5 text-[12px] font-medium text-rec">
@@ -330,13 +390,14 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
               type="button"
               key={g.value}
               onClick={() => setGenre(g.value)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+              aria-pressed={genreActif === g.value}
+              className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${
                 genreActif === g.value ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
-              }`}
+              } ${CLASSE_FOCUS}`}
             >
               {g.label}
               <span
-                className={`flex h-4 w-4 items-center justify-center rounded-full text-[9.5px] font-bold ${
+                className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold ${
                   genreActif === g.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
                 }`}
               >
@@ -354,27 +415,16 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
               placeholder="Rechercher un modèle ou une catégorie…"
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+              aria-label="Rechercher un modèle ou une catégorie"
+              className={`flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
             />
             <button
               type="button"
               onClick={() => setVue('scanner')}
               aria-label="Scanner une chaussure"
-              title="Scanner une chaussure"
-              className="flex shrink-0 items-center justify-center rounded-xl border border-border bg-surface px-3 text-muted"
+              className={`flex shrink-0 items-center justify-center rounded-xl border border-border bg-surface px-3 text-muted ${CLASSE_FOCUS}`}
             >
-              <svg
-                className="h-5 w-5"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
+              <IconScanner className="h-5 w-5" />
             </button>
           </div>
 
@@ -385,7 +435,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
           <div className="flex flex-col gap-4">
             {groupes.map(([categorie, liste]) => (
               <div key={categorie} className="flex flex-col gap-2">
-                <div className="text-[11px] font-bold uppercase tracking-wide text-muted">
+                <div className="text-[12px] font-bold uppercase tracking-wide text-muted">
                   {categorie} · {liste.length}
                 </div>
                 <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
