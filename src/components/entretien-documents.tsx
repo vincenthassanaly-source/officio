@@ -10,6 +10,13 @@ import {
 import type { DocumentEntretien, CategorieDocumentEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import {
+  CLASSE_BOUTON_PRIMAIRE,
+  CLASSE_BOUTON_SECONDAIRE,
+  CLASSE_CHAMP,
+  CLASSE_FOCUS,
+  Icone,
+} from '@/components/entretien-ui'
 
 const LABELS_CATEGORIE: Record<CategorieDocumentEntretien, string> = {
   support_patient: 'Support patient',
@@ -18,7 +25,13 @@ const LABELS_CATEGORIE: Record<CategorieDocumentEntretien, string> = {
   autre: 'Autre',
 }
 
-const OPTIONS_CATEGORIE = Object.entries(LABELS_CATEGORIE) as [CategorieDocumentEntretien, string][]
+const ORDRE_CATEGORIES: CategorieDocumentEntretien[] = ['support_patient', 'fiche_suivi', 'affiche_support', 'autre']
+
+const OPTIONS_CATEGORIE = ORDRE_CATEGORIES.map((c) => [c, LABELS_CATEGORIE[c]] as const)
+
+// Au-delà de ce nombre de documents affichés, seul le premier groupe est
+// ouvert par défaut (85 documents pour les anticancéreux oraux).
+const SEUIL_TOUT_OUVERT = 12
 
 function formatTaille(octets: number | null) {
   if (!octets) return ''
@@ -28,7 +41,7 @@ function formatTaille(octets: number | null) {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 function estImage(typeFichier: string) {
@@ -46,6 +59,151 @@ function reducerDocuments(etat: DocumentEntretien[], action: ActionDocuments): D
   }
 }
 
+type GroupeDocuments = { categorie: CategorieDocumentEntretien; documents: DocumentEntretien[] }
+
+// Un seul passage, dans l'ordre fixe des catégories ; les catégories vides
+// n'apparaissent pas. Le regroupement est purement visuel : la donnée n'est
+// pas modifiée.
+function regrouperParCategorie(documents: DocumentEntretien[]): GroupeDocuments[] {
+  const parCategorie = new Map<CategorieDocumentEntretien, DocumentEntretien[]>()
+  for (const d of documents) {
+    const groupe = parCategorie.get(d.categorie)
+    if (groupe) groupe.push(d)
+    else parCategorie.set(d.categorie, [d])
+  }
+  return ORDRE_CATEGORIES.filter((c) => parCategorie.has(c)).map((c) => ({ categorie: c, documents: parCategorie.get(c)! }))
+}
+
+type PropsLigne = {
+  document: DocumentEntretien
+  modeEdition: boolean
+  ouvertureEnCours: boolean
+  enEditionTag: boolean
+  tagEnEdition: string
+  enCours: boolean
+  onOuvrir: () => void
+  onDemarrerTag: () => void
+  onTagChange: (tag: string) => void
+  onEnregistrerTag: () => void
+  onAnnulerTag: () => void
+  onSupprimer: () => void
+}
+
+// Défini hors du composant principal (sinon il se remonterait à chaque
+// rendu et le champ de tag perdrait le focus à chaque frappe).
+function LigneDocument({
+  document: d,
+  modeEdition,
+  ouvertureEnCours,
+  enEditionTag,
+  tagEnEdition,
+  enCours,
+  onOuvrir,
+  onDemarrerTag,
+  onTagChange,
+  onEnregistrerTag,
+  onAnnulerTag,
+  onSupprimer,
+}: PropsLigne) {
+  const image = estImage(d.type_fichier)
+  const details = [
+    image ? 'Image' : 'PDF',
+    formatTaille(d.taille_octets),
+    formatDate(d.created_at),
+    d.ajoute_par?.nom_complet ?? 'Ancien collègue',
+  ].filter(Boolean)
+
+  return (
+    // content-visibility : sur 85 lignes, le navigateur saute le rendu de
+    // celles qui sont hors écran.
+    <li className="rounded-xl bg-bg [contain-intrinsic-size:auto_76px] [content-visibility:auto]">
+      <button
+        type="button"
+        onClick={onOuvrir}
+        disabled={ouvertureEnCours}
+        aria-busy={ouvertureEnCours}
+        className={`flex min-h-16 w-full items-center gap-3 rounded-xl p-2.5 text-left disabled:opacity-70 ${CLASSE_FOCUS}`}
+      >
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-neutral-soft text-ink">
+          <Icone nom={image ? 'image' : 'fichier'} taille={20} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="line-clamp-2 break-words text-[15px] font-semibold leading-snug text-ink" title={d.nom}>
+            {d.nom}
+          </span>
+          {d.tag && (
+            <span
+              className="mt-1 block w-fit max-w-full truncate rounded-full bg-neutral-soft px-2.5 py-0.5 text-[12px] font-semibold text-ink"
+              title={d.tag}
+            >
+              {d.tag}
+            </span>
+          )}
+          <span className="mt-1 block text-[12.5px] leading-snug text-muted">{details.join(' · ')}</span>
+          <span className="sr-only">S’ouvre dans un nouvel onglet.</span>
+        </span>
+        <span className="shrink-0 text-[12.5px] font-semibold text-muted">
+          {ouvertureEnCours ? 'Ouverture…' : <Icone nom="chevron-droite" taille={18} />}
+        </span>
+      </button>
+
+      {modeEdition && (
+        <div className="border-t border-border px-2 py-1">
+          {enEditionTag ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                onEnregistrerTag()
+              }}
+              className="flex flex-col gap-2 py-1"
+            >
+              <input
+                autoFocus
+                value={tagEnEdition}
+                onChange={(e) => onTagChange(e.target.value)}
+                list="tags-existants"
+                autoComplete="off"
+                placeholder="Tag (laisser vide pour retirer)…"
+                aria-label={`Tag pour ${d.nom}`}
+                className={CLASSE_CHAMP}
+              />
+              <div className="flex gap-2">
+                <button type="button" onClick={onAnnulerTag} className={`${CLASSE_BOUTON_SECONDAIRE} flex-1`}>
+                  Annuler
+                </button>
+                <button type="submit" disabled={enCours} className={`${CLASSE_BOUTON_PRIMAIRE} flex-1`}>
+                  Enregistrer le tag
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex items-center justify-end gap-1">
+              <button
+                type="button"
+                onClick={onDemarrerTag}
+                aria-label={d.tag ? `Modifier le tag « ${d.tag} » de ${d.nom}` : `Ajouter un tag à ${d.nom}`}
+                className={`flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[13px] font-semibold text-ink hover:bg-neutral-soft ${CLASSE_FOCUS}`}
+              >
+                <Icone nom="crayon" taille={15} />
+                {d.tag ? 'Modifier le tag' : 'Ajouter un tag'}
+              </button>
+              <button
+                type="button"
+                onClick={onSupprimer}
+                aria-label={`Supprimer ${d.nom}`}
+                className={`flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[13px] font-semibold text-ink hover:bg-neutral-soft ${CLASSE_FOCUS}`}
+              >
+                <Icone nom="corbeille" taille={15} />
+                Supprimer
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </li>
+  )
+}
+
 export function EntretienDocuments({
   typeEntretienId,
   documents,
@@ -60,6 +218,9 @@ export function EntretienDocuments({
   const [enEditionTag, setEnEditionTag] = useState<string | null>(null)
   const [tagEnEdition, setTagEnEdition] = useState('')
   const [filtreTag, setFiltreTag] = useState('')
+  // Catégories ouvertes ; null = ouverture par défaut (voir SEUIL_TOUT_OUVERT).
+  const [categoriesOuvertes, setCategoriesOuvertes] = useState<ReadonlySet<CategorieDocumentEntretien> | null>(null)
+  const [ouvertureEnCours, setOuvertureEnCours] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
 
@@ -73,16 +234,35 @@ export function EntretienDocuments({
     return [...vus].sort((a, b) => a.localeCompare(b, 'fr'))
   }, [documentsOptimistes])
 
-  const documentsAffiches = filtreTag
-    ? documentsOptimistes.filter((d) => d.tag === filtreTag)
-    : documentsOptimistes
+  const documentsAffiches = useMemo(
+    () => (filtreTag ? documentsOptimistes.filter((d) => d.tag === filtreTag) : documentsOptimistes),
+    [documentsOptimistes, filtreTag]
+  )
 
-  async function ouvrirDocument(chemin: string) {
+  const groupes = useMemo(() => regrouperParCategorie(documentsAffiches), [documentsAffiches])
+
+  const ouvertes = useMemo<ReadonlySet<CategorieDocumentEntretien>>(() => {
+    if (categoriesOuvertes) return categoriesOuvertes
+    const aOuvrir = documentsAffiches.length <= SEUIL_TOUT_OUVERT ? groupes : groupes.slice(0, 1)
+    return new Set(aOuvrir.map((g) => g.categorie))
+  }, [categoriesOuvertes, documentsAffiches.length, groupes])
+
+  function basculerCategorie(categorie: CategorieDocumentEntretien) {
+    const nouvelles = new Set(ouvertes)
+    if (nouvelles.has(categorie)) nouvelles.delete(categorie)
+    else nouvelles.add(categorie)
+    setCategoriesOuvertes(nouvelles)
+  }
+
+  async function ouvrirDocument(id: string, chemin: string) {
+    setOuvertureEnCours(id)
     try {
       const url = await obtenirUrlDocumentEntretien(chemin)
       window.open(url, '_blank', 'noopener,noreferrer')
     } catch (err) {
       toast({ type: 'erreur', message: err instanceof Error ? err.message : "Impossible d'ouvrir le document." })
+    } finally {
+      setOuvertureEnCours(null)
     }
   }
 
@@ -112,34 +292,70 @@ export function EntretienDocuments({
     })
   }
 
+  function rendreLignes(liste: DocumentEntretien[]) {
+    return (
+      <ul className="flex flex-col gap-1.5">
+        {liste.map((d) => (
+          <LigneDocument
+            key={d.id}
+            document={d}
+            modeEdition={modeEdition}
+            ouvertureEnCours={ouvertureEnCours === d.id}
+            enEditionTag={enEditionTag === d.id}
+            tagEnEdition={tagEnEdition}
+            enCours={isPending}
+            onOuvrir={() => ouvrirDocument(d.id, d.chemin_stockage)}
+            onDemarrerTag={() => {
+              setEnEditionTag(d.id)
+              setTagEnEdition(d.tag ?? '')
+            }}
+            onTagChange={setTagEnEdition}
+            onEnregistrerTag={() => enregistrerTag(d.id)}
+            onAnnulerTag={() => setEnEditionTag(null)}
+            onSupprimer={() => setASupprimer(d.id)}
+          />
+        ))}
+      </ul>
+    )
+  }
+
+  const total = documentsOptimistes.length
+
   return (
-    <section className="flex flex-col gap-2.5 rounded-[20px] bg-surface p-3.5 shadow-card">
-      <div className="flex items-center justify-between">
-        <h2 className="text-[13.5px] font-bold text-ink">Documents</h2>
+    <section className="flex flex-col gap-3 rounded-[20px] bg-surface p-3.5 shadow-card">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-[15px] font-bold text-ink">
+          Documents{' '}
+          <span className="font-semibold tabular-nums text-muted">
+            {filtreTag ? `(${documentsAffiches.length} sur ${total})` : `(${total})`}
+          </span>
+        </h2>
         {modeEdition && (
           <button
             type="button"
             onClick={() => setFormOuvert((v) => !v)}
-            aria-label={formOuvert ? 'Fermer le formulaire d’ajout' : 'Ajouter un document'}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary text-base leading-none text-white"
+            aria-expanded={formOuvert}
+            aria-controls="formulaire-document"
+            className={CLASSE_BOUTON_PRIMAIRE}
           >
-            {formOuvert ? '×' : '+'}
+            <Icone nom="plus" taille={16} />
+            {formOuvert ? 'Fermer' : 'Ajouter'}
           </button>
         )}
       </div>
 
       {tagsDistincts.length >= 2 && (
         <div className="flex items-center gap-2">
-          <label htmlFor="filtre-tag-documents" className="shrink-0 text-[12px] font-semibold text-muted">
+          <label htmlFor="filtre-tag-documents" className="shrink-0 text-[13px] font-semibold text-muted">
             Filtrer par tag
           </label>
           <select
             id="filtre-tag-documents"
             value={filtreTag}
             onChange={(e) => setFiltreTag(e.target.value)}
-            className="min-w-0 flex-1 rounded-lg border border-border bg-bg px-2.5 py-1.5 text-[12.5px] text-ink outline-none focus:border-primary"
+            className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 text-base text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           >
-            <option value="">Tous ({documentsOptimistes.length})</option>
+            <option value="">Tous ({total})</option>
             {tagsDistincts.map((tag) => (
               <option key={tag} value={tag}>
                 {tag} ({documentsOptimistes.filter((d) => d.tag === tag).length})
@@ -159,6 +375,7 @@ export function EntretienDocuments({
 
       {modeEdition && formOuvert && (
         <form
+          id="formulaire-document"
           action={(formData) => {
             formData.set('type_entretien_id', typeEntretienId)
             startTransition(async () => {
@@ -171,154 +388,126 @@ export function EntretienDocuments({
               }
             })
           }}
-          className="flex flex-col gap-2 rounded-xl bg-bg p-2.5"
+          className="flex flex-col gap-3 rounded-xl border border-border bg-bg p-3"
         >
-          <input
-            type="file"
-            name="fichier"
-            accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-            required
-            className="text-[13px] text-ink file:mr-3 file:rounded-lg file:border-0 file:bg-primary-soft file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-primary"
-          />
-          <input
-            name="nom"
-            placeholder="Nom du document (optionnel)"
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-[15px] text-ink outline-none focus:border-primary"
-          />
-          <select
-            name="categorie"
-            defaultValue="autre"
-            aria-label="Catégorie du document"
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
-          >
-            {OPTIONS_CATEGORIE.map(([valeur, label]) => (
-              <option key={valeur} value={valeur}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <input
-            name="tag"
-            list="tags-existants"
-            placeholder="Tag (optionnel, ex. nom de molécule…)"
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-[13px] text-ink outline-none focus:border-primary"
-          />
-          <button
-            type="submit"
-            disabled={isPending}
-            className="flex min-h-11 items-center justify-center rounded-lg bg-primary text-[12.5px] font-semibold text-white disabled:opacity-60"
-          >
-            {isPending ? 'Envoi…' : 'Ajouter'}
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="doc-fichier" className="text-[13px] font-semibold text-muted">
+              Fichier (PDF, JPG ou PNG)
+            </label>
+            <input
+              id="doc-fichier"
+              type="file"
+              name="fichier"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              required
+              className="text-[13px] text-ink file:mr-3 file:min-h-11 file:rounded-xl file:border-0 file:bg-primary-soft file:px-4 file:text-[13px] file:font-semibold file:text-primary"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="doc-nom" className="text-[13px] font-semibold text-muted">
+              Nom du document (facultatif)
+            </label>
+            <input id="doc-nom" name="nom" autoComplete="off" className={CLASSE_CHAMP} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="doc-categorie" className="text-[13px] font-semibold text-muted">
+              Catégorie
+            </label>
+            <select id="doc-categorie" name="categorie" defaultValue="autre" className={`${CLASSE_CHAMP} min-h-11`}>
+              {OPTIONS_CATEGORIE.map(([valeur, label]) => (
+                <option key={valeur} value={valeur}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="doc-tag" className="text-[13px] font-semibold text-muted">
+              Tag (facultatif)
+            </label>
+            <input
+              id="doc-tag"
+              name="tag"
+              list="tags-existants"
+              autoComplete="off"
+              placeholder="Ex. nom de molécule…"
+              className={CLASSE_CHAMP}
+            />
+          </div>
+          <button type="submit" disabled={isPending} className={CLASSE_BOUTON_PRIMAIRE}>
+            {isPending ? 'Envoi…' : 'Ajouter le document'}
           </button>
         </form>
       )}
 
       {documentsAffiches.length === 0 && (
-        <p className="py-4 text-center text-[12.5px] text-muted">
-          {documentsOptimistes.length === 0 ? 'Aucun document pour l’instant.' : 'Aucun document pour ce tag.'}
-        </p>
+        <div className="flex flex-col items-center gap-3 py-6 text-center">
+          {total === 0 ? (
+            <>
+              <p className="text-[13px] text-muted">Aucun document pour l’instant.</p>
+              {!modeEdition && (
+                <p className="text-[13px] text-muted">Passez en mode Édition pour en ajouter.</p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-[13px] text-muted">Aucun document pour ce tag.</p>
+              <button type="button" onClick={() => setFiltreTag('')} className={CLASSE_BOUTON_SECONDAIRE}>
+                Afficher tous les documents
+              </button>
+            </>
+          )}
+        </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        {documentsAffiches.map((d) => (
-          <div key={d.id} className="flex items-center gap-3 rounded-xl bg-bg p-2.5">
-            <button
-              type="button"
-              onClick={() => ouvrirDocument(d.chemin_stockage)}
-              className="flex min-w-0 flex-1 items-center gap-3 text-left"
-            >
-              <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[8px] font-bold text-white ${
-                  estImage(d.type_fichier) ? 'bg-primary' : 'bg-rec'
-                }`}
-              >
-                {estImage(d.type_fichier) ? 'IMG' : 'PDF'}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="truncate text-[12.5px] font-semibold text-ink">{d.nom}</span>
-                  <span className="shrink-0 rounded-full bg-primary-soft px-1.5 py-0.5 text-[9.5px] font-semibold text-primary">
-                    {LABELS_CATEGORIE[d.categorie]}
-                  </span>
-                  {d.tag && (
-                    <span className="shrink-0 rounded-full bg-neutral-soft px-1.5 py-0.5 text-[9.5px] font-semibold text-muted">
-                      {d.tag}
+      {groupes.length === 1 && (
+        <div className="flex flex-col gap-2">
+          <h3 className="text-[13px] font-bold text-muted">
+            {LABELS_CATEGORIE[groupes[0].categorie]}{' '}
+            <span className="tabular-nums">({groupes[0].documents.length})</span>
+          </h3>
+          {rendreLignes(groupes[0].documents)}
+        </div>
+      )}
+
+      {groupes.length > 1 && (
+        <div className="flex flex-col gap-2.5">
+          {groupes.map(({ categorie, documents: liste }) => {
+            const ouvert = ouvertes.has(categorie)
+            const idPanneau = `categorie-${categorie}`
+            return (
+              <section key={categorie} className="rounded-2xl border border-border">
+                <h3>
+                  <button
+                    type="button"
+                    aria-expanded={ouvert}
+                    aria-controls={idPanneau}
+                    onClick={() => basculerCategorie(categorie)}
+                    className={`flex min-h-12 w-full items-center gap-2 rounded-2xl px-3.5 py-2 text-left ${CLASSE_FOCUS}`}
+                  >
+                    <span className="min-w-0 flex-1 text-[15px] font-bold text-ink">
+                      {LABELS_CATEGORIE[categorie]}
+                      <span className="sr-only">,</span>
                     </span>
-                  )}
+                    <span className="shrink-0 text-[13px] font-semibold tabular-nums text-muted">
+                      {liste.length}
+                      <span className="sr-only"> documents</span>
+                    </span>
+                    <Icone
+                      nom="chevron-bas"
+                      taille={18}
+                      className={`text-muted motion-safe:transition-transform motion-safe:duration-200 ${ouvert ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                </h3>
+                <div id={idPanneau} hidden={!ouvert} className="px-2 pb-2">
+                  {rendreLignes(liste)}
                 </div>
-                <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[10.5px] text-muted">
-                  <span>{formatTaille(d.taille_octets)}</span>
-                  <span>·</span>
-                  <span>{d.ajoute_par?.nom_complet ?? 'Ancien collègue'}</span>
-                  <span>·</span>
-                  <span>{formatDate(d.created_at)}</span>
-                </div>
-              </div>
-            </button>
-            {modeEdition && enEditionTag === d.id && (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  enregistrerTag(d.id)
-                }}
-                className="flex shrink-0 items-center gap-1"
-              >
-                <input
-                  autoFocus
-                  value={tagEnEdition}
-                  onChange={(e) => setTagEnEdition(e.target.value)}
-                  list="tags-existants"
-                  placeholder="Tag…"
-                  aria-label={`Tag pour ${d.nom}`}
-                  className="w-24 rounded-lg border border-primary bg-surface px-2 py-1.5 text-[11.5px] text-ink outline-none"
-                />
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-white disabled:opacity-60"
-                  aria-label="Valider le tag"
-                >
-                  ✓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEnEditionTag(null)}
-                  aria-label="Annuler la modification du tag"
-                  className="flex h-7 w-7 shrink-0 items-center justify-center text-muted"
-                >
-                  ×
-                </button>
-              </form>
-            )}
-            {modeEdition && enEditionTag !== d.id && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEnEditionTag(d.id)
-                  setTagEnEdition(d.tag ?? '')
-                }}
-                aria-label={d.tag ? `Modifier le tag « ${d.tag} »` : `Ajouter un tag à ${d.nom}`}
-                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-muted"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                </svg>
-              </button>
-            )}
-            {modeEdition && (
-              <button
-                type="button"
-                onClick={() => setASupprimer(d.id)}
-                aria-label="Supprimer"
-                className="flex h-7 w-7 shrink-0 items-center justify-center text-muted hover:text-rec"
-              >
-                ×
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+              </section>
+            )
+          })}
+        </div>
+      )}
 
       <ModaleConfirmation
         ouvert={aSupprimer !== null}
