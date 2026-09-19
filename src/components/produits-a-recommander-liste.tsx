@@ -6,6 +6,37 @@ import type { ProduitARecommander } from '@/lib/data/produits-a-recommander'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { vibrer } from '@/lib/haptics'
 
+// Icône propre à ce module (pas de tuile de nav dédiée à distinguer de
+// IconRupturesStock, voir la liste voisine sur la même page).
+function IconRecommande({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M6 8h12l-1.3 11.2a2 2 0 0 1-2 1.8H9.3a2 2 0 0 1-2-1.8L6 8Z" />
+      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
+    </svg>
+  )
+}
+
+function EtatVide({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-10 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-soft text-muted">
+        <IconRecommande className="h-6 w-6" />
+      </div>
+      <p className="max-w-[220px] text-sm text-muted">{message}</p>
+    </div>
+  )
+}
+
 export function ProduitsARecommanderListe({ produits }: { produits: ProduitARecommander[] }) {
   const [nomProduit, setNomProduit] = useState('')
   const [isPending, startTransition] = useTransition()
@@ -30,19 +61,20 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
           value={nomProduit}
           onChange={(e) => setNomProduit(e.target.value)}
           placeholder="Nom du produit à recommander…"
-          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          aria-label="Nom du produit à recommander"
+          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <button
           type="submit"
           disabled={isPending || !nomProduit.trim()}
-          className="shrink-0 rounded-xl bg-primary px-4 py-2.5 text-[13px] font-semibold text-white disabled:opacity-50"
+          className="min-h-11 shrink-0 rounded-xl bg-primary px-4 text-[13px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
         >
           Ajouter
         </button>
       </form>
 
       {produitsOptimistes.length === 0 && (
-        <p className="py-10 text-center text-sm text-muted">Aucun produit à recommander pour l&rsquo;instant.</p>
+        <EtatVide message="Aucun produit à recommander pour l’instant." />
       )}
 
       {produitsOptimistes.length > 0 && (
@@ -70,7 +102,7 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
                   )
                 }}
                 aria-label={`${p.nom_produit} recommandé/reçu`}
-                className="h-5 w-5 shrink-0 accent-[var(--color-primary)]"
+                className="h-5 w-5 shrink-0 accent-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
               <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium text-ink">{p.nom_produit}</span>
             </label>

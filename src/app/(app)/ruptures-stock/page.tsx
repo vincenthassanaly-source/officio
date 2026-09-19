@@ -20,10 +20,24 @@ export default async function RupturesStockPage() {
       <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Ruptures de stock</h1>
 
-      <h2 className="mb-2 text-sm font-semibold text-ink">Ruptures</h2>
+      <div className="mb-2 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-ink">Ruptures</h2>
+        {ruptures.length > 0 && (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rec px-1 text-[12px] font-bold text-white">
+            {ruptures.length}
+          </span>
+        )}
+      </div>
       <RupturesStockListe ruptures={ruptures} />
 
-      <h2 className="mb-2 mt-6 text-sm font-semibold text-ink">À recommander</h2>
+      <div className="mb-2 mt-6 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-ink">À recommander</h2>
+        {produitsARecommander.length > 0 && (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[12px] font-bold text-white">
+            {produitsARecommander.length}
+          </span>
+        )}
+      </div>
       <ProduitsARecommanderListe produits={produitsARecommander} />
     </PullToRefresh>
   )
