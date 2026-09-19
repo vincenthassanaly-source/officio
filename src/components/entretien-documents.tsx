@@ -10,6 +10,7 @@ import {
 import type { DocumentEntretien, CategorieDocumentEntretien } from '@/lib/data/entretiens'
 import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
+import { ouvrirDocumentDansOnglet } from '@/lib/ouvrir-document-onglet'
 import {
   CLASSE_BOUTON_PRIMAIRE,
   CLASSE_BOUTON_SECONDAIRE,
@@ -256,14 +257,11 @@ export function EntretienDocuments({
 
   async function ouvrirDocument(id: string, chemin: string) {
     setOuvertureEnCours(id)
-    try {
-      const url = await obtenirUrlDocumentEntretien(chemin)
-      window.open(url, '_blank', 'noopener,noreferrer')
-    } catch (err) {
-      toast({ type: 'erreur', message: err instanceof Error ? err.message : "Impossible d'ouvrir le document." })
-    } finally {
-      setOuvertureEnCours(null)
+    const resultat = await ouvrirDocumentDansOnglet(() => obtenirUrlDocumentEntretien(chemin))
+    if (!resultat.succes) {
+      toast({ type: 'erreur', message: resultat.message })
     }
+    setOuvertureEnCours(null)
   }
 
   function supprimer(id: string) {

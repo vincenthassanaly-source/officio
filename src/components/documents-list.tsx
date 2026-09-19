@@ -3,6 +3,8 @@
 import { useMemo, useState, useTransition } from 'react'
 import { ajouterDocument, obtenirUrlDocument } from '@/app/actions/documents'
 import type { CategorieDocument, Document } from '@/lib/data/documents'
+import { ouvrirDocumentDansOnglet } from '@/lib/ouvrir-document-onglet'
+import { useToast } from '@/components/ui/toast-provider'
 
 const CATEGORIES: { value: CategorieDocument; label: string; className: string }[] = [
   { value: 'factures_fournisseurs', label: 'Factures fournisseurs', className: 'bg-primary-soft text-primary' },
@@ -59,6 +61,7 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
   const [filtre, setFiltre] = useState<'tous' | CategorieDocument>('tous')
   const [formOuvert, setFormOuvert] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const toast = useToast()
 
   const visibles = useMemo(
     () => (filtre === 'tous' ? documents : documents.filter((d) => d.categorie === filtre)),
@@ -66,8 +69,10 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
   )
 
   async function ouvrirDocument(chemin: string) {
-    const url = await obtenirUrlDocument(chemin)
-    window.open(url, '_blank', 'noopener,noreferrer')
+    const resultat = await ouvrirDocumentDansOnglet(() => obtenirUrlDocument(chemin))
+    if (!resultat.succes) {
+      toast({ type: 'erreur', message: resultat.message })
+    }
   }
 
   return (
