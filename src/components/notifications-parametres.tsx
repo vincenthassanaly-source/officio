@@ -97,7 +97,7 @@ export function NotificationsParametres({
             type="button"
             onClick={toggleActivation}
             disabled={isPending || actif === null}
-            className={`self-start rounded-xl px-4 py-2.5 text-[13.5px] font-semibold disabled:opacity-60 ${
+            className={`min-h-11 self-start rounded-xl px-4 py-2.5 text-[13.5px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
               actif ? 'border border-border text-muted' : 'bg-primary text-white'
             }`}
           >
@@ -119,23 +119,30 @@ export function NotificationsParametres({
             <div key={cat.value} className="flex items-center justify-between gap-3 py-3">
               <div className="min-w-0">
                 <div className="text-[13.5px] font-semibold text-ink">{cat.label}</div>
-                <div className="mt-0.5 text-[11.5px] leading-snug text-muted">{cat.description}</div>
+                <div className="mt-0.5 text-[12px] leading-snug text-muted">{cat.description}</div>
               </div>
+              {/* Cible 44 px via padding invisible + marge négative (même
+                  principe que LienRetour) : la piste visible du switch reste
+                  à 24 px de haut. */}
               <button
                 type="button"
                 role="switch"
                 aria-checked={active}
                 aria-label={cat.label}
                 onClick={() => togglePreference(cat.value, active)}
-                className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                  active ? 'bg-primary' : 'bg-neutral-soft'
-                }`}
+                className="-my-2.5 flex h-11 w-11 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
-                    active ? 'left-[22px]' : 'left-0.5'
+                  className={`relative h-6 w-11 rounded-full motion-safe:transition-colors ${
+                    active ? 'bg-primary' : 'bg-neutral-soft'
                   }`}
-                />
+                >
+                  <span
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm motion-safe:transition-all ${
+                      active ? 'left-[22px]' : 'left-0.5'
+                    }`}
+                  />
+                </span>
               </button>
             </div>
           )
