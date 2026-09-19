@@ -48,13 +48,13 @@ export default function ErreurAppli({
         <button
           type="button"
           onClick={reset}
-          className="rounded-2xl bg-primary px-6 py-3 text-[14px] font-semibold text-white transition active:scale-[0.98]"
+          className="rounded-2xl bg-primary px-6 py-3 text-[14px] font-semibold text-white transition active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Réessayer
         </button>
         <Link
           href="/"
-          className="rounded-2xl border border-border px-6 py-3 text-[14px] font-semibold text-muted"
+          className="rounded-2xl border border-border px-6 py-3 text-[14px] font-semibold text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Accueil
         </Link>

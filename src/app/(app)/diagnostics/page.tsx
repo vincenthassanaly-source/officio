@@ -25,8 +25,8 @@ export default async function DiagnosticsPage() {
           erreurs.map((e) => (
             <div key={e.id} className="rounded-[20px] bg-surface shadow-card p-3.5">
               <div className="flex items-start justify-between gap-2">
-                <span className="text-[13px] font-semibold text-ink">{e.message}</span>
-                <span className="shrink-0 text-[10.5px] text-muted">
+                <span className="break-words text-[13px] font-semibold text-ink">{e.message}</span>
+                <span className="shrink-0 text-[12px] text-muted">
                   {new Date(e.createdAt).toLocaleString('fr-FR', {
                     day: '2-digit',
                     month: '2-digit',
@@ -36,10 +36,12 @@ export default async function DiagnosticsPage() {
                 </span>
               </div>
               {e.stackPremiereLigne && (
-                <p className="mt-1 truncate font-mono text-[11px] text-muted">{e.stackPremiereLigne}</p>
+                <p className="mt-1 overflow-x-auto whitespace-nowrap rounded-lg bg-bg px-2 py-1.5 font-mono text-[12px] text-muted">
+                  {e.stackPremiereLigne}
+                </p>
               )}
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10.5px] text-muted">
-                {e.url && <span className="truncate">{e.url}</span>}
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-muted">
+                {e.url && <span className="break-all">{e.url}</span>}
                 {e.digest && <span className="shrink-0 rounded-full bg-neutral-soft px-2 py-0.5">{e.digest}</span>}
               </div>
             </div>
