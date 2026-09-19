@@ -39,7 +39,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <NotificationsProvider notifications={notifications} nombreNonLues={nombreNonLues}>
-      <div className="flex w-full flex-1 flex-col overflow-x-hidden lg:flex-row lg:overflow-x-visible">
+      {/* `clip` plutôt que `hidden` : les deux rognent le débordement
+          horizontal à l'identique sous le breakpoint lg, mais `hidden`
+          fait passer overflow-y à `auto` (un axe non 'visible' force l'autre
+          à le devenir), transformant ce wrapper en conteneur de défilement —
+          alors que c'est le document qui défile — et empêchant tout élément
+          `position: sticky` descendant de coller (barre d'onglets/bandeau
+          d'édition des Entretiens, formulaire d'envoi de fil-de-messages.tsx).
+          `clip` n'a pas cet effet de bord. Remplace le correctif ciblé par
+          :has() qui vivait dans globals.css (voir son historique). */}
+      <div className="flex w-full flex-1 flex-col overflow-x-clip lg:flex-row lg:overflow-x-visible">
         <IndicateurNavigation />
         <EcouteurSession />
         <EcouteurRepriseApp />
