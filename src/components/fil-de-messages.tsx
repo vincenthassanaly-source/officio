@@ -825,7 +825,7 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
         {message.audioUrl && (
           <div className="flex flex-col gap-1">
             <audio controls src={message.audioUrl} className="h-9 w-full" />
-            <p className="text-[11px] text-muted">L&rsquo;audio ne peut pas être modifié ici.</p>
+            <p className="text-[12px] text-muted">L&rsquo;audio ne peut pas être modifié ici.</p>
           </div>
         )}
         <textarea

@@ -25,9 +25,17 @@ colors:
   neutral-soft: "oklch(93% 0.01 265)"
   neutral-text: "oklch(65% 0.01 265)"
 typography:
+  headline:
+    fontFamily: "Space Grotesk, system-ui, sans-serif"
+    fontSize: "24px"
+    fontWeight: 600
   heading:
     fontFamily: "Space Grotesk, system-ui, sans-serif"
     fontWeight: 600
+  title:
+    fontFamily: "Inter, system-ui, sans-serif"
+    fontSize: "16px"
+    fontWeight: 400
   body:
     fontFamily: "Inter, system-ui, sans-serif"
     fontSize: "13.5px"
@@ -35,7 +43,7 @@ typography:
     lineHeight: 1.4
   label:
     fontFamily: "Inter, system-ui, sans-serif"
-    fontSize: "11px"
+    fontSize: "12px"
     fontWeight: 700
     letterSpacing: "0.02em"
 rounded:
@@ -121,15 +129,20 @@ Palette `oklch`, restreinte : un seul accent d'action (`primary`), un vocabulair
 
 ### Hierarchy
 Échelle fine et dense, en px arbitraires plutôt qu'une échelle rem classique — observée telle quelle dans le code, à ne pas « nettoyer » vers des valeurs rondes sans raison :
-- **Titre de page** (`font-heading`, `text-2xl`, `text-ink`) : un seul `<h1>` par page, ex. `<h1 className="mb-4 font-heading text-2xl text-ink">`.
+- **Titre de page** (`font-heading`, `text-2xl` = 24 px, `text-ink`) : un seul `<h1>` par page, ex. `<h1 className="mb-4 font-heading text-2xl text-ink">`.
 - **Titre de panneau/modale** (`font-heading`, `text-lg`, poids 600) : en-têtes de sheet (FAB, menu « Plus »).
-- **Titre de carte/section** (`text-sm`, poids 700, ou `text-[11px]` majuscules + `tracking-wide` pour un libellé de groupe type « Tâches », « Messages non lus »).
-- **Corps** (`text-[13px]`–`text-[13.5px]`, poids 400–600 selon le contexte) : texte courant des listes, boutons, cartes. Mesure de ligne non contrainte (contenu dense en colonne étroite mobile-first, pas de prose longue).
-- **Label/méta** (`text-[10px]`–`text-[12.5px]`, `text-muted`) : dates, compteurs, sous-texte, badges.
+- **Titre de carte/section** (`text-sm`, poids 700, ou `text-[12px]` majuscules + `tracking-wide` pour un libellé de groupe type « Tâches », « Messages non lus », « Aujourd'hui »/« Hier » en séparateur de fil).
+- **Corps** (`text-[13px]`–`text-[14.5px]`, poids 400–600 selon le contexte) : texte courant des listes, boutons, cartes. Mesure de ligne non contrainte (contenu dense en colonne étroite mobile-first, pas de prose longue).
+- **Label/méta** (`text-[12px]`–`text-[12.5px]`, `text-muted`) : dates, compteurs, sous-texte, badges — **12 px est le plancher** pour tout texte porteur d'information (Lot 2 : les ~50 occurrences à 8–11,5 px relevées dans le périmètre communication/organisation ont été portées à 12 px).
 - **Champ de saisie** (`text-[16px]` obligatoire) : la seule taille qui ne descend jamais en dessous de 16 px, pour éviter le zoom automatique iOS Safari au focus.
 
 ### Named Rules
 **La règle des 16 px de saisie.** Tout `<input>`/`<textarea>`/`<select>` reste à `text-[16px]` (jamais `text-sm` ni une taille arbitraire inférieure), y compris quand le reste du formulaire est plus dense.
+
+**La règle du plancher à 12 px.** Tout texte porteur d'information (pas purement décoratif) reste à 12 px ou plus. Exception documentée et volontaire : les micro-badges d'une grille dense au sens strict (compte de créneaux dans une cellule de calendrier de ~45 px, indicateur « +n » d'une liste tronquée) peuvent rester en dessous à condition que l'information complète reste disponible à taille normale en un tap/une activation (panneau de détail, `aria-label`) — voir Agenda → Planning équipe dans le rapport du Lot 2.
+
+### Sur le frontmatter et la mesure automatique
+Le schéma de frontmatter Stitch ne porte que 5 rôles nommés (`display`, `headline`, `title`, `body`, `label`), chacun avec une seule taille : il ne peut pas représenter une échelle fine à 8–10 paliers comme celle réellement utilisée ici. Le Lot 2 a élargi le frontmatter (`headline` 24 px, `title` 16 px, `body` 13,5 px, `label` 12 px désormais, au lieu de 11 px) pour refléter les paliers les plus significatifs et réduire les faux positifs *advisory* `design-system-font-size` du détecteur — sans chercher à faire disparaître ce constat entièrement : des valeurs intermédiaires légitimes (12,5 px, 13 px, 14 px, 14,5 px, 20 px pour un affichage d'heure en `font-heading`…) resteront signalées *advisory*, ce qui est attendu et sans action à prendre tant qu'elles restent ≥ 12 px (ou ≥ 16 px pour un champ de saisie).
 
 ## Layout
 
@@ -161,7 +174,7 @@ Rayon large et cohérent, jamais anguleux : `rounded-xl` (12 px) domine sur bout
 - **Destructif :** fond `bg-rec`, texte blanc — jamais utilisé pour autre chose qu'une action destructive/de suppression.
 - **Secondaire/fantôme :** fond transparent, bordure `border-border`, texte `text-muted`.
 - **Choix (liste d'options, ex. sheet de confirmation à choix multiples) :** fond `-soft` de la couleur sémantique (`bg-primary-soft text-primary` ou `bg-rec-soft text-rec`).
-- **Hover/Focus :** anneau de focus visible (`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`) — à généraliser à tous les boutons/liens interactifs (constat transverse, voir DESIGN.md → Do's and Don'ts). Retour tactile global au tap (`active:scale-95`, `prefers-reduced-motion` respecté).
+- **Hover/Focus :** anneau de focus visible (`focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary`) — généralisé à la navigation, l'accueil, les éléments globaux (Lot 1) et au périmètre communication/organisation : Liaison, Tâches, Notes, Agenda, Suggestions, Activité, Notifications (Lot 2). Reste à faire dans les modules des Lots 3 à 5. Retour tactile global au tap (`active:scale-95`, `prefers-reduced-motion` respecté).
 - **Bouton-icône compact (cible tactile invisible) :** quand l'icône visible doit rester petite (ex. fermeture de toast, lien « Retour »), la cible de 44 px est obtenue par un padding compensé par une marge négative égale, jamais en agrandissant l'icône elle-même.
 
 ### Cards / Containers
@@ -173,14 +186,28 @@ Rayon large et cohérent, jamais anguleux : `rounded-xl` (12 px) domine sur bout
 
 ### Inputs / Fields
 - **Style :** `rounded-xl`, `border border-border`, fond `bg-bg`, texte `text-[16px]` obligatoire (règle des 16 px, voir Typography), `<label>` ou `aria-label` toujours présent (jamais un placeholder seul en guise de libellé).
-- **Focus :** `focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary` (motif établi dans le module Entretiens, à généraliser).
-- **Erreur/Désactivé :** pas de motif dédié observé à ce jour dans le code hors module Entretiens ; à établir au fil des lots suivants plutôt qu'inventé ici.
+- **Focus :** `outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary` (motif établi dans le module Entretiens, généralisé à tout le périmètre communication/organisation dans le Lot 2 — remplace l'ancien `focus:border-primary` qui réagissait à tout focus, y compris au clic, sans le repli visuel dédié).
+- **Erreur :** pas de bordure rouge dédiée observée dans le code (ni avant ni après le Lot 2) — les erreurs de champ/action restent signalées soit par le toast global (`role="alert"`, voir Toasts), soit par un texte `text-[12px] text-rec` positionné juste sous ou à côté du contrôle concerné (ex. `champ-audio.tsx` : échec d'accès au micro ; `notifications-parametres.tsx` : échec d'activation des notifications sur l'appareil). C'est le motif établi à généraliser pour un prochain lot plutôt qu'un contour rouge inventé ici.
+- **Désactivé :** `disabled:opacity-50` sur le contrôle (bouton ou champ), sans autre changement visuel — cohérent avec le reste de l'app (`disabled:opacity-50`/`disabled:opacity-60` déjà utilisés partout ailleurs). Le curseur `not-allowed` n'est pas ajouté (non observé dans le code existant).
 
 ### Navigation
 - **Bottom nav (mobile, `lg:hidden`) :** barre fixe en bas, 5 onglets (4 liens directs + « Plus »), icône 20 px + libellé `text-xs`, pill `bg-primary-soft` animée (`transform`/`width`, mesurée en JS) derrière l'onglet actif, hauteur ≈ 50 px (déjà ≥ 44 px).
 - **Sidebar (desktop, `hidden lg:flex`) :** liste verticale de liens, icône 18 px + libellé `text-sm`, fond `bg-primary-soft` sur l'item actif, `hover:bg-neutral-soft` sinon.
 - **Panneau « Plus » :** grille 2 colonnes de tuiles carrées (icône dans un carré `rounded-xl` teinté par module + libellé), même sheet que les modales (`rounded-t-[20px]`, remonte du bas sur mobile).
 - **Indicateur de navigation :** fine barre `h-[3px]` en haut de la zone de contenu, feedback immédiat au tap avant la réponse serveur — purement décoratif (`aria-hidden`), n'affecte aucune donnée.
+
+### Interrupteur (switch)
+`role="switch"` + `aria-checked` sur un `<button>` (jamais `<input type="checkbox">` seul pour ce rôle visuel) — établi dans `notifications-parametres.tsx`. Piste `h-6 w-11` (24×44 px) avec un curseur rond `h-5 w-5` qui coulisse (`left-0.5`/`left-[22px]`), `bg-primary` actif / `bg-neutral-soft` inactif. La piste visible ne fait que 24 px de haut : la cible réelle est élargie à 44×44 px via un `<button>` englobant plus grand (`-my-2.5` sur un `h-11 w-11`, piste centrée dedans) plutôt qu'en agrandissant la piste elle-même. Libellé et description toujours visibles à côté (jamais l'interrupteur seul comme unique porteur de sens), transition `motion-safe:transition-colors`/`motion-safe:transition-all`.
+
+### Alternative à l'appui long
+Un appui long (`onTouchStart`/`onMouseDown` + minuteur 500 ms, voir `notes.tsx`/`fil-de-messages.tsx`) qui révèle une action ou ouvre une édition n'est, par nature, ni détectable ni déclenchable au clavier ou par un lecteur d'écran. Motif établi dans le Lot 2 : ajouter à côté un bouton toujours visible (icône trois points, `IconOptions`, même tracé que les autres icônes du fichier) qui déclenche exactement la même fonction que le minuteur d'appui long, sans remplacer le geste. Dans `fil-de-messages.tsx`, ce bouton n'apparaît que pour l'auteur du message (`estAuteur`) et seulement tant que les icônes d'action ne sont pas déjà révélées, pour ne pas dupliquer l'affordance. Ne pas appliquer ce motif à un contrôle qui a déjà un déclenchement standard (ex. `taches-list.tsx` : l'édition d'une tâche se fait par un simple tap sur un `<button>`, sans appui long — rien à ajouter là).
+
+### Backdrop de sheet/panneau
+Motif unique pour fermer au clic en dehors d'un panneau flottant ou d'une sheet : un `<div>` non focusable (`aria-hidden="true"`, pas de `role`/`tabindex`) qui porte le `onClick` de fermeture, jamais un `<button>` — un bouton-backdrop reste un arrêt de tabulation sans retour visuel (constat transverse du Lot 1, corrigé dans le Lot 2 sur `fil-de-messages.tsx`, `agenda/planning-equipe.tsx`, `notifications-cloche.tsx`, `recherche-globale.tsx`, `fab-creation-rapide-modal.tsx`). Deux variantes selon la structure :
+- **Panneau positionné en overlay simple** (ex. notifications, recherche) : le `<div>` backdrop est un élément séparé, `fixed inset-0`, sous le panneau dans l'ordre du DOM.
+- **Sheet/modale avec conteneur englobant** (ex. `MenuPlusPanel`, `ModaleConfirmation`, panneaux de détail de l'Agenda) : le `<div>` englobant `fixed inset-0` porte lui-même le `onClick` de fermeture, et le panneau interne l'arrête avec `onClick={(e) => e.stopPropagation()}` pour ne pas se fermer à son propre clic.
+
+Dans les deux cas, Échap et le bouton retour du téléphone restent gérés par `useFermerAvecRetour` (inchangé par ce motif), et le piège à focus par `usePiegeFocus` quand le panneau en a un.
 
 ### Modale de confirmation (composant signature)
 Remplace `window.confirm()` partout dans l'app : sheet remontant du bas sur mobile (centrée à partir de `sm:`), rendue via `createPortal(..., document.body)` pour échapper à tout ancêtre `transform`. Piège à focus complet (Tab/Shift+Tab bouclent dans la boîte), Échap, retour du focus à l'élément déclencheur à la fermeture, verrouillage du scroll de la page tant qu'elle est ouverte (`document.body.style.overflow = 'hidden'`). Deux variantes : Annuler/Confirmer, ou une liste de choix (ex. « cette occurrence »/« toute la série »).
@@ -196,6 +223,8 @@ Fil `aria-live="polite"` positionné au-dessus de la bottom nav et de la safe-ar
 - **Do** dessiner les icônes en SVG trait (`viewBox 24x24`, `strokeWidth 2`, `currentColor`) plutôt qu'utiliser un glyphe Unicode.
 - **Do** rendre les modales/sheets via `createPortal(..., document.body)`, avec détection de montage côté client (`useSyncExternalStore`) pour éviter un mismatch d'hydratation.
 - **Do** garder les animations en `motion-safe:`/respecter `prefers-reduced-motion` (déjà la norme dans `globals.css`).
+- **Do** fermer une sheet/un panneau au clic sur l'arrière-plan via un `<div>` non focusable (`aria-hidden`), jamais un `<button>` — voir Composants → Backdrop de sheet/panneau.
+- **Do** doubler tout geste d'appui long qui révèle une action ou ouvre une édition d'un bouton toujours visible, accessible au clavier et au lecteur d'écran, sans retirer le geste — voir Composants → Alternative à l'appui long.
 
 ### Don't :
 - **Don't** utiliser de bordure latérale colorée (`border-l-4` ou similaire) sur une carte, une ligne de liste ou une alerte.
