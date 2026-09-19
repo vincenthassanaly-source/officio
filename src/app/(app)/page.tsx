@@ -178,11 +178,17 @@ export default async function AccueilPage() {
     day: 'numeric',
     month: 'long',
   })
+  // Salutation selon l'heure plutôt qu'un « Bonjour » fixe toute la journée
+  // — un même titre, mais qui reflète le moment réel où l'équipe consulte
+  // l'app (souvent en fin de journée après le comptoir).
+  const salutation = aujourdhui.getHours() < 18 ? 'Bonjour' : 'Bonsoir'
 
   return (
     <>
       <div>
-        <h1 className="font-heading text-2xl text-ink">Bonjour, {prenom}</h1>
+        <h1 className="font-heading text-2xl font-bold tracking-tight text-ink">
+          {salutation}, {prenom}
+        </h1>
         <p className="mt-0.5 text-[12.5px] capitalize text-muted">{dateLabel}</p>
       </div>
 
@@ -203,198 +209,198 @@ export default async function AccueilPage() {
       <div className="mt-5 grid grid-cols-2 gap-2.5">
         <Link
           href="/liaison"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary">
             <IconLiaison className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Cahier de liaison</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {messagesOk ? `${nonLus} nouveaux messages` : '—'}
             </div>
           </div>
         </Link>
         <Link
           href="/agenda"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-green-soft text-green">
             <IconAgenda className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Agenda</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {rendezVousOk ? `${rendezVous.length} rendez-vous` : '—'}
             </div>
           </div>
         </Link>
         <Link
           href="/carnet"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary">
             <IconCarnet className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Carnet d&rsquo;adresses</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {contactsOk ? `${contacts.length} contacts` : '—'}
             </div>
           </div>
         </Link>
         <Link
           href="/huiles-essentielles"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-purple-soft text-purple">
             <IconHuiles className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Huiles essentielles</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {huilesOk ? `${huilesACommander} à commander` : '—'}
             </div>
           </div>
         </Link>
         <Link
           href="/fournisseurs"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
             <IconFournisseurs className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Fournisseurs</div>
-            <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
           </div>
         </Link>
         <Link
           href="/chaussures"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-brun-soft text-brun">
             <IconChaussures className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Chaussures orthopédiques</div>
-            <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
           </div>
         </Link>
         <Link
           href="/suivi-cno"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-green-soft text-green">
             <IconCno className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suivi CNO</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {patientsCnoOk ? `${patientsCno.length} patients suivis` : '—'}
             </div>
           </div>
         </Link>
         <Link
           href="/regularisations"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
             <IconRegularisation className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Régularisation ordonnances</div>
-            <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
           </div>
         </Link>
         <Link
           href="/suggestions"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary-light">
             <IconSuggestions className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Suggestions</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {suggestionsOk ? `${suggestionsNonTraitees} propositions` : '—'}
             </div>
           </div>
         </Link>
         <Link
           href="/vaccins"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-green-soft text-green">
             <IconVaccin className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Vaccins</div>
-            <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
           </div>
         </Link>
         <Link
           href="/ruptures-stock"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-rec-soft text-rec">
             <IconRupturesStock className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Ruptures de stock</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {rupturesOk ? `${rupturesStock.length + produitsARecommander.length} en cours` : '—'}
             </div>
           </div>
         </Link>
         <Link
           href="/notes"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-primary-soft text-primary-dark">
             <IconNote className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Notes</div>
-            <div className="mt-0.5 text-[11px] text-muted">{notesOk ? `${notes.length} notes` : '—'}</div>
+            <div className="mt-0.5 text-[12px] text-muted">{notesOk ? `${notes.length} notes` : '—'}</div>
           </div>
         </Link>
         <Link
           href="/activite"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-neutral-soft text-neutral-text">
             <IconActivite className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Activité</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {journalActiviteOk ? `${activitesAujourdhui} activités récentes` : '—'}
             </div>
           </div>
         </Link>
         <Link
           href="/plan-posologie"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-accent-soft text-accent">
             <IconPosologie className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Plan de posologie</div>
-            <div className="mt-0.5 text-[11px] text-muted">&nbsp;</div>
+            <div className="mt-0.5 text-[12px] text-muted">&nbsp;</div>
           </div>
         </Link>
         <Link
           href="/entretiens-pharmaceutiques"
-          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-purple-soft text-purple">
             <IconEntretien className="h-[18px] w-[18px]" />
           </div>
           <div>
             <div className="text-[13.5px] font-semibold text-ink">Entretiens pharmaceutiques</div>
-            <div className="mt-0.5 text-[11px] text-muted">
+            <div className="mt-0.5 text-[12px] text-muted">
               {typesEntretienOk ? `${typesEntretienActifs} types actifs` : '—'}
             </div>
           </div>

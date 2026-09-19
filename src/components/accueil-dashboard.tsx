@@ -92,7 +92,7 @@ export function AccueilDashboard({
     return (
       <div className="mt-4 rounded-[20px] bg-surface shadow-card p-4 text-center">
         <p className="text-[13.5px] font-semibold text-ink">Tout est à jour ✓</p>
-        <p className="mt-0.5 text-[11.5px] text-muted">
+        <p className="mt-0.5 text-[12px] text-muted">
           Rien de prévu aujourd&rsquo;hui, aucune tâche ni message en attente.
         </p>
       </div>
@@ -103,7 +103,7 @@ export function AccueilDashboard({
     <div className="mt-4 flex flex-col gap-3">
       <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Tâches</span>
+          <span className="text-[12px] font-bold uppercase tracking-wide text-muted">Tâches</span>
         </div>
         {tachesOptimistes.length === 0 ? (
           <p className="py-2 text-center text-[12.5px] text-muted">Aucune tâche en attente</p>
@@ -115,40 +115,49 @@ export function AccueilDashboard({
               return (
                 <div
                   key={t.id}
-                  className={`flex items-center gap-2.5 ${estEnSortie(t.id) ? 'item-sortie' : 'item-entree'}`}
+                  className={`flex min-h-11 items-stretch gap-2.5 ${estEnSortie(t.id) ? 'item-sortie' : 'item-entree'}`}
                 >
                   {/* Plus de `disabled` : la bascule est optimiste, et le
                       isPending partagé figeait tout l'encart le temps d'un
-                      aller-retour serveur déjà reflété à l'écran. */}
+                      aller-retour serveur déjà reflété à l'écran. Cible
+                      tactile 44 px (w-11 + hauteur héritée de la ligne via
+                      items-stretch) sans agrandir le carré visible. */}
                   <button
                     type="button"
                     onClick={() => basculerStatut(t)}
                     aria-label={t.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-                    className="flex shrink-0 items-center justify-center"
+                    className="flex w-11 shrink-0 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   >
                     <span
                       className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[6px] border-2 ${
                         t.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
                       }`}
                     >
-                      {t.statut === 'fait' && <span className="text-[10px] font-bold text-white">✓</span>}
+                      {t.statut === 'fait' && (
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                      )}
                     </span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setTacheEnEdition(t)}
-                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
+                    className="flex min-w-0 flex-1 items-center gap-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   >
                     {t.assigne && (
                       <span
-                        className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+                        // 28 px (au lieu de 18) : seule taille où les initiales
+                        // peuvent atteindre 12 px sans déborder du rond (règle
+                        // des textes ≥ 12 px).
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
                       >
                         {t.assigne.initiales}
                       </span>
                     )}
                     <span className="min-w-0 flex-1 truncate text-[13px] text-ink">{t.titre}</span>
                     {badge && (
-                      <span className={`shrink-0 text-[10px] font-semibold ${badge.className}`}>{badge.label}</span>
+                      <span className={`shrink-0 text-[12px] font-semibold ${badge.className}`}>{badge.label}</span>
                     )}
                   </button>
                 </div>
@@ -170,9 +179,15 @@ export function AccueilDashboard({
 
       <div className="rounded-[20px] bg-surface shadow-card p-3.5">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wide text-muted">Messages non lus</span>
+          <span className="text-[12px] font-bold uppercase tracking-wide text-muted">Messages non lus</span>
           {totalMessagesNonLus > messagesNonLusApercu.length && (
-            <Link href="/liaison" className="text-[11px] font-semibold text-primary">
+            <Link
+              href="/liaison"
+              // Cible tactile 44 px : marges négatives compensant le padding
+              // (même principe que LienRetour), le lien reste ancré au coin
+              // du bandeau comme avant.
+              className="-my-3.5 -mr-3.5 inline-flex min-h-11 items-center rounded-lg px-3.5 text-[12px] font-semibold text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
               Voir tout ({totalMessagesNonLus})
             </Link>
           )}
@@ -182,7 +197,11 @@ export function AccueilDashboard({
         ) : (
           <div className="flex flex-col gap-2">
             {messagesNonLusApercu.map((m) => (
-              <Link key={m.id} href="/liaison" className="flex items-start gap-1.5">
+              <Link
+                key={m.id}
+                href="/liaison"
+                className="flex min-h-11 items-center gap-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
                 <span className="shrink-0 text-[12.5px] font-semibold text-ink">
                   {m.auteur?.nom_complet.split(' ')[0] ?? 'Ancien collègue'} ·
                 </span>

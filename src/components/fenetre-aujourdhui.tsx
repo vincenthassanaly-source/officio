@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { getProgrammeDuJour, type ProgrammeDuJour } from '@/app/actions/fenetre-aujourdhui'
@@ -8,6 +8,9 @@ import { doitOuvrirFenetreAujourdhui, marquerFenetreAujourdhuiAffichee } from '@
 import { toISODate } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import type { CategorieRdv } from '@/lib/data/rendez-vous'
+
+const SELECTEUR_FOCUSABLE =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 const LABELS_CATEGORIE_RDV: Record<CategorieRdv, string> = {
   rdv: 'Rendez-vous',
@@ -40,6 +43,8 @@ export function FenetreAujourdhui() {
   // hydratation pour éviter un mismatch SSR (document.body n'existe pas
   // côté serveur).
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
+  const panneauRef = useRef<HTMLDivElement>(null)
+  const declencheurRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     const dateAujourdhuiISO = toISODate(new Date())
@@ -66,6 +71,50 @@ export function FenetreAujourdhui() {
     router.push(url)
   }
 
+  // Même traitement d'accessibilité que ModaleConfirmation/MenuPlusPanel :
+  // piège à focus, verrouillage du scroll, retour du focus au déclencheur.
+  // Ici la fenêtre s'ouvre automatiquement (pas de clic déclencheur) : le
+  // focus mémorisé est celui qui avait le focus au moment de l'ouverture
+  // (souvent <body>), ce qui reste un repli sûr.
+  useEffect(() => {
+    if (ouvert) {
+      declencheurRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      panneauRef.current?.querySelector<HTMLElement>(SELECTEUR_FOCUSABLE)?.focus()
+    } else {
+      declencheurRef.current?.focus()
+      declencheurRef.current = null
+    }
+  }, [ouvert])
+
+  useEffect(() => {
+    if (!ouvert) return
+    const overflowOrigine = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = overflowOrigine
+    }
+  }, [ouvert])
+
+  useEffect(() => {
+    if (!ouvert) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Tab' || !panneauRef.current) return
+      const cibles = Array.from(panneauRef.current.querySelectorAll<HTMLElement>(SELECTEUR_FOCUSABLE))
+      if (cibles.length === 0) return
+      const premier = cibles[0]
+      const dernier = cibles[cibles.length - 1]
+      if (e.shiftKey && document.activeElement === premier) {
+        e.preventDefault()
+        dernier.focus()
+      } else if (!e.shiftKey && document.activeElement === dernier) {
+        e.preventDefault()
+        premier.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [ouvert])
+
   if (!monte || !ouvert || !programme) return null
 
   const rienDePrevu =
@@ -77,13 +126,26 @@ export function FenetreAujourdhui() {
       onClick={() => setOuvert(false)}
     >
       <div
+        ref={panneauRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="fenetre-aujourdhui-titre"
         onClick={(e) => e.stopPropagation()}
         className="panneau-entree flex max-h-[80vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-ink">Aujourd&rsquo;hui</h2>
-          <button type="button" onClick={() => setOuvert(false)} aria-label="Fermer" className="text-muted">
-            ×
+          <h2 id="fenetre-aujourdhui-titre" className="text-sm font-bold text-ink">
+            Aujourd&rsquo;hui
+          </h2>
+          <button
+            type="button"
+            onClick={() => setOuvert(false)}
+            aria-label="Fermer"
+            className="-my-3 -mr-3 flex h-11 w-11 items-center justify-center text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -93,14 +155,14 @@ export function FenetreAujourdhui() {
           <>
             {programme.taches.length > 0 && (
               <section>
-                <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">Tâches</h3>
+                <h3 className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-muted">Tâches</h3>
                 <div className="flex flex-col gap-1.5">
                   {programme.taches.map((t) => (
                     <button
                       key={t.id}
                       type="button"
                       onClick={() => naviguer(`/liaison?onglet=taches&tache=${t.id}`)}
-                      className="truncate rounded-xl bg-bg px-3 py-2 text-left text-[13px] text-ink"
+                      className="truncate min-h-11 rounded-xl bg-bg px-3 py-3 text-left text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     >
                       {t.titre}
                     </button>
@@ -111,7 +173,7 @@ export function FenetreAujourdhui() {
 
             {programme.regularisations.length > 0 && (
               <section>
-                <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">
+                <h3 className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-muted">
                   Régularisation ordonnances
                 </h3>
                 <div className="flex flex-col gap-1.5">
@@ -120,7 +182,7 @@ export function FenetreAujourdhui() {
                       key={r.id}
                       type="button"
                       onClick={() => naviguer('/regularisations')}
-                      className="truncate rounded-xl bg-bg px-3 py-2 text-left text-[13px] text-ink"
+                      className="truncate min-h-11 rounded-xl bg-bg px-3 py-3 text-left text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     >
                       {r.patient_prenom} {r.patient_nom}
                     </button>
@@ -131,17 +193,17 @@ export function FenetreAujourdhui() {
 
             {programme.rendezVous.length > 0 && (
               <section>
-                <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted">Agenda</h3>
+                <h3 className="mb-1.5 text-[12px] font-bold uppercase tracking-wide text-muted">Agenda</h3>
                 <div className="flex flex-col gap-1.5">
                   {programme.rendezVous.map((r) => (
                     <button
                       key={r.id}
                       type="button"
                       onClick={() => naviguer('/agenda')}
-                      className="flex items-center justify-between gap-2 rounded-xl bg-bg px-3 py-2 text-left text-[13px] text-ink"
+                      className="flex items-center justify-between gap-2 min-h-11 rounded-xl bg-bg px-3 py-3 text-left text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     >
                       <span className="min-w-0 flex-1 truncate">{r.titre}</span>
-                      <span className="shrink-0 text-[11px] text-muted">
+                      <span className="shrink-0 text-[12px] text-muted">
                         {r.heure_debut.slice(0, 5)} · {LABELS_CATEGORIE_RDV[r.categorie]}
                       </span>
                     </button>
