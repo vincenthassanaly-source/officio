@@ -104,7 +104,8 @@ export function JournalActivite({
               type="button"
               key={m.value}
               onClick={() => toggleModule(m.value)}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+              aria-pressed={actif}
+              className={`min-h-11 shrink-0 rounded-full border px-3 py-1.5 text-[12px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 actif ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
               }`}
             >
@@ -115,18 +116,24 @@ export function JournalActivite({
       </div>
 
       {membres.length > 0 && (
-        <select
-          value={membreSelectionne}
-          onChange={(e) => changerMembre(e.target.value)}
-          className="w-full max-w-xs rounded-xl border border-border bg-bg px-3 py-2.5 text-[15px] text-ink outline-none focus:border-primary"
-        >
-          <option value={MEMBRE_TOUS}>Toute l&rsquo;équipe</option>
-          {membres.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nom_complet}
-            </option>
-          ))}
-        </select>
+        <>
+          <label htmlFor="membre-journal-activite" className="sr-only">
+            Filtrer par membre de l&rsquo;équipe
+          </label>
+          <select
+            id="membre-journal-activite"
+            value={membreSelectionne}
+            onChange={(e) => changerMembre(e.target.value)}
+            className="w-full max-w-xs rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          >
+            <option value={MEMBRE_TOUS}>Toute l&rsquo;équipe</option>
+            {membres.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.nom_complet}
+              </option>
+            ))}
+          </select>
+        </>
       )}
 
       {entrees.length === 0 ? (
@@ -140,7 +147,7 @@ export function JournalActivite({
         >
           {groupes.map((groupe) => (
             <div key={groupe.cle} className="flex flex-col gap-2">
-              <span className="text-[11.5px] font-semibold uppercase tracking-wide text-muted">{groupe.label}</span>
+              <span className="text-[12px] font-semibold uppercase tracking-wide text-muted">{groupe.label}</span>
               <div className="flex flex-col gap-2">
                 {groupe.entrees.map((entree) => (
                   <EntreeJournalItem
@@ -163,7 +170,7 @@ export function JournalActivite({
           type="button"
           disabled={isPending}
           onClick={chargerPlus}
-          className="self-center rounded-full border border-border bg-surface px-4 py-2 text-[13px] font-semibold text-ink disabled:opacity-60"
+          className="min-h-11 self-center rounded-full border border-border bg-surface px-4 py-2 text-[13px] font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
         >
           {isPending ? 'Chargement…' : 'Charger plus'}
         </button>
@@ -184,26 +191,28 @@ function EntreeJournalItem({
   const contenu = (
     <>
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${couleur.fond} ${couleur.texte}`}
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-bold ${couleur.fond} ${couleur.texte}`}
       >
         {entree.auteur?.initiales ?? '·'}
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13.5px] font-semibold text-ink">{entree.titre}</p>
-        <p className="text-[11.5px] text-muted">{formatDateRelative(entree.created_at)}</p>
+        <p className="text-[12px] text-muted">{formatDateRelative(entree.created_at)}</p>
       </div>
     </>
   )
 
   if (!entree.url) {
-    return <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3">{contenu}</div>
+    return (
+      <div className="flex min-h-11 items-center gap-3 rounded-2xl border border-border bg-surface p-3">{contenu}</div>
+    )
   }
 
   return (
     <button
       type="button"
       onClick={onOuvrir}
-      className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-left"
+      className="flex min-h-11 items-center gap-3 rounded-2xl border border-border bg-surface p-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       {contenu}
     </button>
