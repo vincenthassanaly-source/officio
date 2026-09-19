@@ -150,6 +150,8 @@ function IconAlerte({ className }: { className?: string }) {
   )
 }
 
+const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
 function LigneInfo({
   icone,
   label,
@@ -167,7 +169,7 @@ function LigneInfo({
         {icone}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-[11px] font-bold uppercase tracking-wide text-muted">{label}</div>
+        <div className="text-[12px] font-bold uppercase tracking-wide text-muted">{label}</div>
         <p className="mt-0.5 text-[13px] leading-relaxed text-ink">{texte}</p>
       </div>
     </div>
@@ -184,13 +186,13 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
         type="button"
         onClick={() => setOuvert((o) => !o)}
         aria-expanded={ouvert}
-        className="flex items-start justify-between gap-2 text-left"
+        className={`-m-1 flex min-h-11 items-center justify-between gap-2 rounded-xl p-1 text-left ${CLASSE_FOCUS}`}
       >
         <div className="min-w-0 flex-1 text-[14.5px] font-semibold text-ink">
           {surligner(v.nom_commercial, rechercheNormalisee)}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badge.className}`}>{badge.label}</span>
+          <span className={`rounded-full px-2 py-0.5 text-[12px] font-bold ${badge.className}`}>{badge.label}</span>
           <IconChevron
             className={`h-4 w-4 text-muted transition-transform duration-200 ${ouvert ? 'rotate-180' : ''}`}
           />
@@ -202,7 +204,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
           {v.valences.map((valence) => (
             <span
               key={valence}
-              className="rounded-full bg-neutral-soft px-2 py-0.5 text-[10.5px] font-medium text-muted"
+              className="rounded-full bg-neutral-soft px-2 py-0.5 text-[12px] font-medium text-muted"
             >
               {surligner(valence, rechercheNormalisee)}
             </span>
@@ -237,7 +239,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
 
           {v.cas_particuliers && (
             <div className="mt-2.5 rounded-xl bg-rec-soft px-3 py-2">
-              <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-rec">
+              <div className="flex items-center gap-1.5 text-[12px] font-bold uppercase tracking-wide text-rec">
                 <IconAlerte className="h-3 w-3" />
                 Cas particuliers
               </div>
@@ -245,7 +247,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
             </div>
           )}
 
-          <div className="mt-2.5 text-[10.5px] text-muted">
+          <div className="mt-2.5 text-[12px] text-muted">
             {v.source} · MAJ {formatDateCourte(v.date_maj)}
           </div>
         </div>
@@ -336,7 +338,8 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
             type="button"
             key={f.value}
             onClick={() => setFiltreStatut(f.value)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+            aria-pressed={filtreStatut === f.value}
+            className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[12px] font-semibold ${CLASSE_FOCUS} ${
               filtreStatut === f.value
                 ? 'border-primary bg-primary text-white'
                 : 'border-border bg-surface text-muted'
@@ -344,7 +347,7 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
           >
             {f.label}
             <span
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9.5px] font-bold ${
+              className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold ${
                 filtreStatut === f.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
               }`}
             >
@@ -360,16 +363,19 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher par nom commercial ou indication (ex. hépatite B)…"
-          className="w-full rounded-xl border border-border bg-bg py-2.5 pl-9 pr-9 text-[16px] text-ink outline-none focus:border-primary"
+          aria-label="Rechercher un vaccin par nom commercial ou indication"
+          className={`w-full rounded-xl border border-border bg-bg py-2.5 pl-9 pr-9 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
         />
         {recherche.length > 0 && (
           <button
             type="button"
             onClick={() => setRecherche('')}
             aria-label="Effacer la recherche"
-            className="absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-neutral-soft text-muted"
+            className={`absolute -right-0.5 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center ${CLASSE_FOCUS}`}
           >
-            <IconCroix className="h-3 w-3" />
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-neutral-soft text-muted">
+              <IconCroix className="h-3 w-3" />
+            </span>
           </button>
         )}
       </div>
