@@ -9,6 +9,15 @@ import type { MembreEquipe } from '@/lib/data/equipe'
 import { useToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 
+// Remplace le glyphe « × » du bouton de fermeture.
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
 // Abonnement vide : rien à écouter, sert seulement de moyen idiomatique
 // (useSyncExternalStore) pour détecter le montage côté client sans
 // déclencher de setState synchrone dans un effet (interdit par le lint
@@ -98,8 +107,13 @@ export default function ModaleEditionTache({
           <h2 id="modale-edition-tache-titre" className="text-sm font-bold text-ink">
             Modifier la tâche
           </h2>
-          <button type="button" onClick={onFerme} aria-label="Fermer sans enregistrer" className="text-muted">
-            ×
+          <button
+            type="button"
+            onClick={onFerme}
+            aria-label="Fermer sans enregistrer"
+            className="-m-2.5 flex h-11 w-11 items-center justify-center rounded-full text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <IconFermer className="h-4 w-4" />
           </button>
         </div>
         {tache.createur && (
@@ -134,7 +148,7 @@ export default function ModaleEditionTache({
             name="echeance"
             defaultValue={tache.echeance ?? ''}
             aria-label="Date d'échéance"
-            className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
           <input
             type="time"

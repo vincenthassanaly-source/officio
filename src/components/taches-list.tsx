@@ -93,6 +93,45 @@ function IconChevron({ className }: { className?: string }) {
   )
 }
 
+// Remplace les glyphes « + »/« × » du bouton qui ouvre/ferme le formulaire
+// d'ajout.
+function IconAjouter({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+// Remplace le glyphe « ✓ » de la case cochée.
+function IconCoche({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  )
+}
+
+// Remplace l'émoji « 👍 » du bouton de pouce. Dupliquée depuis
+// fil-de-messages.tsx (même convention que IconAppareilPhoto entre
+// champ-photo.tsx et champ-photos.tsx) plutôt que factorisée.
+function IconPouce({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 10v12" />
+      <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+    </svg>
+  )
+}
+
 export function TachesList({
   taches,
   equipe,
@@ -271,31 +310,43 @@ export function TachesList({
           <button
             type="button"
             onClick={() => setFiltre('tous')}
-            className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-              filtre === 'tous' ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
-            }`}
+            className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            Tous
+            <span
+              className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
+                filtre === 'tous' ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
+              }`}
+            >
+              Tous
+            </span>
           </button>
           {equipe.map((m) => (
             <button
               type="button"
               key={m.id}
               onClick={() => setFiltre(m.id)}
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                filtre === m.id ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
-              }`}
+              className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              {m.id === profilActuelId ? 'Moi' : m.nom_complet.split(' ')[0]}
+              <span
+                className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
+                  filtre === m.id ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
+                }`}
+              >
+                {m.id === profilActuelId ? 'Moi' : m.nom_complet.split(' ')[0]}
+              </span>
             </button>
           ))}
         </div>
         <button
           type="button"
           onClick={() => setFormOuvert((v) => !v)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-lg leading-none text-white"
+          aria-label={formOuvert ? "Fermer le formulaire d'ajout" : 'Ajouter une tâche'}
+          aria-expanded={formOuvert}
+          className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          {formOuvert ? '×' : '+'}
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
+            {formOuvert ? <IconFermer className="h-4 w-4" /> : <IconAjouter className="h-4 w-4" />}
+          </span>
         </button>
       </div>
 
@@ -318,13 +369,21 @@ export function TachesList({
           }}
           className="flex flex-col gap-2 rounded-[20px] bg-surface shadow-card p-3"
         >
+          <label htmlFor="titre-nouvelle-tache" className="sr-only">
+            Titre de la tâche
+          </label>
           <input
+            id="titre-nouvelle-tache"
             name="titre"
             required
             placeholder="Titre de la tâche"
             className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
           />
+          <label htmlFor="assigne-nouvelle-tache" className="sr-only">
+            Assigner à
+          </label>
           <select
+            id="assigne-nouvelle-tache"
             name="assigne_id"
             defaultValue=""
             className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
@@ -340,7 +399,8 @@ export function TachesList({
             <input
               type="date"
               name="echeance"
-              className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+              aria-label="Date d'échéance"
+              className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
             />
             {/* Facultative : si renseignée, un rappel push + in-app arrive
                 pile à cette heure (au lieu du rappel générique "Échéance
@@ -350,6 +410,7 @@ export function TachesList({
             <input
               type="time"
               name="echeance_heure"
+              aria-label="Heure d'échéance"
               className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
             />
           </div>
@@ -395,11 +456,11 @@ export function TachesList({
             type="button"
             onClick={() => setArchiveOuverte((o) => !o)}
             aria-expanded={archiveOuverte}
-            className="flex items-center justify-between gap-2 text-left"
+            className="flex min-h-11 items-center justify-between gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <span className="text-[13.5px] font-semibold text-ink">Tâches archivées ({archivees.length})</span>
             <IconChevron
-              className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
+              className={`h-4 w-4 shrink-0 text-muted motion-safe:transition-transform motion-safe:duration-200 ${
                 archiveOuverte ? 'rotate-180' : ''
               }`}
             />
@@ -514,30 +575,30 @@ function CarteTache({
         type="button"
         onClick={() => onBasculerStatut(tache)}
         aria-label={tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme fait'}
-        className="flex h-8 w-8 shrink-0 items-center justify-center"
+        className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <div
           className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] border-2 ${
             tache.statut === 'fait' ? 'border-primary bg-primary' : 'border-border'
           }`}
         >
-          {tache.statut === 'fait' && <span className="text-xs font-bold text-white">✓</span>}
+          {tache.statut === 'fait' && <IconCoche className="h-3 w-3 text-white" />}
         </div>
       </button>
       <button
         type="button"
         onClick={() => onEditer(tache)}
         disabled={isPending}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:opacity-70"
+        className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-70"
       >
         <div className="min-w-0 flex-1">
           <div className={`text-sm font-semibold ${tache.statut === 'fait' ? 'text-muted line-through' : 'text-ink'}`}>
             {tache.titre}
           </div>
           {tache.assigne && (
-            <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-muted">
+            <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-muted">
               <span
-                className={`flex h-[18px] w-[18px] items-center justify-center rounded-full text-[8.5px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-[12px] font-bold ${couleurAssigne.fond} ${couleurAssigne.texte}`}
               >
                 {tache.assigne.initiales}
               </span>
@@ -545,19 +606,19 @@ function CarteTache({
             </div>
           )}
         </div>
-        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${due.className}`}>
+        <span className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${due.className}`}>
           {due.label}
         </span>
       </button>
-      <div className="flex shrink-0 items-center gap-1.5">
+      <div className="flex shrink-0 items-center gap-1">
         {tache.pouces.length > 0 && (
-          <div className="flex">
+          <div className="flex" title={`Pouce de ${tache.pouces.length} personne${tache.pouces.length > 1 ? 's' : ''}`}>
             {tache.pouces.map((p, i) => {
               const c = couleurs.get(p.profil_id) ?? COULEUR_PAR_DEFAUT
               return (
                 <div
                   key={p.profil_id}
-                  className={`-ml-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full border-2 border-surface text-[7.5px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
+                  className={`-ml-2 flex h-7 w-7 items-center justify-center rounded-full border-2 border-surface text-[12px] font-bold first:ml-0 ${c.fond} ${c.texte}`}
                   style={{ zIndex: tache.pouces.length - i }}
                 >
                   {p.initiales}
@@ -584,11 +645,11 @@ function CarteTache({
           }
           aria-label={monPouce ? 'Retirer mon pouce' : 'Mettre un pouce'}
           aria-pressed={monPouce}
-          className={`text-base leading-none transition-transform active:scale-90 ${
-            monPouce ? 'opacity-100' : 'opacity-35 grayscale hover:opacity-70 hover:grayscale-0'
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-transform focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary motion-safe:active:scale-90 ${
+            monPouce ? 'text-primary' : 'text-muted hover:text-primary'
           }`}
         >
-          👍
+          <IconPouce className="h-[18px] w-[18px]" />
         </button>
       </div>
       <button
@@ -596,9 +657,9 @@ function CarteTache({
         disabled={isPending}
         onClick={() => setConfirmationOuverte(true)}
         aria-label="Supprimer la tâche"
-        className="shrink-0 text-muted hover:text-rec disabled:opacity-50"
+        className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted hover:text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50"
       >
-        ×
+        <IconFermer className="h-4 w-4" />
       </button>
       </div>
 
