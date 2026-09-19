@@ -124,7 +124,7 @@ export function JournalActivite({
             id="membre-journal-activite"
             value={membreSelectionne}
             onChange={(e) => changerMembre(e.target.value)}
-            className="w-full max-w-xs rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            className="w-full max-w-xs rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           >
             <option value={MEMBRE_TOUS}>Toute l&rsquo;équipe</option>
             {membres.map((m) => (

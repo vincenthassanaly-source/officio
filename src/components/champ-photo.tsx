@@ -88,7 +88,12 @@ export function ChampPhoto({
       />
       {apercu ? (
         <div className="relative h-16 w-16">
-          <button type="button" onClick={() => setAgrandie(true)} aria-label="Agrandir la photo">
+          <button
+            type="button"
+            onClick={() => setAgrandie(true)}
+            aria-label="Agrandir la photo"
+            className="rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element -- `apercu` mélange deux
                 origines dans le même state : une URL signée Supabase Storage au montage
                 (édition, voir `photoInitiale`) OU une blob URL locale dès qu'un nouveau

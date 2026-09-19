@@ -127,13 +127,13 @@ export default function ModaleEditionTache({
           defaultValue={tache.titre}
           placeholder="Titre de la tâche"
           aria-label="Titre de la tâche"
-          className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <select
           name="assigne_id"
           defaultValue={tache.assigne?.id ?? ''}
           aria-label="Assigner à"
-          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         >
           <option value="">Non assignée (toute l&rsquo;équipe)</option>
           {equipe.map((m) => (
@@ -148,14 +148,14 @@ export default function ModaleEditionTache({
             name="echeance"
             defaultValue={tache.echeance ?? ''}
             aria-label="Date d'échéance"
-            className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
           <input
             type="time"
             name="echeance_heure"
             defaultValue={tache.echeance_heure?.slice(0, 5) ?? ''}
             aria-label="Heure d'échéance"
-            className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
         </div>
         <ChampPhoto
@@ -173,7 +173,7 @@ export default function ModaleEditionTache({
         <button
           type="submit"
           disabled={isPending}
-          className="mt-1 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
         >
           Enregistrer
         </button>
@@ -189,7 +189,7 @@ export default function ModaleEditionTache({
             onBasculerStatut(tache)
             onFerme()
           }}
-          className="rounded-xl border border-border py-2.5 text-[13.5px] font-semibold text-muted disabled:opacity-60"
+          className="min-h-11 rounded-xl border border-border py-2.5 text-[13.5px] font-semibold text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
         >
           {tache.statut === 'fait' ? 'Marquer à faire' : 'Marquer comme faite'}
         </button>

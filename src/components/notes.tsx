@@ -176,7 +176,7 @@ export function Notes({
           value={titre}
           onChange={(e) => setTitre(e.target.value)}
           placeholder="Titre de la note"
-          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <label htmlFor="contenu-nouvelle-note" className="sr-only">
           Contenu de la note
@@ -188,7 +188,7 @@ export function Notes({
           onChange={(e) => setContenu(e.target.value)}
           placeholder="Contenu de la note"
           rows={3}
-          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <ChampPhotos onChange={setPhotos} />
         <button
@@ -209,7 +209,7 @@ export function Notes({
         value={recherche}
         onChange={(e) => setRecherche(e.target.value)}
         placeholder="Rechercher une note..."
-        className="rounded-xl border border-border bg-surface px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+        className="rounded-xl border border-border bg-surface px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
       />
 
       <div className="flex flex-1 flex-col gap-3">
@@ -373,7 +373,7 @@ function CarteNote({
               type="button"
               onClick={() => setPhotoAgrandie(index)}
               aria-label="Agrandir la photo"
-              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl"
+              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Image src={url} alt="" fill sizes="64px" className="object-cover" />
             </button>
@@ -461,7 +461,7 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
           required
           defaultValue={note.titre}
           placeholder="Titre de la note"
-          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <label htmlFor="contenu-edition-note" className="sr-only">
           Contenu de la note
@@ -473,7 +473,7 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
           defaultValue={note.contenu}
           placeholder="Contenu de la note"
           rows={5}
-          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <button
           type="submit"

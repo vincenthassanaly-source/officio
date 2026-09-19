@@ -292,7 +292,7 @@ export function FilDeMessages({
               value={recherche}
               onChange={(e) => setRecherche(e.target.value)}
               placeholder="Rechercher dans les messages…"
-              className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+              className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
             />
             {filtresActifs && (
               <button
@@ -469,7 +469,7 @@ export function FilDeMessages({
             }}
             rows={1}
             placeholder="Écrire un message…"
-            className="min-w-0 max-h-40 flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-bg px-4 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            className="min-w-0 max-h-40 flex-1 resize-none overflow-y-auto rounded-2xl border border-border bg-bg px-4 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
           <ChampAudio key={`audio-${cleFormulaire}`} onChange={setAudio} />
           <ChampPhotos key={`photos-${cleFormulaire}`} onChange={setPhotos} />
@@ -677,7 +677,7 @@ function MessageItem({
               type="button"
               onClick={() => setPhotoAgrandie(index)}
               aria-label="Agrandir la photo"
-              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl"
+              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Image src={url} alt="" fill sizes="64px" className="object-cover" />
             </button>
@@ -835,12 +835,12 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
           defaultValue={message.contenu}
           placeholder="Écrire un message…"
           rows={5}
-          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <button
           type="submit"
           disabled={isPending}
-          className="mt-1 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+          className="mt-1 min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
         >
           Enregistrer
         </button>

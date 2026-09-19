@@ -76,7 +76,12 @@ export function ChampPhotos({ onChange }: { onChange: (fichiers: File[]) => void
       />
       {apercus.map((a, index) => (
         <div key={a.url} className="relative h-16 w-16">
-          <button type="button" onClick={() => setAgrandie(index)} aria-label="Agrandir la photo">
+          <button
+            type="button"
+            onClick={() => setAgrandie(index)}
+            aria-label="Agrandir la photo"
+            className="rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob URL), pas une image distante */}
             <img src={a.url} alt="" className="h-16 w-16 rounded-xl object-cover" />
           </button>

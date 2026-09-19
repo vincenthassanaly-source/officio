@@ -377,7 +377,7 @@ export function TachesList({
             name="titre"
             required
             placeholder="Titre de la tâche"
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
           <label htmlFor="assigne-nouvelle-tache" className="sr-only">
             Assigner à
@@ -386,7 +386,7 @@ export function TachesList({
             id="assigne-nouvelle-tache"
             name="assigne_id"
             defaultValue=""
-            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+            className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           >
             <option value="">Non assignée (toute l&rsquo;équipe)</option>
             {equipe.map((m) => (
@@ -400,7 +400,7 @@ export function TachesList({
               type="date"
               name="echeance"
               aria-label="Date d'échéance"
-              className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+              className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
             />
             {/* Facultative : si renseignée, un rappel push + in-app arrive
                 pile à cette heure (au lieu du rappel générique "Échéance
@@ -411,7 +411,7 @@ export function TachesList({
               type="time"
               name="echeance_heure"
               aria-label="Heure d'échéance"
-              className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+              className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -421,7 +421,7 @@ export function TachesList({
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+            className="min-h-11 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
           >
             Ajouter la tâche
           </button>
@@ -559,9 +559,9 @@ function CarteTache({
           type="button"
           onClick={() => setPhotoAgrandie(true)}
           aria-label="Agrandir la photo"
-          className="relative block h-10 w-10 shrink-0 overflow-hidden rounded-lg"
+          className="relative block h-11 w-11 shrink-0 overflow-hidden rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          <Image src={tache.photoUrl} alt="" fill sizes="40px" className="object-cover" />
+          <Image src={tache.photoUrl} alt="" fill sizes="44px" className="object-cover" />
         </button>
       )}
       {photoAgrandie && tache.photoUrl && (
