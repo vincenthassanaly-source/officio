@@ -79,9 +79,10 @@ export function SquelettePage({ children }: { children: React.ReactNode }) {
 
 // Repli par défaut, conservé tel quel pour les routes dont la forme réelle
 // est déjà proche d'une simple liste de cartes (carnet, fournisseurs, notes,
-// suggestions, ruptures, CNO, chaussures, documents, profil…). Les routes à
-// fort écart de forme ont leur propre squelette : accueil, agenda, liaison,
-// huiles essentielles et vaccins.
+// suggestions, ruptures, CNO, documents, profil…). Les routes à fort écart de
+// forme ont leur propre squelette : accueil, agenda, liaison, huiles
+// essentielles, vaccins et chaussures (Lot 4 : grille de vignettes, pas une
+// liste).
 export function PageLoading() {
   return (
     <SquelettePage>
