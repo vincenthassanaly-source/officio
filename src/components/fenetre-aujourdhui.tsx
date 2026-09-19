@@ -7,10 +7,8 @@ import { getProgrammeDuJour, type ProgrammeDuJour } from '@/app/actions/fenetre-
 import { doitOuvrirFenetreAujourdhui, marquerFenetreAujourdhuiAffichee } from '@/lib/fenetre-aujourdhui'
 import { toISODate } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import type { CategorieRdv } from '@/lib/data/rendez-vous'
-
-const SELECTEUR_FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 const LABELS_CATEGORIE_RDV: Record<CategorieRdv, string> = {
   rdv: 'Rendez-vous',
@@ -44,7 +42,6 @@ export function FenetreAujourdhui() {
   // côté serveur).
   const monte = useSyncExternalStore(sabonnerSansChangement, () => true, () => false)
   const panneauRef = useRef<HTMLDivElement>(null)
-  const declencheurRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     const dateAujourdhuiISO = toISODate(new Date())
@@ -65,55 +62,21 @@ export function FenetreAujourdhui() {
 
   const signalerNavigation = useFermerAvecRetour(ouvert, () => setOuvert(false))
 
+  // Même traitement d'accessibilité que ModaleConfirmation/MenuPlusPanel,
+  // porté par le hook partagé usePiegeFocus (Lot 5) : piège à focus,
+  // verrouillage du scroll, retour du focus au déclencheur. Ici la fenêtre
+  // s'ouvre automatiquement (pas de clic déclencheur) : le focus mémorisé
+  // est celui qui avait le focus au moment de l'ouverture (souvent
+  // <body>), ce qui reste un repli sûr — identique au comportement avant
+  // la bascule (le focus initial visait déjà le premier élément focusable,
+  // ici le bouton Fermer).
+  usePiegeFocus(ouvert, panneauRef)
+
   function naviguer(url: string) {
     setOuvert(false)
     signalerNavigation()
     router.push(url)
   }
-
-  // Même traitement d'accessibilité que ModaleConfirmation/MenuPlusPanel :
-  // piège à focus, verrouillage du scroll, retour du focus au déclencheur.
-  // Ici la fenêtre s'ouvre automatiquement (pas de clic déclencheur) : le
-  // focus mémorisé est celui qui avait le focus au moment de l'ouverture
-  // (souvent <body>), ce qui reste un repli sûr.
-  useEffect(() => {
-    if (ouvert) {
-      declencheurRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-      panneauRef.current?.querySelector<HTMLElement>(SELECTEUR_FOCUSABLE)?.focus()
-    } else {
-      declencheurRef.current?.focus()
-      declencheurRef.current = null
-    }
-  }, [ouvert])
-
-  useEffect(() => {
-    if (!ouvert) return
-    const overflowOrigine = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = overflowOrigine
-    }
-  }, [ouvert])
-
-  useEffect(() => {
-    if (!ouvert) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Tab' || !panneauRef.current) return
-      const cibles = Array.from(panneauRef.current.querySelectorAll<HTMLElement>(SELECTEUR_FOCUSABLE))
-      if (cibles.length === 0) return
-      const premier = cibles[0]
-      const dernier = cibles[cibles.length - 1]
-      if (e.shiftKey && document.activeElement === premier) {
-        e.preventDefault()
-        dernier.focus()
-      } else if (!e.shiftKey && document.activeElement === dernier) {
-        e.preventDefault()
-        premier.focus()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [ouvert])
 
   if (!monte || !ouvert || !programme) return null
 

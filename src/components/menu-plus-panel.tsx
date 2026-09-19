@@ -1,14 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { MODULES_SECONDAIRES, deriveDirectionNav } from '@/lib/nav-items'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { demarrerNavigation } from '@/lib/navigation-en-cours'
-
-const SELECTEUR_FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 /**
  * Panneau remontant du bas listant les modules secondaires (accessibles
@@ -16,52 +14,17 @@ const SELECTEUR_FOCUSABLE =
  * pattern visuel que ModaleConfirmation : fixed inset-0 + fond noir semi-
  * transparent, contenu ancré en bas sur mobile. Même traitement d'accessi-
  * bilité que ModaleConfirmation (piège à focus, verrouillage du scroll,
- * retour du focus au déclencheur), voir son commentaire pour le détail.
+ * retour du focus au déclencheur), porté par le hook partagé usePiegeFocus
+ * (Lot 5) — parité démontrée : ce panneau n'a jamais eu besoin d'un focus
+ * initial différent du premier élément focusable (contrairement à
+ * ModaleConfirmation en variante à choix, qui vise toujours son bouton
+ * Annuler et reste donc sur sa propre implémentation, voir son commentaire).
  */
 export function MenuPlusPanel({ ouvert, onFermer }: { ouvert: boolean; onFermer: () => void }) {
   const pathname = usePathname()
   const signalerNavigation = useFermerAvecRetour(ouvert, onFermer)
   const panneauRef = useRef<HTMLDivElement>(null)
-  const declencheurRef = useRef<HTMLElement | null>(null)
-
-  useEffect(() => {
-    if (ouvert) {
-      declencheurRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-      panneauRef.current?.querySelector<HTMLElement>(SELECTEUR_FOCUSABLE)?.focus()
-    } else {
-      declencheurRef.current?.focus()
-      declencheurRef.current = null
-    }
-  }, [ouvert])
-
-  useEffect(() => {
-    if (!ouvert) return
-    const overflowOrigine = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = overflowOrigine
-    }
-  }, [ouvert])
-
-  useEffect(() => {
-    if (!ouvert) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'Tab' || !panneauRef.current) return
-      const cibles = Array.from(panneauRef.current.querySelectorAll<HTMLElement>(SELECTEUR_FOCUSABLE))
-      if (cibles.length === 0) return
-      const premier = cibles[0]
-      const dernier = cibles[cibles.length - 1]
-      if (e.shiftKey && document.activeElement === premier) {
-        e.preventDefault()
-        dernier.focus()
-      } else if (!e.shiftKey && document.activeElement === dernier) {
-        e.preventDefault()
-        premier.focus()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [ouvert])
+  usePiegeFocus(ouvert, panneauRef)
 
   if (!ouvert) return null
 
