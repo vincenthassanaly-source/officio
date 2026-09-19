@@ -43,11 +43,42 @@ const LABELS_STATUT: Record<StatutHuile, string> = {
 
 const OPTIONS_STATUT: StatutHuile[] = ['en_stock', 'non_tenu_en_stock', 'a_commander', 'en_commande']
 
+const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
+
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 const CHAMP_VOLUME_COMMANDE_CLASS =
-  'w-16 rounded-lg border border-border bg-bg px-2 py-1.5 text-[13px] text-ink outline-none focus:border-primary disabled:opacity-60'
+  'w-16 rounded-lg border border-border bg-bg px-2 py-1.5 text-[13px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-60'
+
+function IconAjouter({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
+
+function IconFermer({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  )
+}
+
+// Bouton « Voir les actions » (alternative à l'appui long, voir
+// fil-de-messages.tsx) : le geste ne peut pas être déclenché au clavier ou
+// par un lecteur d'écran, ce bouton ouvre le même état que l'appui long.
+function IconOptions({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <circle cx="12" cy="5" r="1.75" />
+      <circle cx="12" cy="12" r="1.75" />
+      <circle cx="12" cy="19" r="1.75" />
+    </svg>
+  )
+}
 
 export function formatVolume(volume: number) {
   return volume % 1 === 0 ? volume : volume.toLocaleString('fr-FR')
@@ -64,7 +95,14 @@ export function formatPrix(prix: number, volume: number) {
 function ChampsFormulaire({ huile }: { huile?: HuileEssentielle }) {
   return (
     <>
-      <input name="nom" defaultValue={huile?.nom} required placeholder="Nom de l'huile" className={CHAMP_CLASS} />
+      <input
+        name="nom"
+        defaultValue={huile?.nom}
+        required
+        placeholder="Nom de l'huile"
+        aria-label="Nom de l'huile"
+        className={CHAMP_CLASS}
+      />
       <div className="flex gap-2">
         <input
           type="number"
@@ -74,6 +112,9 @@ function ChampsFormulaire({ huile }: { huile?: HuileEssentielle }) {
           defaultValue={huile?.prix_reference}
           required
           placeholder="Prix (€)"
+          aria-label="Prix en euros"
+          inputMode="decimal"
+          enterKeyHint="next"
           className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
         />
         <input
@@ -83,6 +124,9 @@ function ChampsFormulaire({ huile }: { huile?: HuileEssentielle }) {
           min="1"
           defaultValue={huile?.volume_reference_ml ?? 10}
           placeholder="Volume (mL)"
+          aria-label="Volume en mL"
+          inputMode="numeric"
+          enterKeyHint="done"
           className={`min-w-0 flex-1 ${CHAMP_CLASS}`}
         />
       </div>
@@ -185,15 +229,16 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
             type="button"
             key={s.value}
             onClick={() => setOngletStatut(s.value)}
-            className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold ${
+            aria-pressed={ongletStatut === s.value}
+            className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${
               ongletStatut === s.value
                 ? 'border-primary bg-primary text-white'
                 : 'border-border bg-surface text-muted'
-            }`}
+            } ${CLASSE_FOCUS}`}
           >
             {s.label}
             <span
-              className={`flex h-4 w-4 items-center justify-center rounded-full text-[9.5px] font-bold ${
+              className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold ${
                 ongletStatut === s.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
               }`}
             >
@@ -208,18 +253,20 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
           <button
             type="button"
             onClick={() => setFiltreDisponibilite('en_stock')}
-            className={`flex-1 rounded-lg py-2 text-[12.5px] font-semibold transition ${
+            aria-pressed={filtreDisponibilite === 'en_stock'}
+            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold transition ${
               filtreDisponibilite === 'en_stock' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
-            }`}
+            } ${CLASSE_FOCUS}`}
           >
             En stock
           </button>
           <button
             type="button"
             onClick={() => setFiltreDisponibilite('non_tenu_en_stock')}
-            className={`flex-1 rounded-lg py-2 text-[12.5px] font-semibold transition ${
+            aria-pressed={filtreDisponibilite === 'non_tenu_en_stock'}
+            className={`min-h-11 flex-1 rounded-lg text-[12.5px] font-semibold transition ${
               filtreDisponibilite === 'non_tenu_en_stock' ? 'bg-surface text-primary shadow-sm' : 'text-muted'
-            }`}
+            } ${CLASSE_FOCUS}`}
           >
             Non tenu en stock
           </button>
@@ -230,6 +277,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
         value={recherche}
         onChange={(e) => setRecherche(e.target.value)}
         placeholder="Rechercher une huile…"
+        aria-label="Rechercher une huile"
         className={CHAMP_CLASS}
       />
 
@@ -240,9 +288,19 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
             setFormOuvert((v) => !v)
             setEnEdition(null)
           }}
-          className="self-start text-xs font-semibold text-primary"
+          className={`flex min-h-11 items-center gap-1.5 self-start text-xs font-semibold text-primary ${CLASSE_FOCUS}`}
         >
-          {formOuvert ? '× Annuler' : '+ Créer une nouvelle huile'}
+          {formOuvert ? (
+            <>
+              <IconFermer className="h-4 w-4" />
+              Annuler
+            </>
+          ) : (
+            <>
+              <IconAjouter className="h-4 w-4" />
+              Créer une nouvelle huile
+            </>
+          )}
         </button>
       )}
 
@@ -250,9 +308,10 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
         <button
           type="button"
           onClick={() => setModaleAjoutStockOuverte(true)}
-          className="self-start text-xs font-semibold text-primary"
+          className={`flex min-h-11 items-center gap-1.5 self-start text-xs font-semibold text-primary ${CLASSE_FOCUS}`}
         >
-          + Ajouter une huile
+          <IconAjouter className="h-4 w-4" />
+          Ajouter une huile
         </button>
       )}
 
@@ -270,7 +329,7 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
           <button
             type="submit"
             disabled={isPending}
-            className="rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+            className={`rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
           >
             Ajouter
           </button>
@@ -301,14 +360,14 @@ export function HuilesEssentiellesListe({ huiles }: { huiles: HuileEssentielle[]
                   <button
                     type="submit"
                     disabled={isPending}
-                    className="flex-1 rounded-xl bg-primary py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-60"
+                    className={`flex-1 rounded-xl bg-primary py-3 text-[13.5px] font-semibold text-white disabled:opacity-60 ${CLASSE_FOCUS}`}
                   >
                     Enregistrer
                   </button>
                   <button
                     type="button"
                     onClick={() => setEnEdition(null)}
-                    className="rounded-xl border border-border px-4 py-2.5 text-[13.5px] font-semibold text-muted"
+                    className={`rounded-xl border border-border px-4 py-3 text-[13.5px] font-semibold text-muted ${CLASSE_FOCUS}`}
                   >
                     Annuler
                   </button>
@@ -436,14 +495,16 @@ function CarteHuile({
                 defaultValue={huile.volume_a_commander_ml ?? ''}
                 onBlur={(e) => onSauvegarderVolume(huile.id, e.target.value)}
                 placeholder="Vol."
-                aria-label="Volume à commander"
+                aria-label={`Volume à commander pour ${huile.nom}`}
+                inputMode="numeric"
+                enterKeyHint="done"
                 className={CHAMP_VOLUME_COMMANDE_CLASS}
               />
-              <span className="text-[11px] text-muted">mL</span>
+              <span className="text-[12px] text-muted">mL</span>
             </div>
           )}
         </div>
-        <div className="mt-0.5 font-mono text-[11px] text-muted">
+        <div className="mt-0.5 font-mono text-[12px] text-muted">
           {formatPrix(huile.prix_reference, huile.volume_reference_ml)}
           {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') &&
             huile.volume_a_commander_ml != null &&
@@ -454,7 +515,8 @@ function CarteHuile({
         <select
           value={huile.statut}
           onChange={(e) => onChangerStatut(huile.id, e.target.value as StatutHuile)}
-          className="shrink-0 rounded-lg border border-border bg-bg px-2 py-1.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
+          aria-label={`Statut de ${huile.nom}`}
+          className={`min-h-11 shrink-0 rounded-lg border border-border bg-bg px-2 text-[16px] font-semibold text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
         >
           {OPTIONS_STATUT.map((statut) => (
             <option key={statut} value={statut}>
@@ -463,7 +525,7 @@ function CarteHuile({
           ))}
         </select>
       ) : (
-        <label className="flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-ink">
+        <label className="flex min-h-11 shrink-0 items-center gap-1.5 text-[12px] font-semibold text-ink">
           <input
             type="checkbox"
             checked={false}
@@ -471,7 +533,7 @@ function CarteHuile({
               const nouveauStatut: StatutHuile = ongletStatut === 'a_commander' ? 'en_commande' : 'en_stock'
               onChangerStatut(huile.id, nouveauStatut)
             }}
-            className="h-4 w-4 accent-[var(--color-primary)] disabled:opacity-60"
+            className={`h-4 w-4 accent-[var(--color-primary)] disabled:opacity-60 ${CLASSE_FOCUS}`}
           />
           {ongletStatut === 'a_commander' ? 'Commandée' : 'Reçue'}
         </label>
@@ -481,26 +543,46 @@ function CarteHuile({
           type="button"
           disabled={isPending}
           onClick={() => setConfirmationOuverte(true)}
-          aria-label="Supprimer l'huile"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec"
+          aria-label={`Supprimer l'huile ${huile.nom}`}
+          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 6h18" />
-            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
-          </svg>
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18" />
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+            </svg>
+          </span>
         </button>
       ) : (
-        <button
-          type="button"
-          onClick={() => onEditer(huile.id)}
-          aria-label="Modifier"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-soft text-muted"
-        >
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
-        </button>
+        <>
+          {/* Les icônes d'action se limitent au bouton Modifier, toujours
+              visible — l'appui long ne fait qu'ajouter la possibilité de
+              supprimer. Ce bouton en est l'alternative visible, accessible
+              au clavier et au lecteur d'écran : le geste reste disponible
+              en plus, pas à la place (voir DESIGN.md, Alternative à l'appui
+              long). */}
+          <button
+            type="button"
+            onClick={() => setSelectionneePourSuppression(true)}
+            aria-label={`Voir les actions pour ${huile.nom}`}
+            className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 text-muted hover:text-ink ${CLASSE_FOCUS}`}
+          >
+            <IconOptions className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => onEditer(huile.id)}
+            aria-label={`Modifier ${huile.nom}`}
+            className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </span>
+          </button>
+        </>
       )}
 
       <ModaleConfirmation
