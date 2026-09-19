@@ -125,7 +125,7 @@ export function BottomNav() {
               // des onglets (voir deriveDirectionNav) : absent si l'onglet
               // ciblé est déjà actif, retombe alors sur le fondu par défaut.
               transitionTypes={direction ? [direction] : undefined}
-              className={`relative z-10 flex shrink-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-3 py-1.5 text-xs font-semibold sm:px-4 ${
+              className={`relative z-10 flex shrink-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-3 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4 ${
                 actif ? 'text-primary' : 'text-muted'
               }`}
             >
@@ -142,7 +142,7 @@ export function BottomNav() {
           type="button"
           aria-label="Autres modules"
           onClick={() => setPanelOuvert(true)}
-          className={`relative z-10 flex shrink-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-3 py-1.5 text-xs font-semibold sm:px-4 ${
+          className={`relative z-10 flex shrink-0 flex-col items-center gap-0.5 whitespace-nowrap rounded-2xl px-3 py-1.5 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:px-4 ${
             plusActif ? 'text-primary' : 'text-muted'
           }`}
         >

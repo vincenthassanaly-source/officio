@@ -60,7 +60,7 @@ export function SidebarNav({
               // ces pages sont en Cache-Control no-store (voir next.config.ts),
               // le prefetch resservirait un contenu obsolète (ex. non lus).
               prefetch={item.href === '/' || item.href === '/liaison' || item.href === '/agenda' ? false : undefined}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                 actif ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-neutral-soft hover:text-ink'
               }`}
             >
@@ -76,7 +76,7 @@ export function SidebarNav({
         <Link
           href="/activite"
           prefetch={false}
-          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold ${
+          className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             estLienActif('/activite', pathname) ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-neutral-soft hover:text-ink'
           }`}
         >
@@ -96,20 +96,20 @@ export function SidebarNav({
         )}
         <Link
           href="/inviter"
-          className="rounded-lg px-3 py-2 text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink"
+          className="rounded-lg px-3 py-3 text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Mon équipe
         </Link>
         <Link
           href="/profil"
-          className="rounded-lg px-3 py-2 text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink"
+          className="rounded-lg px-3 py-3 text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           Profil
         </Link>
         <form action={signOut}>
           <button
             type="submit"
-            className="w-full rounded-lg px-3 py-2 text-left text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink"
+            className="w-full rounded-lg px-3 py-3 text-left text-sm font-semibold text-muted hover:bg-neutral-soft hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Se déconnecter
           </button>
