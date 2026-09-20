@@ -28,6 +28,13 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#4F46E5",
+  // Sur Chrome Android, le clavier virtuel redimensionne la page (au lieu de
+  // se superposer par-dessus sans redimensionner le viewport visuel) : les
+  // `dvh`/`max-h`/`overflow-y-auto` des sheets (voir commits précédents)
+  // suivent alors la hauteur réellement disponible. iOS Safari ignore cette
+  // option (pas de régression : comportement système inchangé) — à valider
+  // sur un vrai téléphone Android, non émulable par Playwright.
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({
