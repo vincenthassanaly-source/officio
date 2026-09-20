@@ -105,7 +105,7 @@ export function ChampPhoto({
             type="button"
             onClick={retirer}
             aria-label="Retirer la photo"
-            className="absolute -right-3.5 -top-3.5 flex h-11 w-11 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="absolute -right-2.5 -top-2.5 flex h-11 w-11 items-center justify-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rec text-white">
               <IconFermer className="h-3 w-3" />

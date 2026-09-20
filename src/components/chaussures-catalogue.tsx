@@ -225,16 +225,24 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
         onClick={(e) => e.stopPropagation()}
         className="relative flex max-h-[90dvh] w-full flex-col overflow-y-auto rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
       >
-        <button
-          type="button"
-          onClick={onFermer}
-          aria-label="Fermer"
-          className={`absolute right-3 top-3 z-10 -m-1.5 flex h-11 w-11 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white">
-            <IconFermer className="h-4 w-4" />
-          </span>
-        </button>
+        {/* `sticky top-3 h-0` : conteneur sans hauteur propre, ne décale pas
+            la photo qui suit, mais reste accroché en haut du viewport visible
+            de ce panneau `overflow-y-auto` pendant le défilement — le bouton
+            Fermer, positionné en absolu par rapport à ce conteneur, ne
+            défilait auparavant qu'avec le contenu et sortait de l'écran une
+            fois la fiche parcourue (constat D5 de l'audit). */}
+        <div className="sticky top-3 z-10 h-0">
+          <button
+            type="button"
+            onClick={onFermer}
+            aria-label="Fermer"
+            className={`absolute right-3 top-0 -m-1.5 flex h-11 w-11 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white">
+              <IconFermer className="h-4 w-4" />
+            </span>
+          </button>
+        </div>
 
         <div className="relative aspect-square w-full shrink-0 bg-neutral-soft">
           {photoAffichee ? (

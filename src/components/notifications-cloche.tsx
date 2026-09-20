@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { marquerNotificationLue, marquerToutesNotificationsLues } from '@/app/actions/notifications'
 import { useNotificationsInApp } from '@/components/notifications-provider'
@@ -68,27 +68,44 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
     }
   }
 
+  // Position calculée depuis le bouton plutôt que déduite en CSS (`right-0`
+  // sur le wrapper) : la cloche n'est pas forcément près du bord droit de
+  // l'écran (header mobile : OfficineSwitcher, cloche, puis Inviter/Profil/
+  // déconnexion après). `right` doit être plafonné dans LES DEUX sens : pas
+  // trop petit (le panneau collerait/dépasserait le bord droit) et pas trop
+  // grand (le panneau, ancré à droite, déborderait à gauche si le bouton est
+  // loin du bord droit — c'était le bug du premier correctif, qui ne
+  // plafonnait que le minimum).
+  const calculerPosition = useCallback(() => {
+    const bouton = boutonRef.current
+    if (!bouton) return
+    const rect = bouton.getBoundingClientRect()
+    const margeMin = 16
+    const rightMax = Math.max(window.innerWidth - LARGEUR_PANNEAU - margeMin, margeMin)
+    const rightIdeal = window.innerWidth - rect.right
+    setPosition({
+      top: rect.bottom + 8,
+      right: Math.min(Math.max(rightIdeal, margeMin), rightMax),
+    })
+  }, [])
+
+  // Recalcule tant que le panneau reste ouvert : sans ça, une rotation ou un
+  // redimensionnement panneau ouvert laisse la position figée sur l'ancienne
+  // géométrie (constat D4 de l'audit).
+  useEffect(() => {
+    if (!ouvert) return
+    window.addEventListener('resize', calculerPosition)
+    window.addEventListener('orientationchange', calculerPosition)
+    return () => {
+      window.removeEventListener('resize', calculerPosition)
+      window.removeEventListener('orientationchange', calculerPosition)
+    }
+  }, [ouvert, calculerPosition])
+
   function toggle() {
     const seraOuvert = !ouvert
 
-    if (seraOuvert && boutonRef.current) {
-      // Position calculée depuis le bouton plutôt que déduite en CSS
-      // (`right-0` sur le wrapper) : la cloche n'est pas forcément près du
-      // bord droit de l'écran (header mobile : OfficineSwitcher, cloche,
-      // puis Inviter/Profil/déconnexion après). `right` doit être plafonné
-      // dans LES DEUX sens : pas trop petit (le panneau collerait/dépasserait
-      // le bord droit) et pas trop grand (le panneau, ancré à droite,
-      // déborderait à gauche si le bouton est loin du bord droit — c'était le
-      // bug du premier correctif, qui ne plafonnait que le minimum).
-      const rect = boutonRef.current.getBoundingClientRect()
-      const margeMin = 16
-      const rightMax = Math.max(window.innerWidth - LARGEUR_PANNEAU - margeMin, margeMin)
-      const rightIdeal = window.innerWidth - rect.right
-      setPosition({
-        top: rect.bottom + 8,
-        right: Math.min(Math.max(rightIdeal, margeMin), rightMax),
-      })
-    }
+    if (seraOuvert) calculerPosition()
 
     // Marque tout comme lu à l'ouverture (pas à la fermeture) plutôt que via
     // un bouton dédié dans le panneau : ouvrir la cloche, c'est déjà

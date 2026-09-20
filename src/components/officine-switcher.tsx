@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useTransition } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import { changerOfficineActiveAction } from '@/app/actions/officine'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import type { Adhesion } from '@/lib/data/adhesions'
@@ -43,16 +43,33 @@ export function OfficineSwitcher({
     </span>
   ) : null
 
-  function toggle() {
-    if (!ouvert && boutonRef.current) {
-      const rect = boutonRef.current.getBoundingClientRect()
-      const margeMin = 16
-      const leftMax = Math.max(window.innerWidth - LARGEUR_PANNEAU - margeMin, margeMin)
-      setPosition({
-        top: rect.bottom + 8,
-        left: Math.min(Math.max(rect.left, margeMin), leftMax),
-      })
+  const calculerPosition = useCallback(() => {
+    const bouton = boutonRef.current
+    if (!bouton) return
+    const rect = bouton.getBoundingClientRect()
+    const margeMin = 16
+    const leftMax = Math.max(window.innerWidth - LARGEUR_PANNEAU - margeMin, margeMin)
+    setPosition({
+      top: rect.bottom + 8,
+      left: Math.min(Math.max(rect.left, margeMin), leftMax),
+    })
+  }, [])
+
+  // Recalcule tant que le panneau reste ouvert : sans ça, une rotation ou un
+  // redimensionnement panneau ouvert laisse la position figée sur l'ancienne
+  // géométrie (constat D4 de l'audit, même défaut que NotificationsCloche).
+  useEffect(() => {
+    if (!ouvert) return
+    window.addEventListener('resize', calculerPosition)
+    window.addEventListener('orientationchange', calculerPosition)
+    return () => {
+      window.removeEventListener('resize', calculerPosition)
+      window.removeEventListener('orientationchange', calculerPosition)
     }
+  }, [ouvert, calculerPosition])
+
+  function toggle() {
+    if (!ouvert) calculerPosition()
     setOuvert((v) => !v)
   }
 
