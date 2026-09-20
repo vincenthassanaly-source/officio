@@ -306,11 +306,14 @@ export function TachesList({
   return (
     <div className="flex flex-1 flex-col gap-3">
       <div className="flex items-center gap-2">
-        <div className="flex flex-1 gap-1.5 overflow-x-auto">
+        {/* Compensation de cible tactile posée sur le conteneur, pas sur les
+            boutons enfants — voir DESIGN.md, règle de la compensation
+            négative (même correctif que fil-de-messages.tsx). */}
+        <div className="-my-3.5 flex flex-1 gap-1.5 overflow-x-auto overflow-y-hidden">
           <button
             type="button"
             onClick={() => setFiltre('tous')}
-            className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            className="flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <span
               className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
@@ -325,7 +328,7 @@ export function TachesList({
               type="button"
               key={m.id}
               onClick={() => setFiltre(m.id)}
-              className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <span
                 className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${

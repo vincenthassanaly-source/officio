@@ -305,11 +305,20 @@ export function FilDeMessages({
             )}
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+          {/* `-my-3.5` (compensation de cible tactile 44 px) posée sur ce
+              conteneur, pas sur les boutons enfants : un enfant à marge
+              négative dans un conteneur `overflow-x-auto` (dont l'overflow-y
+              se calcule alors à `auto`, jamais `visible`) se retrouve rogné
+              en haut/bas et rend la rangée scrollable verticalement — voir
+              DESIGN.md, règle de la compensation négative. Le conteneur reste
+              ≥ 44 px de haut (hauteur des enfants), sa propre marge négative
+              ne fait que rapprocher visuellement les blocs voisins.
+              `overflow-y-hidden` en filet de sécurité. */}
+          <div className="-my-3.5 flex gap-1.5 overflow-x-auto overflow-y-hidden pb-0.5">
             <button
               type="button"
               onClick={() => setFiltreCategorie(FILTRE_TOUTES)}
-              className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <span
                 className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
@@ -326,7 +335,7 @@ export function FilDeMessages({
                 type="button"
                 key={c.value}
                 onClick={() => setFiltreCategorie(c.value)}
-                className="-my-3.5 flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="flex min-h-11 shrink-0 items-center rounded-full px-0.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 <span
                   className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold ${
