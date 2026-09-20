@@ -196,7 +196,7 @@ function EntreeJournalItem({
         {entree.auteur?.initiales ?? '·'}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13.5px] font-semibold text-ink">{entree.titre}</p>
+        <p className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">{entree.titre}</p>
         <p className="text-[12px] text-muted">{formatDateRelative(entree.created_at)}</p>
       </div>
     </>

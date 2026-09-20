@@ -186,7 +186,7 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
               {estImage(d.type_fichier) ? 'IMG' : 'PDF'}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="truncate text-[13.5px] font-semibold text-ink">{d.nom}</div>
+              <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">{d.nom}</div>
               <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[12px] text-muted">
                 <span
                   className={`rounded-full px-2 py-0.5 text-[12px] font-bold ${classNameCategorie(d.categorie)}`}

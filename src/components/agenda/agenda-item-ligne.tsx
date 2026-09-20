@@ -117,7 +117,7 @@ export function ItemLigne({
         </div>
         <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
           <div className="flex items-start justify-between gap-2">
-            <div className="text-sm font-semibold text-ink">{r.titre}</div>
+            <div className="wrap-anywhere text-sm font-semibold text-ink">{r.titre}</div>
             <div className="flex shrink-0 items-center gap-1">
               <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold ${cat.className}`}>{cat.label}</span>
               <button
@@ -130,7 +130,7 @@ export function ItemLigne({
               </button>
             </div>
           </div>
-          {r.note && <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{r.note}</p>}
+          {r.note && <p className="mt-1.5 wrap-anywhere text-[12.5px] leading-relaxed text-muted">{r.note}</p>}
         </div>
       </div>
     )
@@ -166,7 +166,7 @@ export function ItemLigne({
             className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             <div
-              className={`min-w-0 flex-1 text-sm font-semibold ${
+              className={`min-w-0 flex-1 wrap-anywhere text-sm font-semibold ${
                 t.statut === 'fait' ? 'text-muted line-through' : 'text-ink'
               }`}
             >

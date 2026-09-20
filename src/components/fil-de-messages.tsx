@@ -618,7 +618,7 @@ function MessageItem({
           {m.auteur?.initiales ?? '?'}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[13.5px] font-semibold text-ink">
+          <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">
             {m.auteur?.nom_complet ?? 'Ancien collègue'}
           </div>
           <div className="text-[12px] text-muted">{formatDateRelative(m.created_at)}</div>
@@ -664,7 +664,7 @@ function MessageItem({
         )}
       </div>
 
-      {m.contenu && <p className="text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>}
+      {m.contenu && <p className="wrap-anywhere text-[13.5px] leading-relaxed text-ink">{m.contenu}</p>}
       {m.audioUrl && (
         <audio controls src={m.audioUrl} className={`h-9 w-full max-w-xs ${m.contenu ? 'mt-2' : ''}`} />
       )}

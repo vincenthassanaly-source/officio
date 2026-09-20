@@ -731,7 +731,7 @@ export function PlanningEquipe({
                       </p>
                     )}
                   </div>
-                  {c.note && <p className="text-[13px] text-ink">{c.note}</p>}
+                  {c.note && <p className="wrap-anywhere text-[13px] text-ink">{c.note}</p>}
                   <div className="flex gap-2 pt-1">
                     <button
                       type="button"

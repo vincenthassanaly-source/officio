@@ -332,7 +332,7 @@ function CarteNote({
           {note.auteur?.initiales ?? '?'}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[13.5px] font-semibold text-ink">
+          <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">
             {note.auteur?.nom_complet ?? 'Ancien collègue'}
           </div>
           <div className="text-[12px] text-muted">{formatDate(note.created_at)}</div>
@@ -363,8 +363,8 @@ function CarteNote({
           </>
         )}
       </div>
-      <div className="mb-1 text-[14.5px] font-semibold text-ink">{note.titre}</div>
-      <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{note.contenu}</p>
+      <div className="mb-1 wrap-anywhere text-[14.5px] font-semibold text-ink">{note.titre}</div>
+      <p className="wrap-anywhere whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{note.contenu}</p>
       {note.photosUrls.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {note.photosUrls.map((url, index) => (

@@ -146,9 +146,14 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
         <button
           type="button"
           onClick={onOuvrir}
-          className={`flex min-h-11 items-center truncate text-left text-[13px] font-semibold text-ink ${CLASSE_FOCUS}`}
+          className={`flex min-h-11 w-full min-w-0 items-center text-left ${CLASSE_FOCUS}`}
         >
-          {chaussure.nom_modele}
+          {/* `line-clamp-2` posé sur ce <span>, pas sur le <button> flex qui
+              l'englobe : appliqué directement sur un conteneur flex, ni
+              `truncate` ni `line-clamp` ne produisent une ellipse fiable. */}
+          <span className="line-clamp-2 wrap-anywhere text-[13px] font-semibold text-ink">
+            {chaussure.nom_modele}
+          </span>
         </button>
         <div className="truncate text-[12px] font-medium uppercase tracking-wide text-muted">
           {chaussure.categorie}
@@ -306,7 +311,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
           {chaussure.description && (
             <div className="flex flex-col gap-1.5">
               <div className="text-[12px] font-bold uppercase tracking-wide text-muted">Description</div>
-              <p className="text-[13px] leading-relaxed text-ink">{chaussure.description}</p>
+              <p className="wrap-anywhere text-[13px] leading-relaxed text-ink">{chaussure.description}</p>
             </div>
           )}
 

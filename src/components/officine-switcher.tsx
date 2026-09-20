@@ -143,7 +143,7 @@ export function OfficineSwitcher({
                     active ? 'bg-primary-soft text-primary' : 'text-ink hover:bg-neutral-soft'
                   }`}
                 >
-                  <span className="min-w-0 flex-1 truncate">{a.officine_nom}</span>
+                  <span className="min-w-0 flex-1 line-clamp-2 wrap-anywhere">{a.officine_nom}</span>
                   {active && <span className="shrink-0">✓</span>}
                 </button>
               )

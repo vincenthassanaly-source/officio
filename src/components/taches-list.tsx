@@ -592,7 +592,7 @@ function CarteTache({
         className="flex min-h-11 min-w-0 flex-1 items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-70"
       >
         <div className="min-w-0 flex-1">
-          <div className={`text-sm font-semibold ${tache.statut === 'fait' ? 'text-muted line-through' : 'text-ink'}`}>
+          <div className={`wrap-anywhere text-sm font-semibold ${tache.statut === 'fait' ? 'text-muted line-through' : 'text-ink'}`}>
             {tache.titre}
           </div>
           {tache.assigne && (

@@ -90,7 +90,7 @@ function ToastItem({ toast, onFermer }: { toast: Toast; onFermer: () => void }) 
         toast.enSortie ? 'toast-sortie' : 'toast-entree'
       } ${STYLE_PAR_TYPE[toast.type]}`}
     >
-      <p className="min-w-0 flex-1 text-[13.5px] font-medium leading-snug">{toast.message}</p>
+      <p className="min-w-0 flex-1 wrap-anywhere text-[13.5px] font-medium leading-snug">{toast.message}</p>
       <button
         type="button"
         onClick={onFermer}

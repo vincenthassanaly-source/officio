@@ -162,9 +162,9 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
                   >
                     <div className="flex items-center gap-1.5">
                       {!n.lu && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />}
-                      <span className="truncate text-[13px] font-semibold text-ink">{n.titre}</span>
+                      <span className="line-clamp-2 wrap-anywhere text-[13px] font-semibold text-ink">{n.titre}</span>
                     </div>
-                    <p className="truncate text-[12px] text-muted">{n.corps}</p>
+                    <p className="line-clamp-2 wrap-anywhere text-[12px] text-muted">{n.corps}</p>
                     <span className="text-[12px] text-muted">{formatDateRelative(n.created_at)}</span>
                   </button>
                 ))}

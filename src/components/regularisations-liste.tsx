@@ -216,7 +216,7 @@ function CarteRegularisation({
         </div>
       </div>
 
-      {r.note && <p className="mt-1.5 text-[12px] leading-relaxed text-muted">{r.note}</p>}
+      {r.note && <p className="mt-1.5 wrap-anywhere text-[12px] leading-relaxed text-muted">{r.note}</p>}
 
       <div className="mt-2.5 flex items-center gap-2">
         <button

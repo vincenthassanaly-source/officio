@@ -485,7 +485,7 @@ function CarteHuile({
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-start gap-2">
-          <div className="line-clamp-2 text-[13px] font-semibold text-ink">{huile.nom}</div>
+          <div className="line-clamp-2 wrap-anywhere text-[13px] font-semibold text-ink">{huile.nom}</div>
           {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') && (
             <div className="flex shrink-0 items-center gap-1">
               <input

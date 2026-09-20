@@ -285,7 +285,7 @@ function CarteSuggestion({
           {suggestion.auteur?.initiales ?? '?'}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[13.5px] font-semibold text-ink">
+          <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">
             {suggestion.auteur?.nom_complet ?? 'Ancien collègue'}
           </div>
           <div className="text-[12px] text-muted">{formatDate(suggestion.created_at)}</div>
@@ -303,7 +303,7 @@ function CarteSuggestion({
         )}
       </div>
       <p
-        className={`whitespace-pre-wrap text-[13.5px] leading-relaxed ${
+        className={`wrap-anywhere whitespace-pre-wrap text-[13.5px] leading-relaxed ${
           suggestion.fait ? 'text-muted line-through' : 'text-ink'
         }`}
       >
