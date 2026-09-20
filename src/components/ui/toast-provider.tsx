@@ -72,7 +72,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div
         aria-live="polite"
         aria-atomic="false"
-        className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+0.75rem+env(safe-area-inset-bottom))] z-[60] flex flex-col items-center gap-2 px-4 lg:inset-x-auto lg:bottom-6 lg:right-6 lg:items-end lg:px-0"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--hauteur-bottom-nav)+0.75rem+env(safe-area-inset-bottom))] z-[60] flex flex-col items-center gap-2 px-4 lg:inset-x-auto lg:bottom-6 lg:right-6 lg:items-end lg:px-0"
       >
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onFermer={() => retirer(t.id)} />

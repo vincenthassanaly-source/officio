@@ -440,7 +440,14 @@ export function FilDeMessages({
             }
           })
         }}
-        className="sticky bottom-4 flex flex-col gap-2 rounded-[20px] bg-surface p-3 shadow-card"
+        // `bottom` d'un élément sticky se réfère au bas de la zone visible,
+        // pas au bas du contenu : sur mobile, sans ce décalage, le formulaire
+        // se cale à 16 px du bas de l'écran et reste caché sous la bottom nav
+        // (fixed, z-20) tant que le fil n'est pas défilé jusqu'en bas
+        // (constaté sur téléphone). Même variable que le wrapper de page et
+        // les toasts (voir globals.css, --hauteur-bottom-nav). z-10, sous la
+        // nav (z-20) mais au-dessus du contenu du fil.
+        className="sticky bottom-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom)+0.75rem)] z-10 flex flex-col gap-2 rounded-[20px] bg-surface p-3 shadow-card lg:bottom-4"
       >
         <div className="flex gap-1.5">
           {CATEGORIES.map((c) => (

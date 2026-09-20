@@ -55,7 +55,12 @@ export function FabCreationRapide({
           type="button"
           onClick={() => setVue('menu')}
           aria-label="Créer"
-          className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg lg:bottom-8"
+          // `bottom-20` (80px) fixe ne dégageait la bottom nav (≈72px) que de
+          // 8px sans safe-area : sur un téléphone à zone gestuelle/encoche
+          // (safe-area-inset-bottom non nul, 20-34px courant), le FAB se
+          // recouvrait avec le bas de la nav — voir DESIGN.md, règle du bas
+          // collant. Même variable que le formulaire d'envoi et les toasts.
+          className="fixed bottom-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom)+0.5rem)] right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg lg:bottom-8"
         >
           <IconPlus className="h-6 w-6" />
         </button>

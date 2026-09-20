@@ -108,7 +108,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               ex: le swipe semaine/mois de l'agenda, ne déclenche aussi cette
               transition de page). */}
           <PageViewTransition>
-            <div className="flex flex-1 flex-col px-4 py-4 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8 print:p-0">
+            <div className="flex flex-1 flex-col px-4 py-4 pb-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom))] sm:px-8 lg:mx-auto lg:w-full lg:max-w-4xl lg:px-10 lg:py-8 print:p-0">
               {children}
             </div>
           </PageViewTransition>
