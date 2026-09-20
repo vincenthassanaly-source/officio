@@ -131,7 +131,7 @@ export function FenetreAujourdhui() {
         aria-modal="true"
         aria-labelledby="fenetre-aujourdhui-titre"
         onClick={(e) => e.stopPropagation()}
-        className="panneau-entree flex max-h-[80vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex max-h-[80dvh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
           <h2 id="fenetre-aujourdhui-titre" className="text-sm font-bold text-ink">

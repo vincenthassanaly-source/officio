@@ -159,7 +159,7 @@ export function RechercheGlobale() {
         {ouvert && (
           <div
             aria-live="polite"
-            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[70vh] overflow-y-auto rounded-[20px] border border-border bg-surface p-2 shadow-lg"
+            className="absolute left-0 right-0 top-full z-50 mt-2 max-h-[70dvh] overflow-y-auto rounded-[20px] border border-border bg-surface p-2 shadow-lg"
           >
             {chargement ? (
               <p className="px-3 py-6 text-center text-[12.5px] text-muted">Recherche…</p>

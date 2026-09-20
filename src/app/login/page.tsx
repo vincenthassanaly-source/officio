@@ -10,7 +10,7 @@ export default async function LoginPage({
   const modeAjout = mode === 'ajouter'
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-bg px-6">
+    <main className="flex min-h-[100dvh] items-center justify-center bg-bg px-6">
       <div className="w-full max-w-sm rounded-3xl border border-border bg-surface p-8 shadow-sm">
         <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light">
           Officio

@@ -219,7 +219,7 @@ function ModaleDetailJour({
         aria-modal="true"
         aria-label={`Planning du ${formatDateLongue(iso)}`}
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="flex max-h-[85dvh] w-full flex-col gap-3 overflow-y-auto rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="flex items-center justify-between">
           <span className="text-[12.5px] font-semibold text-ink">{formatDateLongue(iso)}</span>

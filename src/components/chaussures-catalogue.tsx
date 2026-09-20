@@ -218,7 +218,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
         aria-modal="true"
         aria-labelledby="chaussure-detail-titre"
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
+        className="relative flex max-h-[90dvh] w-full flex-col overflow-y-auto rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
       >
         <button
           type="button"

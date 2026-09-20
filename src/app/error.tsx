@@ -36,7 +36,7 @@ export default function ErreurRacine({
   }, [error])
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-bg px-6 text-center">
+    <main className="flex min-h-[100dvh] flex-col items-center justify-center gap-6 bg-bg px-6 text-center">
       <IllustrationErreur />
       <div className="flex flex-col gap-2">
         <h1 className="font-heading text-2xl text-ink">Une erreur est survenue</h1>

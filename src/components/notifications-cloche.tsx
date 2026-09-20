@@ -141,7 +141,7 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
           <div aria-hidden="true" onClick={() => setOuvert(false)} className="fixed inset-0 z-40" />
           <div
             style={{ top: position.top, right: position.right }}
-            className="fixed z-50 max-h-[70vh] w-[320px] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface shadow-lg"
+            className="fixed z-50 max-h-[70dvh] w-[320px] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface shadow-lg"
           >
             <div className="border-b border-border px-3.5 py-2.5">
               <span className="text-[13px] font-semibold text-ink">Notifications</span>

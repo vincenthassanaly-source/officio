@@ -380,7 +380,7 @@ export default function FabCreationRapideModal({
       <div
         ref={boiteRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[90vh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
+        className="relative flex max-h-[90dvh] w-full flex-col overflow-y-auto overscroll-contain rounded-t-3xl bg-surface lg:max-w-lg lg:rounded-3xl"
       >
         <button
           type="button"
