@@ -55,7 +55,7 @@ export function FabCreationRapide({
           type="button"
           onClick={() => setVue('menu')}
           aria-label="Créer"
-          className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg lg:bottom-8"
+          className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg lg:bottom-8 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <IconPlus className="h-6 w-6" />
         </button>
