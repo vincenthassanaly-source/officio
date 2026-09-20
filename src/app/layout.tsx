@@ -26,8 +26,12 @@ export const metadata: Metadata = {
   },
 };
 
+// #4e56d3 = valeur sRGB réelle du token --color-primary (oklch(52% 0.19 275)
+// de globals.css) une fois converti — un <meta name="theme-color"> ne peut
+// pas référencer un token CSS. Corrigé du Lot 5 (était #4F46E5, une teinte
+// visiblement différente jamais alignée sur le token).
 export const viewport: Viewport = {
-  themeColor: "#4F46E5",
+  themeColor: "#4e56d3",
 };
 
 export default function RootLayout({
