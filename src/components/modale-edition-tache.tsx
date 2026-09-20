@@ -101,7 +101,7 @@ export default function ModaleEditionTache({
             }
           })
         }}
-        className="panneau-entree flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
           <h2 id="modale-edition-tache-titre" className="text-sm font-bold text-ink">

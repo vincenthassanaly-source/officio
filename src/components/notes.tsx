@@ -419,6 +419,9 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
 
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modale-edition-note-titre"
       className="overlay-entree fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onFerme}
     >
@@ -438,10 +441,10 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
             }
           })
         }}
-        className="panneau-entree flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="panneau-entree flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-ink">Modifier la note</h2>
+          <h2 id="modale-edition-note-titre" className="text-sm font-bold text-ink">Modifier la note</h2>
           <button
             type="button"
             onClick={onFerme}

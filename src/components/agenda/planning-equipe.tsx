@@ -617,7 +617,7 @@ export function PlanningEquipe({
             aria-modal="true"
             aria-label="Détail du créneau"
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full rounded-t-3xl bg-surface p-4 lg:max-w-sm lg:rounded-3xl"
+            className="relative max-h-[85dvh] w-full overflow-y-auto overscroll-contain rounded-t-3xl bg-surface p-4 lg:max-w-sm lg:rounded-3xl"
           >
             <button
               type="button"

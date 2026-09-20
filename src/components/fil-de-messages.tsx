@@ -790,6 +790,9 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
 
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="modale-edition-message-titre"
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={onFerme}
     >
@@ -809,10 +812,10 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
             }
           })
         }}
-        className="flex w-full flex-col gap-2 rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
+        className="flex max-h-[85dvh] w-full flex-col gap-2 overflow-y-auto overscroll-contain rounded-t-[20px] bg-surface shadow-card p-4 sm:w-96 sm:rounded-[20px]"
       >
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-ink">Modifier le message</h2>
+          <h2 id="modale-edition-message-titre" className="text-sm font-bold text-ink">Modifier le message</h2>
           <button
             type="button"
             onClick={onFerme}
