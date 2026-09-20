@@ -314,7 +314,7 @@ export function FilDeMessages({
               ≥ 44 px de haut (hauteur des enfants), sa propre marge négative
               ne fait que rapprocher visuellement les blocs voisins.
               `overflow-y-hidden` en filet de sécurité. */}
-          <div className="-my-3.5 flex gap-1.5 overflow-x-auto overflow-y-hidden pb-0.5">
+          <div className="-my-2 flex gap-1.5 overflow-x-auto overflow-y-hidden pb-0.5">
             <button
               type="button"
               onClick={() => setFiltreCategorie(FILTRE_TOUTES)}
@@ -447,7 +447,17 @@ export function FilDeMessages({
         // (constaté sur téléphone). Même variable que le wrapper de page et
         // les toasts (voir globals.css, --hauteur-bottom-nav). z-10, sous la
         // nav (z-20) mais au-dessus du contenu du fil.
-        className="sticky bottom-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom)+0.75rem)] z-10 flex flex-col gap-2 rounded-[20px] bg-surface p-3 shadow-card lg:bottom-4"
+        //
+        // `position: sticky` ne sait rien du contenu qui le précède : sur un
+        // clavier virtuel ouvert (viewport très réduit avec
+        // interactiveWidget: resizes-content), sa position "collée" peut se
+        // calculer plus haut que la barre de recherche/les filtres au-dessus,
+        // et les recouvrir (constaté sur téléphone). En dessous de 500px de
+        // hauteur de viewport, on repasse en position normale (`static`) :
+        // le formulaire redevient un élément de flux ordinaire, atteignable
+        // en défilant comme le reste, plutôt que de risquer un chevauchement
+        // — à cette hauteur, l'écran est de toute façon très contraint.
+        className="static flex flex-col gap-2 rounded-[20px] bg-surface p-3 shadow-card [@media(min-height:500px)]:sticky [@media(min-height:500px)]:bottom-[calc(var(--hauteur-bottom-nav)+env(safe-area-inset-bottom)+0.75rem)] [@media(min-height:500px)]:z-10 lg:bottom-4"
       >
         <div className="flex gap-1.5">
           {CATEGORIES.map((c) => (

@@ -309,7 +309,7 @@ export function TachesList({
         {/* Compensation de cible tactile posée sur le conteneur, pas sur les
             boutons enfants — voir DESIGN.md, règle de la compensation
             négative (même correctif que fil-de-messages.tsx). */}
-        <div className="-my-3.5 flex flex-1 gap-1.5 overflow-x-auto overflow-y-hidden">
+        <div className="-my-2 flex flex-1 gap-1.5 overflow-x-auto overflow-y-hidden">
           <button
             type="button"
             onClick={() => setFiltre('tous')}
