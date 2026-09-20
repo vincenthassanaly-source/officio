@@ -64,6 +64,14 @@ export function fonctionDetection() {
     return style.visibility !== 'hidden' && style.display !== 'none' && el.getClientRects().length > 0
   }
 
+  // Motif `.sr-only` standard (Tailwind et équivalents) : texte réservé aux
+  // lecteurs d'écran, rendu dans une boîte de 1x1px. Volontairement invisible
+  // à l'écran — à exclure des critères c/d/h/j/k, qui ne visent que le texte
+  // effectivement affiché.
+  function estReserveLecteurEcran(rect) {
+    return rect.width <= 1 && rect.height <= 1
+  }
+
   // (a) débordement horizontal global
   if (document.documentElement.scrollWidth > innerWidth + 1) {
     resultats.push({
@@ -81,10 +89,30 @@ export function fonctionDetection() {
     const rect = el.getBoundingClientRect()
     if (rect.width === 0 && rect.height === 0) continue
 
-    // (b) élément visible mais hors du viewport horizontalement
+    // (b) élément visible mais hors du viewport horizontalement — sauf s'il
+    // est simplement scrollé hors champ à l'intérieur d'un ancêtre à
+    // défilement horizontal dont la boîte, elle, reste dans le viewport
+    // (une bande `overflow-x-auto` dont on n'a pas fait défiler le début à
+    // l'écran : comportement de défilement normal, pas un bug de mise en
+    // page).
     if (rect.width > 0 && (rect.right < -2 || rect.left > innerWidth + 2)) {
-      resultats.push({ categorie: 'b', description: 'Élément hors viewport', selecteur: selecteurCss(el), details: { rect: rectSimple(rect) } })
+      let ancetreScrollableVisible = false
+      let ancetre = el.parentElement
+      while (ancetre && ancetre !== document.body) {
+        const styleAncetre = getComputedStyle(ancetre)
+        if (styleAncetre.overflowX === 'auto' || styleAncetre.overflowX === 'scroll') {
+          const rectAncetre = ancetre.getBoundingClientRect()
+          if (rectAncetre.left >= -2 && rectAncetre.right <= innerWidth + 2) ancetreScrollableVisible = true
+          break
+        }
+        ancetre = ancetre.parentElement
+      }
+      if (!ancetreScrollableVisible) {
+        resultats.push({ categorie: 'b', description: 'Élément hors viewport', selecteur: selecteurCss(el), details: { rect: rectSimple(rect) } })
+      }
     }
+
+    const reserveLecteurEcran = estReserveLecteurEcran(rect)
 
     const overflowX = style.overflowX
     const overflowY = style.overflowY
@@ -92,9 +120,11 @@ export function fonctionDetection() {
     const aClamp = style.webkitLineClamp && style.webkitLineClamp !== 'none' && style.webkitLineClamp !== '0'
 
     // (c) contenu tronqué sans ellipse ni line-clamp (horizontal ou vertical)
+    // — `reserveLecteurEcran` exclu : un `.sr-only` (1x1px) déborde toujours
+    // de sa propre boîte par construction, ce n'est pas un bug d'affichage.
     const debordeH = (overflowX === 'hidden' || overflowX === 'clip') && el.scrollWidth > el.clientWidth + 1
     const debordeV = (overflowY === 'hidden' || overflowY === 'clip') && el.scrollHeight > el.clientHeight + 1
-    if ((debordeH && !aEllipse && !aClamp) || (debordeV && !aClamp)) {
+    if (!reserveLecteurEcran && ((debordeH && !aEllipse && !aClamp) || (debordeV && !aClamp))) {
       resultats.push({
         categorie: 'c',
         description: 'Contenu tronqué sans ellipse ni line-clamp',
@@ -106,7 +136,7 @@ export function fonctionDetection() {
     // (k) sous-cas explicite de (c), horizontal uniquement : texte clippé
     // lettre par lettre (ni ellipse, ni line-clamp, ni scroll) — le symptôme
     // exact du bug 1 (nom d'huile) avant correctif.
-    if (debordeH && !aEllipse && !aClamp) {
+    if (!reserveLecteurEcran && debordeH && !aEllipse && !aClamp) {
       resultats.push({
         categorie: 'k',
         description: 'Texte clippé lettre par lettre (overflow hidden, sans ellipse ni line-clamp)',
@@ -116,7 +146,7 @@ export function fonctionDetection() {
     }
 
     // (d) inventaire des ellipses actives
-    if (aEllipse && el.scrollWidth > el.clientWidth + 1) {
+    if (!reserveLecteurEcran && aEllipse && el.scrollWidth > el.clientWidth + 1) {
       const titre = el.getAttribute('title')
       const ariaLabel = el.getAttribute('aria-label')
       const interactifProche = el.closest('button, a, [role="button"]')
@@ -130,7 +160,13 @@ export function fonctionDetection() {
     }
 
     // (h) conteneur overflow-x auto|scroll avec défilement vertical parasite
-    if ((overflowX === 'auto' || overflowX === 'scroll') && el.scrollHeight > el.clientHeight + 1) {
+    // — exclut les contrôles de formulaire natifs (textarea notamment), dont
+    // le défilement vertical propre (croissance auto avec max-height) est
+    // volontaire et indépendant de tout overflow-x, jamais le symptôme visé
+    // (une bande à défilement horizontal qui devient scrollable en vertical
+    // par effet de bord d'une marge négative sur ses enfants).
+    const estControleNatif = el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.tagName === 'INPUT'
+    if (!estControleNatif && (overflowX === 'auto' || overflowX === 'scroll') && el.scrollHeight > el.clientHeight + 1) {
       resultats.push({
         categorie: 'h',
         description: 'Défilement vertical parasite dans une bande à défilement horizontal',
@@ -140,7 +176,7 @@ export function fonctionDetection() {
     }
 
     // (j) texte > 8 caractères, enfant direct d'une rangée flex, colonne < 110px
-    if (el.children.length === 0) {
+    if (!reserveLecteurEcran && el.children.length === 0) {
       const texte = (el.textContent || '').trim()
       const parent = el.parentElement
       if (texte.length > 8 && rect.width > 0 && rect.width < 110 && parent) {
