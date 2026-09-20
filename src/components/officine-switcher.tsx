@@ -86,14 +86,19 @@ export function OfficineSwitcher({
       <div
         className={
           avecLogo
-            ? 'flex min-w-0 shrink-0 items-center gap-2 rounded-full py-1 pl-1 pr-3'
-            : 'flex min-w-0 shrink-0 items-center rounded-full bg-surface px-3 py-1.5 shadow-card'
+            ? 'flex min-w-0 flex-1 items-center gap-2 rounded-full py-1 pl-1 pr-3'
+            : 'flex min-w-0 flex-1 items-center rounded-full bg-surface px-3 py-1.5 shadow-card'
         }
       >
         {logo}
-        <span
-          className={`min-w-0 max-w-[100px] truncate font-semibold text-ink sm:max-w-[170px] ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}
-        >
+        {/* Plafond fixe (max-w-[100px]) remplacé par la largeur flexible du
+            conteneur (min-w-0 flex-1) : sur mobile, ~190px restaient libres
+            entre le logo et la cloche de notifications, coupant « Pharmacie
+            Rome Village » en « Pharmacie R… » alors que la place existait.
+            `truncate` reste en filet de sécurité pour un nom qui dépasse
+            malgré tout la largeur réellement disponible (header étroit,
+            nom très long). */}
+        <span className={`min-w-0 flex-1 truncate font-semibold text-ink ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}>
           {officineActive?.officine_nom}
         </span>
       </div>
@@ -101,7 +106,7 @@ export function OfficineSwitcher({
   }
 
   return (
-    <div className="relative">
+    <div className="relative min-w-0 flex-1">
       <button
         ref={boutonRef}
         type="button"
@@ -111,14 +116,15 @@ export function OfficineSwitcher({
         aria-expanded={ouvert}
         className={
           avecLogo
-            ? 'flex min-w-0 shrink-0 items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-neutral-soft disabled:opacity-60'
-            : 'flex min-w-0 shrink-0 items-center gap-1 rounded-full bg-surface py-1.5 pl-3 pr-2.5 shadow-card disabled:opacity-60'
+            ? 'flex min-w-0 w-full items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-neutral-soft disabled:opacity-60'
+            : 'flex min-w-0 w-full items-center gap-1 rounded-full bg-surface py-1.5 pl-3 pr-2.5 shadow-card disabled:opacity-60'
         }
       >
         {logo}
-        <span
-          className={`min-w-0 max-w-[100px] shrink truncate font-semibold text-ink sm:max-w-[170px] ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}
-        >
+        {/* Même correctif que la variante « une seule officine » ci-dessus :
+            largeur flexible plutôt qu'un plafond fixe, truncate en filet de
+            sécurité. */}
+        <span className={`min-w-0 flex-1 truncate font-semibold text-ink ${avecLogo ? 'text-[13.5px]' : 'text-[12px]'}`}>
           {isPending ? 'Changement…' : officineActive?.officine_nom}
         </span>
         <svg
