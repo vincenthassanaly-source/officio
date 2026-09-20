@@ -470,7 +470,7 @@ function CarteHuile({
   return (
     <div
       ref={carteRef}
-      className={`relative flex select-none items-center gap-2.5 rounded-[20px] bg-surface shadow-card p-3 transition-all duration-200 ${
+      className={`relative flex select-none flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3 transition-all duration-200 ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
       }`}
       onTouchStart={demarrerAppuiLong}
@@ -483,9 +483,76 @@ function CarteHuile({
         if (!estElementInteractif(e.target)) e.preventDefault()
       }}
     >
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start gap-2">
-          <div className="line-clamp-2 wrap-anywhere text-[13px] font-semibold text-ink">{huile.nom}</div>
+      {/* Ligne 1 : nom sur toute la largeur utile + actions. Auparavant sur
+          une seule ligne avec le prix, le champ volume, le statut ET les
+          actions en frères `shrink-0` : la colonne réellement laissée au nom
+          tombait à ~60px (constaté sur téléphone, lettres rognées). Un nom
+          d'huile est l'information la plus importante de la carte — il a
+          maintenant toute la largeur de la ligne 1, les contrôles de statut
+          sont repoussés en ligne 2 (voir DESIGN.md, colonne de texte ≥
+          ~110px). */}
+      <div className="flex items-start gap-2">
+        <div className="min-w-0 flex-1 line-clamp-2 wrap-anywhere text-[13px] font-semibold text-ink">
+          {huile.nom}
+        </div>
+        {selectionneePourSuppression ? (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => setConfirmationOuverte(true)}
+            aria-label={`Supprimer l'huile ${huile.nom}`}
+            className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18" />
+                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+              </svg>
+            </span>
+          </button>
+        ) : (
+          <>
+            {/* Les icônes d'action se limitent au bouton Modifier, toujours
+                visible — l'appui long ne fait qu'ajouter la possibilité de
+                supprimer. Ce bouton en est l'alternative visible, accessible
+                au clavier et au lecteur d'écran : le geste reste disponible
+                en plus, pas à la place (voir DESIGN.md, Alternative à l'appui
+                long). */}
+            <button
+              type="button"
+              onClick={() => setSelectionneePourSuppression(true)}
+              aria-label={`Voir les actions pour ${huile.nom}`}
+              className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 text-muted hover:text-ink ${CLASSE_FOCUS}`}
+            >
+              <IconOptions className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onEditer(huile.id)}
+              aria-label={`Modifier ${huile.nom}`}
+              className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+              </span>
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* Ligne 2 : prix à gauche, contrôle de statut à droite (select /
+          case à cocher / champ volume selon l'onglet — inchangés). */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 font-mono text-[12px] text-muted">
+          {formatPrix(huile.prix_reference, huile.volume_reference_ml)}
+          {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') &&
+            huile.volume_a_commander_ml != null &&
+            ` · Commande : ${formatVolume(huile.volume_a_commander_ml)} mL`}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
           {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') && (
             <div className="flex shrink-0 items-center gap-1">
               <input
@@ -503,87 +570,35 @@ function CarteHuile({
               <span className="text-[12px] text-muted">mL</span>
             </div>
           )}
-        </div>
-        <div className="mt-0.5 font-mono text-[12px] text-muted">
-          {formatPrix(huile.prix_reference, huile.volume_reference_ml)}
-          {(ongletStatut === 'a_commander' || ongletStatut === 'en_commande') &&
-            huile.volume_a_commander_ml != null &&
-            ` · Commande : ${formatVolume(huile.volume_a_commander_ml)} mL`}
+          {ongletStatut === 'en_stock' ? (
+            <select
+              value={huile.statut}
+              onChange={(e) => onChangerStatut(huile.id, e.target.value as StatutHuile)}
+              aria-label={`Statut de ${huile.nom}`}
+              className={`min-h-11 shrink-0 rounded-lg border border-border bg-bg px-2 text-[16px] font-semibold text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+            >
+              {OPTIONS_STATUT.map((statut) => (
+                <option key={statut} value={statut}>
+                  {LABELS_STATUT[statut]}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <label className="flex min-h-11 shrink-0 items-center gap-1.5 text-[12px] font-semibold text-ink">
+              <input
+                type="checkbox"
+                checked={false}
+                onChange={() => {
+                  const nouveauStatut: StatutHuile = ongletStatut === 'a_commander' ? 'en_commande' : 'en_stock'
+                  onChangerStatut(huile.id, nouveauStatut)
+                }}
+                className={`h-4 w-4 accent-[var(--color-primary)] disabled:opacity-60 ${CLASSE_FOCUS}`}
+              />
+              {ongletStatut === 'a_commander' ? 'Commandée' : 'Reçue'}
+            </label>
+          )}
         </div>
       </div>
-      {ongletStatut === 'en_stock' ? (
-        <select
-          value={huile.statut}
-          onChange={(e) => onChangerStatut(huile.id, e.target.value as StatutHuile)}
-          aria-label={`Statut de ${huile.nom}`}
-          className={`min-h-11 shrink-0 rounded-lg border border-border bg-bg px-2 text-[16px] font-semibold text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
-        >
-          {OPTIONS_STATUT.map((statut) => (
-            <option key={statut} value={statut}>
-              {LABELS_STATUT[statut]}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <label className="flex min-h-11 shrink-0 items-center gap-1.5 text-[12px] font-semibold text-ink">
-          <input
-            type="checkbox"
-            checked={false}
-            onChange={() => {
-              const nouveauStatut: StatutHuile = ongletStatut === 'a_commander' ? 'en_commande' : 'en_stock'
-              onChangerStatut(huile.id, nouveauStatut)
-            }}
-            className={`h-4 w-4 accent-[var(--color-primary)] disabled:opacity-60 ${CLASSE_FOCUS}`}
-          />
-          {ongletStatut === 'a_commander' ? 'Commandée' : 'Reçue'}
-        </label>
-      )}
-      {selectionneePourSuppression ? (
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => setConfirmationOuverte(true)}
-          aria-label={`Supprimer l'huile ${huile.nom}`}
-          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
-        >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted hover:text-rec">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 6h18" />
-              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
-            </svg>
-          </span>
-        </button>
-      ) : (
-        <>
-          {/* Les icônes d'action se limitent au bouton Modifier, toujours
-              visible — l'appui long ne fait qu'ajouter la possibilité de
-              supprimer. Ce bouton en est l'alternative visible, accessible
-              au clavier et au lecteur d'écran : le geste reste disponible
-              en plus, pas à la place (voir DESIGN.md, Alternative à l'appui
-              long). */}
-          <button
-            type="button"
-            onClick={() => setSelectionneePourSuppression(true)}
-            aria-label={`Voir les actions pour ${huile.nom}`}
-            className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 text-muted hover:text-ink ${CLASSE_FOCUS}`}
-          >
-            <IconOptions className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onEditer(huile.id)}
-            aria-label={`Modifier ${huile.nom}`}
-            className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-soft text-muted">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-              </svg>
-            </span>
-          </button>
-        </>
-      )}
 
       <ModaleConfirmation
         ouvert={confirmationOuverte}
