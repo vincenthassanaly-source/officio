@@ -429,7 +429,13 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
               onChange={(e) => setRecherche(e.target.value)}
               placeholder="Rechercher un modèle ou une catégorie…"
               aria-label="Rechercher un modèle ou une catégorie"
-              className={`flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+              // `min-w-0` indispensable : sans lui, un <input> dans un
+              // conteneur flex garde sa largeur minimale intrinsèque
+              // (~260 px, liée à l'attribut `size` implicite du navigateur)
+              // au lieu de suivre `flex-1`, ce qui pousse le bouton scanner
+              // voisin (`shrink-0`) hors du viewport à 320 px de large
+              // (constat re-vérifié : bouton mesuré à 8 px hors écran).
+              className={`min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
             />
             <button
               type="button"
