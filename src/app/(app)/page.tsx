@@ -9,6 +9,7 @@ import { getContacts, type Contact } from '@/lib/data/contacts'
 import { getCnoPatients, type PatientCno } from '@/lib/data/cno'
 import { getSuggestions, type SuggestionAvecAuteur } from '@/lib/data/suggestions'
 import { getRupturesStock, type RuptureStock } from '@/lib/data/ruptures-stock'
+import { getNombrePromessesActives } from '@/lib/data/promesses-patients'
 import { getProduitsARecommander, type ProduitARecommander } from '@/lib/data/produits-a-recommander'
 import { getNotes, type NoteAvecAuteur } from '@/lib/data/notes'
 import { getJournalActivite, type PageJournalActivite } from '@/lib/data/journal-activite'
@@ -31,6 +32,7 @@ import {
   IconVaccin,
   IconSuggestions,
   IconRupturesStock,
+  IconPromesses,
   IconNote,
   IconActivite,
   IconPosologie,
@@ -92,6 +94,7 @@ export default async function AccueilPage() {
     equipeR,
     couleursR,
     rupturesStockR,
+    promessesR,
     produitsARecommanderR,
     notesR,
     journalActiviteR,
@@ -107,6 +110,7 @@ export default async function AccueilPage() {
     getEquipe(officine.officine_id),
     getCouleursMembres(officine.officine_id),
     getRupturesStock(officine.officine_id),
+    getNombrePromessesActives(officine.officine_id),
     getProduitsARecommander(officine.officine_id),
     getNotes(officine.officine_id),
     getJournalActivite(officine.officine_id),
@@ -123,6 +127,7 @@ export default async function AccueilPage() {
   const equipe = valeur('getEquipe', equipeR, [] as MembreEquipe[])
   const couleurs = valeur('getCouleursMembres', couleursR, new Map<string, CouleurAvatar>())
   const rupturesStock = valeur('getRupturesStock', rupturesStockR, [] as RuptureStock[])
+  const promessesEnAttente = valeur('getNombrePromessesActives', promessesR, 0)
   const produitsARecommander = valeur('getProduitsARecommander', produitsARecommanderR, [] as ProduitARecommander[])
   const notes = valeur('getNotes', notesR, [] as NoteAvecAuteur[])
   const journalActivite = valeur('getJournalActivite', journalActiviteR, {
@@ -140,6 +145,7 @@ export default async function AccueilPage() {
   const patientsCnoOk = patientsCnoR.status === 'fulfilled'
   const suggestionsOk = suggestionsR.status === 'fulfilled'
   const rupturesOk = rupturesStockR.status === 'fulfilled' && produitsARecommanderR.status === 'fulfilled'
+  const promessesOk = promessesR.status === 'fulfilled'
   const notesOk = notesR.status === 'fulfilled'
   const journalActiviteOk = journalActiviteR.status === 'fulfilled'
   const typesEntretienOk = typesEntretienR.status === 'fulfilled'
@@ -350,6 +356,20 @@ export default async function AccueilPage() {
             <div className="text-[13.5px] font-semibold text-ink">Ruptures de stock</div>
             <div className="mt-0.5 text-[12px] text-muted">
               {rupturesOk ? `${rupturesStock.length + produitsARecommander.length} en cours` : '—'}
+            </div>
+          </div>
+        </Link>
+        <Link
+          href="/promesses-patients"
+          className="flex flex-col gap-3.5 rounded-[20px] bg-surface shadow-card p-3.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(155deg,rgba(255,255,255,.45),rgba(255,255,255,0)_60%)] bg-teal-soft text-teal">
+            <IconPromesses className="h-[18px] w-[18px]" />
+          </div>
+          <div>
+            <div className="text-[13.5px] font-semibold text-ink">Promesses patients</div>
+            <div className="mt-0.5 text-[12px] text-muted">
+              {promessesOk ? `${promessesEnAttente} en attente` : '—'}
             </div>
           </div>
         </Link>

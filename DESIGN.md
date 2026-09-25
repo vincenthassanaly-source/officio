@@ -22,6 +22,8 @@ colors:
   green-soft: "oklch(94% 0.05 150)"
   brun: "oklch(48% 0.09 45)"
   brun-soft: "oklch(93% 0.03 55)"
+  teal: "oklch(50% 0.1 195)"
+  teal-soft: "oklch(94% 0.04 195)"
   neutral-soft: "oklch(93% 0.01 265)"
   neutral-text: "oklch(65% 0.01 265)"
 typography:
@@ -108,6 +110,7 @@ Palette `oklch`, restreinte : un seul accent d'action (`primary`), un vocabulair
 - **Accent orangé** (`oklch(53% 0.14 70)`, `--color-accent`) : échéances proches (« Demain », « Aujourd'hui »), signalétique secondaire non critique. `accent-soft` (`oklch(94% 0.06 80)`) pour les fonds associés.
 - **Vert** (`oklch(51% 0.14 150)`, `--color-green`) : succès, état « terminé », toast de succès.
 - **Violet** (`oklch(52% 0.15 300)`, `--color-purple`) et **brun** (`oklch(48% 0.09 45)`, `--color-brun`) : couleurs de tuiles de modules secondaires (`MODULES_SECONDAIRES`) et d'avatars d'équipe, sans rôle sémantique fixe au-delà de la distinction visuelle entre modules/personnes.
+- **Teal** (`oklch(50% 0.1 195)`, `--color-teal`) et `teal-soft` (`oklch(94% 0.04 195)`) : ajoutés le 2026-09-25 pour la tuile du module Promesses patients, toutes les paires de couleurs de module étant déjà prises. Même statut que violet/brun (distinction entre modules, aucun rôle sémantique) ; luminance calée sur la règle du contraste des couleurs sémantiques (5,6:1 sur blanc, 4,7:1 sur `teal-soft`), donc utilisable en texte.
 
 ### Neutral
 - **Fond de page** (`oklch(98% 0.004 260)`, `--color-bg`) : quasi blanc, légèrement bleuté.
