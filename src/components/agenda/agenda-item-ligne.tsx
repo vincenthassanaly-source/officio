@@ -148,12 +148,16 @@ export function ItemLigne({
           <div className="text-[12px] text-muted">{r.duree_minutes} min</div>
         </div>
         <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
-          <div className="flex items-start justify-between gap-2">
+          {/* flex-wrap + base de 7rem sur l'intitulé : un badge long
+              (« Entretien thérapeutique ») passe à la ligne, aligné à droite,
+              plutôt que d'écraser le nom à quelques lettres par ligne à 375 px.
+              Les badges courts restent sur la même ligne qu'avant. */}
+          <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-1">
             <button
               type="button"
               onClick={() => onEditerRdv(r)}
               aria-label={`Modifier le rendez-vous ${patient ?? r.titre}`}
-              className="-m-1 min-h-11 min-w-0 flex-1 rounded-lg p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="-m-1 min-h-11 min-w-0 flex-1 basis-28 rounded-lg p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               {patient ? (
                 <>
@@ -169,7 +173,7 @@ export function ItemLigne({
                 <span className="block wrap-anywhere text-sm font-semibold text-ink">{r.titre}</span>
               )}
             </button>
-            <div className="flex shrink-0 items-center gap-1">
+            <div className="ml-auto flex shrink-0 items-center gap-1">
               <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold ${cat.className}`}>{cat.label}</span>
               <button
                 type="button"

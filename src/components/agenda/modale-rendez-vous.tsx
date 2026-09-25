@@ -29,6 +29,15 @@ function formatDuree(minutes: number): string {
   return reste ? `${heures} h ${String(reste).padStart(2, '0')}` : `${heures} h`
 }
 
+function IconPatient({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  )
+}
+
 function IconFermer({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -61,6 +70,8 @@ export default function ModaleRendezVous({
 }) {
   const [categorie, setCategorie] = useState<CategorieRdv>(rdv?.categorie ?? 'rdv')
   const [titre, setTitre] = useState(rdv?.titre ?? '')
+  // Contrôlée pour que le sous-titre de l'en-tête suive la date saisie.
+  const [date, setDate] = useState(rdv?.date ?? dateParDefaut)
   const [erreur, setErreur] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const toast = useToast()
@@ -79,7 +90,6 @@ export default function ModaleRendezVous({
   const durees = DUREES_MINUTES.includes(dureeInitiale)
     ? DUREES_MINUTES
     : [...DUREES_MINUTES, dureeInitiale].sort((a, b) => a - b)
-  const dateDuRdv = rdv?.date ?? dateParDefaut
 
   // Le titre suit la catégorie tant que l'utilisateur ne l'a pas
   // personnalisé : vide → « Entretien thérapeutique » en passant sur
@@ -126,7 +136,9 @@ export default function ModaleRendezVous({
             <h2 id={`${id}-titre`} className="font-heading text-lg text-ink text-balance">
               {rdv ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'}
             </h2>
-            {!rdv && <p className="text-[12.5px] text-muted">{formatDateLongue(dateDuRdv)}</p>}
+            {/^\d{4}-\d{2}-\d{2}$/.test(date) && (
+              <p className="text-[12.5px] text-muted">{formatDateLongue(date)}</p>
+            )}
           </div>
           <button
             type="button"
@@ -140,7 +152,7 @@ export default function ModaleRendezVous({
 
         <fieldset>
           <legend className="mb-1.5 text-[12px] font-semibold text-muted">Type</legend>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-x-1.5">
             {CATEGORIES.map((c) => {
               const actif = categorie === c.value
               return (
@@ -160,7 +172,7 @@ export default function ModaleRendezVous({
                     className="sr-only"
                   />
                   <span
-                    className={`rounded-full px-3 py-1.5 text-[12.5px] font-semibold motion-safe:transition-colors ${
+                    className={`rounded-full px-3.5 py-2 text-[12.5px] font-semibold motion-safe:transition-colors ${
                       actif ? `${c.className} shadow-sm` : 'bg-bg text-muted hover:text-ink'
                     }`}
                   >
@@ -173,10 +185,13 @@ export default function ModaleRendezVous({
         </fieldset>
 
         {estEntretien && (
-          <fieldset className="rounded-2xl bg-teal-soft p-3">
+          // min-w-0 : un <fieldset> a par défaut min-width: min-content, qui
+          // le faisait déborder de la sheet à 375 px avec deux champs côte à côte.
+          <fieldset className="min-w-0 rounded-2xl bg-teal-soft p-3">
             <legend className="sr-only">Patient</legend>
-            <div className="mb-2 flex items-baseline justify-between gap-2">
-              <span aria-hidden="true" className="text-[12px] font-bold text-teal">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <span aria-hidden="true" className="flex items-center gap-1.5 text-[12px] font-bold text-teal">
+                <IconPatient className="h-3.5 w-3.5" />
                 Patient
               </span>
               <span className="text-[12px] text-muted">Facultatif</span>
@@ -222,8 +237,8 @@ export default function ModaleRendezVous({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-[1.4fr_1fr_1fr]">
-          <div className="col-span-2 min-w-0 sm:col-span-1">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="col-span-2 min-w-0">
             <label htmlFor={`${id}-date`} className="mb-1 block text-[12px] font-semibold text-muted">
               Date
             </label>
@@ -232,7 +247,8 @@ export default function ModaleRendezVous({
               type="date"
               name="date"
               required
-              defaultValue={dateDuRdv}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               className={`w-full ${CHAMP_CLASS}`}
             />
           </div>
