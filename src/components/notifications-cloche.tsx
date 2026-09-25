@@ -123,7 +123,8 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
         ref={boutonRef}
         type="button"
         onClick={toggle}
-        aria-label="Notifications"
+        aria-expanded={ouvert}
+        aria-label={nombreNonLues > 0 ? `Notifications, ${nombreNonLues} non lue${nombreNonLues > 1 ? 's' : ''}` : 'Notifications'}
         // Cercle visible inchangé (36 px, cohérent avec les boutons voisins du
         // header/de la sidebar) ; cible tactile 44 px via -m-1 + p-1 (marge
         // négative compensée par un padding égal, même principe que
@@ -142,7 +143,7 @@ export function NotificationsCloche({ avecFond = false }: { avecFond?: boolean }
           <IconCloche className="h-[18px] w-[18px]" />
         </span>
         {nombreNonLues > 0 && (
-          <span className="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rec px-1 text-[12px] font-bold text-white">
+          <span aria-hidden="true" className="absolute right-1.5 top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-rec px-1 text-[12px] font-bold text-white">
             {nombreNonLues > 9 ? '9+' : nombreNonLues}
           </span>
         )}

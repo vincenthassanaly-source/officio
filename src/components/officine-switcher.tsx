@@ -112,12 +112,12 @@ export function OfficineSwitcher({
         type="button"
         onClick={toggle}
         disabled={isPending}
-        aria-haspopup="listbox"
         aria-expanded={ouvert}
+        aria-controls="panneau-officines"
         className={
           avecLogo
-            ? 'flex min-w-0 w-full items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-neutral-soft disabled:opacity-60'
-            : 'flex min-w-0 w-full items-center gap-1 rounded-full bg-surface py-1.5 pl-3 pr-2.5 shadow-card disabled:opacity-60'
+            ? 'flex min-h-11 min-w-0 w-full items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-neutral-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
+            : 'flex min-w-0 w-full items-center gap-1 rounded-full bg-surface py-1.5 pl-3 pr-2.5 shadow-card focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60'
         }
       >
         {logo}
@@ -135,6 +135,7 @@ export function OfficineSwitcher({
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
+          aria-hidden="true"
         >
           <path d="M6 9l6 6 6-6" />
         </svg>
@@ -142,15 +143,13 @@ export function OfficineSwitcher({
 
       {ouvert && (
         <>
-          {/* Capte les clics en dehors du panneau pour le fermer — voir
-              NotificationsCloche pour le même idiome. */}
-          <button
-            type="button"
-            aria-label="Fermer le sélecteur d'officine"
-            onClick={() => setOuvert(false)}
-            className="fixed inset-0 z-40"
-          />
+          {/* Capte les clics en dehors du panneau pour le fermer : <div> non
+              focusable (DESIGN.md, Backdrop de sheet/panneau), pas un
+              <button> qui restait un arrêt de tabulation invisible. Échap et
+              retour physique restent gérés par useFermerAvecRetour. */}
+          <div aria-hidden="true" onClick={() => setOuvert(false)} className="fixed inset-0 z-40" />
           <div
+            id="panneau-officines"
             style={{ top: position.top, left: position.left }}
             className="fixed z-50 w-[220px] max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-surface p-1.5 shadow-lg"
           >
@@ -162,12 +161,26 @@ export function OfficineSwitcher({
                   type="button"
                   onClick={() => choisir(a.officine_id)}
                   disabled={isPending}
-                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] font-semibold disabled:opacity-60 ${
+                  aria-current={active ? 'true' : undefined}
+                  className={`flex min-h-11 w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[13px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
                     active ? 'bg-primary-soft text-primary' : 'text-ink hover:bg-neutral-soft'
                   }`}
                 >
                   <span className="min-w-0 flex-1 line-clamp-2 wrap-anywhere">{a.officine_nom}</span>
-                  {active && <span className="shrink-0">✓</span>}
+                  {active && (
+                    <svg
+                      className="h-4 w-4 shrink-0"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  )}
                 </button>
               )
             })}
