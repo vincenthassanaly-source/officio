@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, type RefObject } from 'react'
+import { useEffect, type RefObject } from 'react'
 
 const SELECTEUR_FOCUSABLE =
   'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -24,16 +24,16 @@ const SELECTEUR_FOCUSABLE =
  * `useFermerAvecRetour` pour ça (tous les appelants actuels le font déjà).
  */
 export function usePiegeFocus(ouvert: boolean, ref: RefObject<HTMLElement | null>) {
-  const declencheurRef = useRef<HTMLElement | null>(null)
-
+  // Retour du focus porté par le nettoyage de l'effet : il s'exécute aussi
+  // bien quand `ouvert` repasse à faux qu'au démontage du composant — la
+  // version précédente (branche `else`) ne rendait jamais le focus aux
+  // sheets montées seulement ouvertes (`ouvert` toujours vrai), contrairement
+  // à ce qu'annonçait la JSDoc ci-dessus.
   useEffect(() => {
-    if (ouvert) {
-      declencheurRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-      ref.current?.querySelector<HTMLElement>(SELECTEUR_FOCUSABLE)?.focus()
-    } else {
-      declencheurRef.current?.focus()
-      declencheurRef.current = null
-    }
+    if (!ouvert) return
+    const declencheur = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    ref.current?.querySelector<HTMLElement>(SELECTEUR_FOCUSABLE)?.focus()
+    return () => declencheur?.focus()
   }, [ouvert, ref])
 
   useEffect(() => {

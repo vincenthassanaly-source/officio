@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useSyncExternalStore, useTransition } from 'react'
+import { useRef, useState, useSyncExternalStore, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { modifierTache } from '@/app/actions/taches'
 import { ChampPhoto } from '@/components/champ-photo'
@@ -8,6 +8,7 @@ import type { Tache } from '@/lib/data/taches'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import { useToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 
 // Remplace le glyphe « × » du bouton de fermeture.
 function IconFermer({ className }: { className?: string }) {
@@ -72,6 +73,11 @@ export default function ModaleEditionTache({
   // chez les appelants) : `ouvert` vaut donc toujours true tant que ce
   // composant existe, et le démontage déclenche le nettoyage du hook.
   useFermerAvecRetour(true, onFerme)
+  // Piège à focus, verrouillage du scroll et retour du focus au déclencheur
+  // à la fermeture : aria-modal annonçait une modale sans que Tab reste
+  // dedans (audit impeccable 2026-09-25).
+  const formulaireRef = useRef<HTMLFormElement>(null)
+  usePiegeFocus(true, formulaireRef)
 
   if (!monte) return null
 
@@ -84,6 +90,7 @@ export default function ModaleEditionTache({
       onClick={onFerme}
     >
       <form
+        ref={formulaireRef}
         onClick={(e) => e.stopPropagation()}
         action={(formData) => {
           if (photo) formData.set('photo', photo)

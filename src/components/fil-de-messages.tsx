@@ -30,6 +30,7 @@ import { EVENEMENT_NOTIFICATION_CIBLE } from '@/lib/notifications/evenement-cibl
 import { ajouterEnAttente, listerEnAttente, retirerEnAttente } from '@/lib/messages-lus-en-attente'
 import { useToast, type TypeToast } from '@/components/ui/toast-provider'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { vibrer } from '@/lib/haptics'
 import { ChampAudio } from '@/components/champ-audio'
@@ -811,6 +812,11 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
   // chez l'appelant) : `ouvert` vaut donc toujours true tant que ce composant
   // existe, et le démontage déclenche le nettoyage du hook.
   useFermerAvecRetour(true, onFerme)
+  // Piège à focus, verrouillage du scroll et retour du focus au déclencheur
+  // à la fermeture : aria-modal annonçait une modale sans que Tab reste
+  // dedans (audit impeccable 2026-09-25).
+  const formulaireRef = useRef<HTMLFormElement>(null)
+  usePiegeFocus(true, formulaireRef)
 
   if (!monte) return null
 
@@ -823,6 +829,7 @@ function ModaleEditionMessage({ message, onFerme }: { message: MessageAvecDetail
       onClick={onFerme}
     >
       <form
+        ref={formulaireRef}
         onClick={(e) => e.stopPropagation()}
         action={(formData) => {
           startTransition(async () => {

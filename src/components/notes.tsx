@@ -14,6 +14,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
+import { usePiegeFocus } from '@/lib/use-piege-focus'
 import { vibrer } from '@/lib/haptics'
 import { ChampPhotos } from '@/components/champ-photos'
 import { LightboxImage } from '@/components/lightbox-image'
@@ -414,6 +415,11 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
   // chez l'appelant) : `ouvert` vaut donc toujours true tant que ce composant
   // existe, et le démontage déclenche le nettoyage du hook.
   useFermerAvecRetour(true, onFerme)
+  // Piège à focus, verrouillage du scroll et retour du focus au déclencheur
+  // à la fermeture : aria-modal annonçait une modale sans que Tab reste
+  // dedans (audit impeccable 2026-09-25).
+  const formulaireRef = useRef<HTMLFormElement>(null)
+  usePiegeFocus(true, formulaireRef)
 
   if (!monte) return null
 
@@ -426,6 +432,7 @@ export function ModaleEditionNote({ note, onFerme }: { note: NoteAvecAuteur; onF
       onClick={onFerme}
     >
       <form
+        ref={formulaireRef}
         onClick={(e) => e.stopPropagation()}
         action={(formData) => {
           startTransition(async () => {
