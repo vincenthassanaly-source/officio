@@ -3,7 +3,7 @@
 import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from 'react'
 import { rechercherPromessesTraitees, remettrePromesseEnAttente } from '@/app/actions/promesses-patients'
 import type { PromessePatient } from '@/lib/data/promesses-patients'
-import { lienTelephone, LIMITE_HISTORIQUE } from '@/lib/promesses-patients'
+import { lienTelephone, quandTraitee, LIMITE_HISTORIQUE } from '@/lib/promesses-patients'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { vibrer } from '@/lib/haptics'
@@ -46,21 +46,6 @@ function IconTelephone({ className }: { className?: string }) {
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   )
-}
-
-// "Traitée aujourd'hui à 10:32" / "hier à …" / "le 24/09 à …".
-function quandTraitee(iso: string | null): string {
-  if (!iso) return 'Traitée'
-  const date = new Date(iso)
-  const maintenant = new Date()
-  const hier = new Date(maintenant)
-  hier.setDate(maintenant.getDate() - 1)
-  const heure = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  if (date.toDateString() === maintenant.toDateString()) return `Traitée aujourd'hui à ${heure}`
-  if (date.toDateString() === hier.toDateString()) return `Traitée hier à ${heure}`
-  const memeAnnee = date.getFullYear() === maintenant.getFullYear()
-  const jour = date.toLocaleDateString('fr-FR', memeAnnee ? { day: '2-digit', month: '2-digit' } : undefined)
-  return `Traitée le ${jour} à ${heure}`
 }
 
 export function PromessesPatientsHistorique({

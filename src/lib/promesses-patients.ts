@@ -17,6 +17,51 @@ export function normaliserRecherche(texte: string): string {
 // lib/data) pour être lisible côté client sans importer de code serveur.
 export const LIMITE_HISTORIQUE = 50
 
+// ─── Dates ────────────────────────────────────────────────────────────────
+
+// Fuseau fixé (même choix que diagnostics/page.tsx) : ces libellés sont
+// calculés une première fois au rendu serveur (Vercel, en UTC) puis au
+// client — sans fuseau explicite, "Traitée à 07:39" côté serveur devenait
+// "09:39" à l'hydratation, et un "hier"/"aujourd'hui" pouvait basculer
+// autour de minuit.
+const FUSEAU = 'Europe/Paris'
+const FORMAT_JOUR = new Intl.DateTimeFormat('fr-FR', { timeZone: FUSEAU, year: 'numeric', month: '2-digit', day: '2-digit' })
+const FORMAT_JOUR_MOIS = new Intl.DateTimeFormat('fr-FR', { timeZone: FUSEAU, day: '2-digit', month: '2-digit' })
+const FORMAT_HEURE = new Intl.DateTimeFormat('fr-FR', { timeZone: FUSEAU, hour: '2-digit', minute: '2-digit' })
+
+// Numéro de jour calendaire (à Paris), pour compter des jours écoulés
+// indépendamment des heures et du changement d'heure.
+function numeroJour(date: Date): number {
+  const parties = Object.fromEntries(FORMAT_JOUR.formatToParts(date).map((p) => [p.type, p.value]))
+  return Date.UTC(Number(parties.year), Number(parties.month) - 1, Number(parties.day)) / 86_400_000
+}
+
+function joursEcoules(iso: string, maintenant: Date): number {
+  return numeroJour(maintenant) - numeroJour(new Date(iso))
+}
+
+// "Notée aujourd'hui / hier / il y a 4 jours" : ce qui compte au comptoir
+// est depuis combien de temps le patient attend, pas l'heure exacte.
+export function depuisQuand(iso: string, maintenant = new Date()): string {
+  const jours = joursEcoules(iso, maintenant)
+  if (jours <= 0) return "Notée aujourd'hui"
+  if (jours === 1) return 'Notée hier'
+  return `Notée il y a ${jours} jours`
+}
+
+// "Traitée aujourd'hui à 10:32" / "hier à …" / "le 24/09 à …" (année
+// ajoutée si différente de l'année en cours).
+export function quandTraitee(iso: string | null, maintenant = new Date()): string {
+  if (!iso) return 'Traitée'
+  const date = new Date(iso)
+  const heure = FORMAT_HEURE.format(date)
+  const jours = joursEcoules(iso, maintenant)
+  if (jours <= 0) return `Traitée aujourd'hui à ${heure}`
+  if (jours === 1) return `Traitée hier à ${heure}`
+  const memeAnnee = FORMAT_JOUR.format(date).slice(-4) === FORMAT_JOUR.format(maintenant).slice(-4)
+  return `Traitée le ${memeAnnee ? FORMAT_JOUR_MOIS.format(date) : FORMAT_JOUR.format(date)} à ${heure}`
+}
+
 // ─── Téléphone ────────────────────────────────────────────────────────────
 
 // Numéro français (0X XX XX XX XX, +33 X…, 0033 X…) ou international au

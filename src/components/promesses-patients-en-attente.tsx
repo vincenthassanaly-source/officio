@@ -10,6 +10,7 @@ import {
 import type { PromessePatient } from '@/lib/data/promesses-patients'
 import {
   correspondRecherche,
+  depuisQuand,
   formaterTelephone,
   lienTelephone,
   normaliserRecherche,
@@ -88,16 +89,6 @@ function IconCorbeille({ className }: { className?: string }) {
 
 // ─── Utilitaires d'affichage ──────────────────────────────────────────────
 
-// "Notée aujourd'hui / hier / il y a 4 jours" : ce qui compte au comptoir
-// est depuis combien de temps le patient attend, pas l'heure exacte.
-function depuisQuand(iso: string): string {
-  const debutJour = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
-  const jours = Math.round((debutJour(new Date()) - debutJour(new Date(iso))) / 86_400_000)
-  if (jours <= 0) return "Notée aujourd'hui"
-  if (jours === 1) return 'Notée hier'
-  return `Notée il y a ${jours} jours`
-}
-
 type Groupe = { cle: string; medicament: string; promesses: PromessePatient[] }
 
 // Regroupe par médicament normalisé ("Doliprane 1000" et "doliprane 1000"
@@ -137,7 +128,11 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
     focus: false,
   }))
   const [aSupprimer, setASupprimer] = useState<PromessePatient | null>(null)
-  const [isPending, startTransition] = useTransition()
+  // Deux transitions distinctes : la création (qui pilote l'état du bouton
+  // « Enregistrer ») ne doit pas afficher « Enregistrement… » parce qu'un
+  // collègue vient de taper « Traitée » sur une autre ligne, et inversement.
+  const [creationEnCours, startCreation] = useTransition()
+  const [, startTransition] = useTransition()
   const toast = useToast()
   const { estEnSortie, retirerApresAnimation } = useRetraitAnime()
 
@@ -173,7 +168,7 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
     formData.set('facture', champs.facture ? 'oui' : 'non')
 
     return new Promise((resoudre) => {
-      startTransition(async () => {
+      startCreation(async () => {
         appliquerOptimiste({
           type: 'ajout',
           promesse: {
@@ -309,7 +304,7 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
           medicamentInitial={formulaire.medicament}
           focusAuMontage={formulaire.focus}
           fermable={promessesOptimistes.length > 0}
-          enCours={isPending}
+          enCours={creationEnCours}
           onEnregistrer={enregistrer}
           onFermer={() => setFormulaire({ ouvert: false, medicament: '', focus: false })}
         />
@@ -361,7 +356,6 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
             <GroupeMedicament
               key={g.cle}
               groupe={g}
-              enCours={isPending}
               estEnSortie={estEnSortie}
               onAjouter={() => ouvrirFormulaire(g.medicament)}
               onTraiter={traiter}
@@ -391,7 +385,6 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
 
 function GroupeMedicament({
   groupe,
-  enCours,
   estEnSortie,
   onAjouter,
   onTraiter,
@@ -399,7 +392,6 @@ function GroupeMedicament({
   onDemanderSuppression,
 }: {
   groupe: Groupe
-  enCours: boolean
   estEnSortie: (id: string) => boolean
   onAjouter: () => void
   onTraiter: (p: PromessePatient) => void
@@ -412,7 +404,7 @@ function GroupeMedicament({
     <section aria-labelledby={idTitre} className="item-entree rounded-[20px] bg-surface p-4 shadow-card">
       <div className="mb-1 flex items-start gap-2">
         <div className="min-w-0 flex-1">
-          <h2 id={idTitre} className="wrap-anywhere text-[15px] font-semibold leading-snug text-ink">
+          <h2 id={idTitre} className="wrap-anywhere text-[16px] font-semibold leading-snug text-ink">
             {groupe.medicament}
           </h2>
           <p className="text-[12px] text-muted">{libellePatients(groupe.promesses.length)} en attente</p>
@@ -421,9 +413,9 @@ function GroupeMedicament({
           type="button"
           onClick={onAjouter}
           aria-label={`Ajouter un patient en attente de ${groupe.medicament}`}
-          className={`-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
+          className={`group -m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full p-1.5 ${CLASSE_FOCUS}`}
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-primary">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-primary group-hover:bg-primary group-hover:text-white motion-safe:transition-colors">
             <IconAjouter className="h-4 w-4" />
           </span>
         </button>
@@ -433,7 +425,6 @@ function GroupeMedicament({
           <LignePromesse
             key={p.id}
             promesse={p}
-            enCours={enCours}
             enSortie={estEnSortie(p.id)}
             onTraiter={onTraiter}
             onBasculerFacture={onBasculerFacture}
@@ -447,21 +438,24 @@ function GroupeMedicament({
 
 function LignePromesse({
   promesse: p,
-  enCours,
   enSortie,
   onTraiter,
   onBasculerFacture,
   onDemanderSuppression,
 }: {
   promesse: PromessePatient
-  enCours: boolean
   enSortie: boolean
   onTraiter: (p: PromessePatient) => void
   onBasculerFacture: (p: PromessePatient) => void
   onDemanderSuppression: (p: PromessePatient) => void
 }) {
+  // Seule une ligne encore temporaire (ajout optimiste en attente du
+  // serveur) est désactivée : à l'arrivée d'un médicament attendu par
+  // plusieurs patients, on enchaîne les « Traitée » sans attendre chaque
+  // aller-retour (le double tap sur une même ligne est déjà neutralisé par
+  // useRetraitAnime).
   const temporaire = p.id.startsWith(PREFIXE_TEMPORAIRE)
-  const desactive = temporaire || enCours
+  const desactive = temporaire
 
   return (
     <li
@@ -498,11 +492,11 @@ function LignePromesse({
           onClick={() => onBasculerFacture(p)}
           disabled={desactive}
           aria-label={`Facturation de ${p.nom_patient} : ${p.facture ? 'facturé' : 'non facturé'}. Changer`}
-          className={`-my-1.5 flex min-h-11 items-center rounded-full py-1.5 disabled:opacity-50 ${CLASSE_FOCUS}`}
+          className={`group -my-1.5 flex min-h-11 items-center rounded-full py-1.5 disabled:opacity-50 ${CLASSE_FOCUS}`}
         >
           <span
-            className={`rounded-full px-2.5 py-1 text-[12px] font-bold motion-safe:transition-colors ${
-              p.facture ? 'bg-green-soft text-green' : 'bg-accent-soft text-accent'
+            className={`rounded-full px-2.5 py-1 text-[12px] font-bold ring-inset group-hover:ring-1 motion-safe:transition-colors ${
+              p.facture ? 'bg-green-soft text-green ring-green/40' : 'bg-accent-soft text-accent ring-accent/40'
             }`}
           >
             {p.facture ? 'Facturé' : 'Non facturé'}
