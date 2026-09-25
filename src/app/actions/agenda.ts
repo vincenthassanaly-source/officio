@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import type { TypeCreneau } from '@/lib/data/plannings'
+import type { CategorieRdv } from '@/lib/data/rendez-vous'
 
 export type RecurrenceCreneau = 'aucune' | 'hebdomadaire' | 'toutes_les_2_semaines'
 
@@ -63,31 +64,68 @@ function genererDatesPlageConge(dateDebut: string, dateFin: string): string[] {
   return dates
 }
 
+const CATEGORIES_RDV: readonly CategorieRdv[] = ['rdv', 'livraison', 'formation', 'autre', 'entretien']
+
+// Lecture commune à la création et à la modification d'un rendez-vous.
+// Catégorie validée contre la liste connue (repli sur 'rdv', la contrainte
+// CHECK côté base refuserait de toute façon une valeur inconnue). Le nom et
+// le prénom du patient ne sont conservés que pour un entretien
+// thérapeutique : toute autre catégorie les force à NULL, y compris si le
+// formulaire les envoie encore (ex. catégorie changée après saisie).
+function lireChampsRendezVous(formData: FormData) {
+  const categorieSaisie = String(formData.get('categorie') ?? 'rdv') as CategorieRdv
+  const categorie = CATEGORIES_RDV.includes(categorieSaisie) ? categorieSaisie : 'rdv'
+  const dureeSaisie = Math.round(Number(formData.get('duree_minutes') ?? 30))
+  const estEntretien = categorie === 'entretien'
+
+  return {
+    titre: String(formData.get('titre') ?? '').trim(),
+    categorie,
+    date: String(formData.get('date') ?? ''),
+    heure_debut: String(formData.get('heure_debut') ?? ''),
+    duree_minutes: Number.isFinite(dureeSaisie) && dureeSaisie > 0 ? dureeSaisie : 30,
+    note: String(formData.get('note') ?? '').trim() || null,
+    patient_nom: estEntretien ? String(formData.get('patient_nom') ?? '').trim() || null : null,
+    patient_prenom: estEntretien ? String(formData.get('patient_prenom') ?? '').trim() || null : null,
+  }
+}
+
 export async function creerRendezVous(formData: FormData) {
-  const titre = String(formData.get('titre') ?? '').trim()
-  const categorie = String(formData.get('categorie') ?? 'rdv')
-  const date = String(formData.get('date') ?? '')
-  const heureDebut = String(formData.get('heure_debut') ?? '')
-  const dureeMinutes = Number(formData.get('duree_minutes') ?? 30)
-  const note = String(formData.get('note') ?? '').trim() || null
+  const champs = lireChampsRendezVous(formData)
+  if (!champs.titre || !champs.date || !champs.heure_debut) throw new Error('Titre, date et heure sont obligatoires.')
 
-  if (!titre || !date || !heureDebut) return
-
-  const profil = await getCurrentProfil()
-  const officine = await getOfficineActive()
+  // officine_id toujours dérivé côté serveur, jamais lu depuis le FormData.
+  const [profil, officine] = await Promise.all([getCurrentProfil(), getOfficineActive()])
   if (!profil || !officine) throw new Error('Non connecté')
 
   const supabase = await createClient()
   const { error } = await supabase.from('rendez_vous').insert({
+    ...champs,
     officine_id: officine.officine_id,
-    titre,
-    categorie,
-    date,
-    heure_debut: heureDebut,
-    duree_minutes: dureeMinutes,
-    note,
     created_by: profil.id,
   })
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/agenda')
+}
+
+export async function modifierRendezVous(id: string, formData: FormData) {
+  const champs = lireChampsRendezVous(formData)
+  if (!champs.titre || !champs.date || !champs.heure_debut) throw new Error('Titre, date et heure sont obligatoires.')
+
+  const [profil, officine] = await Promise.all([getCurrentProfil(), getOfficineActive()])
+  if (!profil || !officine) throw new Error('Non connecté')
+
+  // Filtre officine_id en plus de la RLS (est_membre) : une modification ne
+  // peut viser qu'un rendez-vous de l'officine active, jamais une autre
+  // officine dont l'utilisateur serait aussi membre.
+  const supabase = await createClient()
+  const { error } = await supabase
+    .from('rendez_vous')
+    .update(champs)
+    .eq('id', id)
+    .eq('officine_id', officine.officine_id)
 
   if (error) throw new Error(error.message)
 
