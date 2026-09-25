@@ -36,9 +36,9 @@ export function GestionOfficines({
               }`}
             >
               <div className="min-w-0">
-                <div className="truncate text-[13.5px] font-semibold text-ink">{a.officine_nom}</div>
+                <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">{a.officine_nom}</div>
                 {active && (
-                  <div className="mt-0.5 text-[11px] font-semibold text-primary">Officine active</div>
+                  <div className="mt-0.5 text-[12px] font-semibold text-primary">Officine active</div>
                 )}
               </div>
               {active && (
@@ -46,7 +46,8 @@ export function GestionOfficines({
                   type="button"
                   disabled={isPending}
                   onClick={() => setOfficineAQuitter({ id: a.officine_id, nom: a.officine_nom })}
-                  className="shrink-0 text-[12px] font-semibold text-rec disabled:opacity-60"
+                  // Cible 44 px par padding compensé (motif bouton-icône compact).
+                  className="-my-2 -mr-2 min-h-11 shrink-0 rounded-lg px-2 text-[12px] font-semibold text-rec focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60"
                 >
                   Quitter cette officine
                 </button>
@@ -56,8 +57,24 @@ export function GestionOfficines({
         })}
       </div>
 
-      <Link href="/bienvenue" className="self-start text-[13px] font-semibold text-primary">
-        + Ajouter une officine
+      <Link
+        href="/bienvenue"
+        className="-ml-2 inline-flex min-h-11 items-center gap-1.5 self-start rounded-lg px-2 text-[13px] font-semibold text-primary hover:bg-primary-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+        Ajouter une officine
       </Link>
 
       <ModaleConfirmation

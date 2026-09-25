@@ -9,29 +9,36 @@ import { LienRetour } from '@/components/lien-retour'
 
 export default async function InviterPage() {
   const officineActive = await getOfficineActive()
-  const officine = officineActive ? await getOfficine(officineActive.officine_id) : null
+  if (!officineActive) return null
 
-  if (!officine) return null
-
-  const [membres, couleurs, profil] = await Promise.all([
-    getEquipe(officine.id),
-    getCouleursMembres(officine.id),
+  // getOfficine en parallèle des autres lectures (toutes clées sur
+  // l'officine active) plutôt qu'avant elles.
+  const [officine, membres, couleurs, profil] = await Promise.all([
+    getOfficine(officineActive.officine_id),
+    getEquipe(officineActive.officine_id),
+    getCouleursMembres(officineActive.officine_id),
     getCurrentProfil(),
   ])
+
+  if (!officine) return null
 
   return (
     <>
       <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Mon équipe</h1>
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-2">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Équipe</div>
+        <section aria-labelledby="titre-equipe" className="flex flex-col gap-2">
+          <h2 id="titre-equipe" className="text-[12px] font-bold uppercase tracking-wide text-muted">
+            Équipe
+          </h2>
           <MembresOfficine membres={membres} profilActuelId={profil?.id ?? ''} couleurs={couleurs} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <div className="text-[11px] font-bold uppercase tracking-wide text-muted">Inviter un collègue</div>
+        </section>
+        <section aria-labelledby="titre-inviter" className="flex flex-col gap-2">
+          <h2 id="titre-inviter" className="text-[12px] font-bold uppercase tracking-wide text-muted">
+            Inviter un collègue
+          </h2>
           <InviterCard officineId={officine.id} code={officine.code_invitation} />
-        </div>
+        </section>
       </div>
     </>
   )

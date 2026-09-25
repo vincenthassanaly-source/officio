@@ -11,6 +11,13 @@ import { signOut } from '@/app/actions/auth'
 
 export default async function ProfilPage() {
   const supabase = await createClient()
+  const profilP = getCurrentProfil()
+  const officineP = getOfficineActive()
+  // Préférences lancées dès que profil + officine sont connus, en parallèle
+  // de getUser/getMesAdhesions plutôt qu'après eux (cascade évitée).
+  const preferencesP = Promise.all([profilP, officineP]).then(([p, o]) =>
+    p && o ? getPreferencesNotification(p.id, o.officine_id) : []
+  )
   const [
     {
       data: { user },
@@ -18,16 +25,10 @@ export default async function ProfilPage() {
     profil,
     officine,
     adhesions,
-  ] = await Promise.all([
-    supabase.auth.getUser(),
-    getCurrentProfil(),
-    getOfficineActive(),
-    getMesAdhesions(),
-  ])
+    preferences,
+  ] = await Promise.all([supabase.auth.getUser(), profilP, officineP, getMesAdhesions(), preferencesP])
 
   if (!profil || !user) return null
-
-  const preferences = officine ? await getPreferencesNotification(profil.id, officine.officine_id) : []
 
   return (
     <>
@@ -44,7 +45,7 @@ export default async function ProfilPage() {
         <form action={signOut}>
           <button
             type="submit"
-            className="w-full rounded-[20px] bg-surface p-4 text-left text-sm font-semibold text-muted shadow-card hover:text-ink"
+            className="w-full rounded-[20px] bg-surface p-4 text-left text-sm font-semibold text-muted shadow-card hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
             Se déconnecter
           </button>

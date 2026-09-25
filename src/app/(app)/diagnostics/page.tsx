@@ -23,26 +23,29 @@ export default async function DiagnosticsPage() {
           <p className="py-10 text-center text-sm text-muted">Aucune erreur récente.</p>
         ) : (
           erreurs.map((e) => (
-            <div key={e.id} className="rounded-[20px] bg-surface shadow-card p-3.5">
+            <article key={e.id} className="rounded-[20px] bg-surface shadow-card p-3.5">
               <div className="flex items-start justify-between gap-2">
-                <span className="text-[13px] font-semibold text-ink">{e.message}</span>
-                <span className="shrink-0 text-[10.5px] text-muted">
+                <span className="min-w-0 wrap-anywhere text-[13px] font-semibold text-ink">{e.message}</span>
+                <span className="shrink-0 text-[12px] text-muted">
                   {new Date(e.createdAt).toLocaleString('fr-FR', {
                     day: '2-digit',
                     month: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit',
+                    // Rendu serveur (UTC sur Vercel) : fuseau explicite, sinon
+                    // l'heure affichée est décalée de 1 à 2 h.
+                    timeZone: 'Europe/Paris',
                   })}
                 </span>
               </div>
               {e.stackPremiereLigne && (
-                <p className="mt-1 truncate font-mono text-[11px] text-muted">{e.stackPremiereLigne}</p>
+                <p className="mt-1 wrap-anywhere font-mono text-[12px] text-muted">{e.stackPremiereLigne}</p>
               )}
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10.5px] text-muted">
-                {e.url && <span className="truncate">{e.url}</span>}
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-muted">
+                {e.url && <span className="min-w-0 wrap-anywhere">{e.url}</span>}
                 {e.digest && <span className="shrink-0 rounded-full bg-neutral-soft px-2 py-0.5">{e.digest}</span>}
               </div>
-            </div>
+            </article>
           ))
         )}
       </div>
