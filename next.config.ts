@@ -65,6 +65,13 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
       },
       {
+        // Promesses patients : liste partagée, notée par un membre et traitée
+        // par un autre à l'arrivée du médicament — un instantané périmé
+        // ferait rappeler un patient déjà rappelé (ou en oublier un).
+        source: '/promesses-patients',
+        headers: [{ key: 'Cache-Control', value: 'no-store, must-revalidate' }],
+      },
+      {
         // Toutes les autres pages (documents, carnet, fournisseurs, profil,
         // huiles essentielles, chaussures, etc.) : leurs données changent
         // rarement en cours de session, un court cache navigateur évite de
@@ -75,7 +82,7 @@ const nextConfig: NextConfig = {
         // concernés par cette règle : exclus explicitement, comme les routes
         // ci-dessus (`.+` plutôt que `.*` exclut aussi la racine `/`
         // elle-même, dont le nombre de caractères après le `/` est nul).
-        source: '/((?!_next/static|_next/image|liaison|agenda|entretiens-pharmaceutiques).+)',
+        source: '/((?!_next/static|_next/image|liaison|agenda|entretiens-pharmaceutiques|promesses-patients).+)',
         headers: [{ key: 'Cache-Control', value: 'private, max-age=10, must-revalidate' }],
       },
     ]
