@@ -20,7 +20,7 @@ export function InscriptionForm({ invite }: { invite?: string }) {
           type="email"
           required
           autoComplete="email"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
       </div>
 
@@ -35,7 +35,7 @@ export function InscriptionForm({ invite }: { invite?: string }) {
           required
           minLength={8}
           autoComplete="new-password"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           placeholder="8 caractères minimum"
         />
       </div>

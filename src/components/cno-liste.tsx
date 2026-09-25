@@ -9,7 +9,7 @@ import { vibrer } from '@/lib/haptics'
 import { IconCno } from '@/components/nav-icons'
 
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -86,7 +86,7 @@ function QuantiteEditable({
             }
           }}
           aria-label={`Compléments restants pour ${patient.nom_patient}`}
-          className={`w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold text-ink outline-none ${CLASSE_FOCUS}`}
+          className={`w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold text-ink ${CLASSE_FOCUS}`}
         />
       </div>
     )

@@ -364,7 +364,7 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher par nom commercial ou indication (ex. hépatite B)…"
           aria-label="Rechercher un vaccin par nom commercial ou indication"
-          className={`w-full rounded-xl border border-border bg-bg py-2.5 pl-9 pr-9 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+          className={`w-full rounded-xl border border-border bg-bg py-2.5 pl-9 pr-9 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
         />
         {recherche.length > 0 && (
           <button

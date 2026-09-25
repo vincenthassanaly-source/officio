@@ -81,7 +81,7 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           placeholder="prenom@pharmacie-romevillage.fr"
         />
       </div>
@@ -96,7 +96,7 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           type="password"
           required
           autoComplete="current-password"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-primary"
+          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           placeholder="••••••••"
         />
       </div>

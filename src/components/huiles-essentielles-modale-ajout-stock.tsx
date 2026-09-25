@@ -80,7 +80,7 @@ export function ModaleAjoutDepuisStock({
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher une huile en stock…"
           aria-label="Rechercher une huile en stock"
-          className={`order-2 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+          className={`order-2 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
         />
 
         <div className="order-1 mb-1 flex items-center justify-between">

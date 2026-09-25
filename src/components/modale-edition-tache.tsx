@@ -127,13 +127,13 @@ export default function ModaleEditionTache({
           defaultValue={tache.titre}
           placeholder="Titre de la tâche"
           aria-label="Titre de la tâche"
-          className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <select
           name="assigne_id"
           defaultValue={tache.assigne?.id ?? ''}
           aria-label="Assigner à"
-          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         >
           <option value="">Non assignée (toute l&rsquo;équipe)</option>
           {equipe.map((m) => (
@@ -148,14 +148,14 @@ export default function ModaleEditionTache({
             name="echeance"
             defaultValue={tache.echeance ?? ''}
             aria-label="Date d'échéance"
-            className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
           <input
             type="time"
             name="echeance_heure"
             defaultValue={tache.echeance_heure?.slice(0, 5) ?? ''}
             aria-label="Heure d'échéance"
-            className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+            className="w-28 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
           />
         </div>
         <ChampPhoto

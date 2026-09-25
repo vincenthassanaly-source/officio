@@ -7,10 +7,10 @@ import type { LigneMedicament } from '@/lib/data/plan-posologie'
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 const CHAMP_MOMENT_CLASS =
-  'w-full min-w-0 rounded-lg border border-border bg-bg px-1.5 py-2.5 text-center text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+  'w-full min-w-0 rounded-lg border border-border bg-bg px-1.5 py-2.5 text-center text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 function IconAjouter({ className }: { className?: string }) {
   return (

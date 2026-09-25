@@ -46,10 +46,10 @@ const OPTIONS_STATUT: StatutHuile[] = ['en_stock', 'non_tenu_en_stock', 'a_comma
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
 const CHAMP_CLASS =
-  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
+  'rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary'
 
 const CHAMP_VOLUME_COMMANDE_CLASS =
-  'w-16 rounded-lg border border-border bg-bg px-2 py-1.5 text-[13px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-60'
+  'w-16 rounded-lg border border-border bg-bg px-2 py-1.5 text-[13px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-60'
 
 function IconAjouter({ className }: { className?: string }) {
   return (
@@ -575,7 +575,7 @@ function CarteHuile({
               value={huile.statut}
               onChange={(e) => onChangerStatut(huile.id, e.target.value as StatutHuile)}
               aria-label={`Statut de ${huile.nom}`}
-              className={`min-h-11 shrink-0 rounded-lg border border-border bg-bg px-2 text-[16px] font-semibold text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+              className={`min-h-11 shrink-0 rounded-lg border border-border bg-bg px-2 text-[16px] font-semibold text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
             >
               {OPTIONS_STATUT.map((statut) => (
                 <option key={statut} value={statut}>

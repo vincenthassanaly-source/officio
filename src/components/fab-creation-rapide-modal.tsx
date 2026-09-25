@@ -158,7 +158,7 @@ function FormulaireMessage({ onEnvoye }: { onEnvoye: () => void }) {
           onChange={(e) => setContenu(e.target.value)}
           placeholder="Écrire un message…"
           aria-label="Écrire un message…"
-          className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <ChampAudio onChange={setAudio} />
       </div>
@@ -206,14 +206,14 @@ function FormulaireTache({
         required
         placeholder="Titre de la tâche"
         aria-label="Titre de la tâche"
-        className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+        className="min-h-24 max-h-48 resize-none overflow-y-auto rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
       />
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         <select
           name="assigne_id"
           defaultValue=""
           aria-label="Assigner à"
-          className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         >
           <option value="">Non assignée (toute l&rsquo;équipe)</option>
           {equipe.map((m) => (
@@ -226,7 +226,7 @@ function FormulaireTache({
           type="date"
           name="echeance"
           aria-label="Date d'échéance"
-          className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         {/* Facultative : si renseignée, un rappel push + in-app arrive pile
             à cette heure (au lieu du rappel générique "Échéance
@@ -236,7 +236,7 @@ function FormulaireTache({
           type="time"
           name="echeance_heure"
           aria-label="Heure d'échéance"
-          className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+          className="w-full rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -308,7 +308,7 @@ function FormulaireNote({ onCree }: { onCree: () => void }) {
         onChange={(e) => setTitre(e.target.value)}
         placeholder="Titre de la note"
         aria-label="Titre de la note"
-        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink outline-none focus:border-primary"
+        className="rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] font-semibold text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
       />
       <textarea
         name="contenu"
@@ -316,7 +316,7 @@ function FormulaireNote({ onCree }: { onCree: () => void }) {
         onChange={(e) => setContenu(e.target.value)}
         placeholder="Contenu de la note"
         rows={4}
-        className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus:border-primary"
+        className="resize-none rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
       />
       <button
         type="submit"

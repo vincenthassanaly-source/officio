@@ -62,7 +62,7 @@ export function ProduitsARecommanderListe({ produits }: { produits: ProduitAReco
           onChange={(e) => setNomProduit(e.target.value)}
           placeholder="Nom du produit à recommander…"
           aria-label="Nom du produit à recommander"
-          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className="flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
         />
         <button
           type="submit"

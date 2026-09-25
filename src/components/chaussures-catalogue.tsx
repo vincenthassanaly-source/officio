@@ -98,7 +98,7 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
         aria-label={`Prix de ${chaussure.nom_modele}`}
         inputMode="decimal"
         enterKeyHint="done"
-        className={`w-full rounded-lg border border-primary bg-bg px-2 py-2.5 text-[16px] font-semibold text-ink outline-none disabled:opacity-60 ${CLASSE_FOCUS}`}
+        className={`w-full rounded-lg border border-primary bg-bg px-2 py-2.5 text-[16px] font-semibold text-ink disabled:opacity-60 ${CLASSE_FOCUS}`}
       />
     )
   }
@@ -435,7 +435,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
               // au lieu de suivre `flex-1`, ce qui pousse le bouton scanner
               // voisin (`shrink-0`) hors du viewport à 320 px de large
               // (constat re-vérifié : bouton mesuré à 8 px hors écran).
-              className={`min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+              className={`min-w-0 flex-1 rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
             />
             <button
               type="button"

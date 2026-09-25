@@ -142,13 +142,13 @@ export function DocumentsList({ documents }: { documents: Document[] }) {
             name="nom"
             placeholder="Nom du document (optionnel)"
             aria-label="Nom du document"
-            className={`rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+            className={`rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
           />
           <select
             name="categorie"
             defaultValue="autre"
             aria-label="Catégorie du document"
-            className={`rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink outline-none focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
+            className={`rounded-xl border border-border bg-bg px-3 py-2.5 text-[16px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary`}
           >
             {CATEGORIES.map((c) => (
               <option key={c.value} value={c.value}>
