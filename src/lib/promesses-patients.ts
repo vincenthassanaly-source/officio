@@ -11,6 +11,12 @@ export function normaliserRecherche(texte: string): string {
   return normaliser(texte).replace(/œ/g, 'oe').replace(/æ/g, 'ae').trim()
 }
 
+// Plafond de l'historique affiché/retourné par recherche : l'historique
+// n'est pas une archive à parcourir mais un filet pour retrouver une
+// promesse récente ("on a bien rappelé Mme X ?"). Ici (et non dans
+// lib/data) pour être lisible côté client sans importer de code serveur.
+export const LIMITE_HISTORIQUE = 50
+
 // ─── Téléphone ────────────────────────────────────────────────────────────
 
 // Numéro français (0X XX XX XX XX, +33 X…, 0033 X…) ou international au

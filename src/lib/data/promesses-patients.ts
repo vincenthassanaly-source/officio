@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { normaliserRecherche } from '@/lib/promesses-patients'
+import { normaliserRecherche, LIMITE_HISTORIQUE } from '@/lib/promesses-patients'
 
 export type StatutPromesse = 'actif' | 'traite'
 
@@ -16,11 +16,6 @@ export type PromessePatient = {
 }
 
 const COLONNES = 'id, nom_medicament, nom_patient, telephone_patient, facture, statut, created_at, traite_at'
-
-// Plafond de l'historique affiché/retourné par recherche : l'historique
-// n'est pas une archive à parcourir mais un filet pour retrouver une
-// promesse récente ("on a bien rappelé Mme X ?").
-export const LIMITE_HISTORIQUE = 50
 
 // Plus ancienne d'abord : la promesse la plus ancienne est celle dont le
 // patient attend depuis le plus longtemps (même logique que

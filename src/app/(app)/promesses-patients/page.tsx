@@ -1,6 +1,6 @@
 import { getOfficineActive } from '@/lib/data/officine-active'
-import { getPromessesActives } from '@/lib/data/promesses-patients'
-import { PromessesPatientsEnAttente } from '@/components/promesses-patients-en-attente'
+import { getPromessesActives, getPromessesTraitees } from '@/lib/data/promesses-patients'
+import { PromessesPatientsOnglets } from '@/components/promesses-patients-onglets'
 import { LienRetour } from '@/components/lien-retour'
 import { PullToRefresh } from '@/components/PullToRefresh'
 
@@ -15,13 +15,18 @@ export default async function PromessesPatientsPage() {
   const officine = await getOfficineActive()
   if (!officine) return null
 
-  const promesses = await getPromessesActives(officine.officine_id)
+  // L'historique en échec ne doit dégrader que son onglet (null → message
+  // dédié), jamais masquer la liste des patients à rappeler.
+  const [actives, traitees] = await Promise.all([
+    getPromessesActives(officine.officine_id),
+    getPromessesTraitees(officine.officine_id).catch(() => null),
+  ])
 
   return (
     <PullToRefresh>
       <LienRetour />
       <h1 className="mb-4 font-heading text-2xl text-ink">Promesses patients</h1>
-      <PromessesPatientsEnAttente promesses={promesses} />
+      <PromessesPatientsOnglets actives={actives} traitees={traitees} />
     </PullToRefresh>
   )
 }
