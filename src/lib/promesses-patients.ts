@@ -67,9 +67,12 @@ export function quandTraitee(iso: string | null, maintenant = new Date()): strin
 // Numéro français (0X XX XX XX XX, +33 X…, 0033 X…) ou international au
 // format E.164 (+ suivi de 8 à 15 chiffres). Séparateurs usuels tolérés
 // (espaces, points, tirets, parenthèses) : le comptoir tape comme il peut.
+// Facultatif : un champ vide est valide (le patient repassera de lui-même,
+// ou on n'a pas son numéro sous la main) ; seul un numéro saisi mais
+// incomplet/erroné est refusé, pour ne pas enregistrer un numéro inutilisable.
 export function validerTelephone(saisie: string): string | null {
   const brut = saisie.trim()
-  if (!brut) return 'Indique un numéro de téléphone.'
+  if (!brut) return null
   const compact = brut.replace(/[\s.\-()]/g, '')
   if (/^(?:\+33|0033|0)[1-9]\d{8}$/.test(compact)) return null
   if (/^\+[1-9]\d{7,14}$/.test(compact)) return null
@@ -78,9 +81,11 @@ export function validerTelephone(saisie: string): string | null {
 
 // Forme stockée et affichée : "06 12 34 56 78" pour un numéro français
 // (quelle que soit la saisie : +33, 0033, points…), sinon la saisie
-// compactée telle quelle (+ et chiffres). À n'appeler qu'après validation.
-export function formaterTelephone(saisie: string): string {
+// compactée telle quelle (+ et chiffres) ; null si rien n'a été saisi. À
+// n'appeler qu'après validation.
+export function formaterTelephone(saisie: string): string | null {
   const compact = saisie.trim().replace(/[\s.\-()]/g, '')
+  if (!compact) return null
   const francais = compact.match(/^(?:\+33|0033|0)([1-9]\d{8})$/)
   if (francais) return `0${francais[1]}`.replace(/(\d{2})(?=\d)/g, '$1 ')
   return compact
@@ -148,14 +153,27 @@ export function correspondRecherche(texteNormalise: string, rechercheNormalisee:
 
 // ─── Validation du formulaire de création ─────────────────────────────────
 
-export type ChampPromesse = 'nom_medicament' | 'nom_patient' | 'telephone_patient'
+export type ChampPromesse = 'nom_medicament' | 'quantite' | 'nom_patient' | 'telephone_patient'
 export type ErreursPromesse = Partial<Record<ChampPromesse, string>>
 
 export const LONGUEUR_MAX_MEDICAMENT = 200
 export const LONGUEUR_MAX_PATIENT = 120
+export const QUANTITE_MAX = 999
+
+// Quantité promise saisie librement : vide = 1 (cas de loin le plus
+// fréquent, ne doit rien coûter au comptoir). null si la saisie n'est pas
+// un entier entre 1 et QUANTITE_MAX.
+export function lireQuantite(saisie: string): number | null {
+  const brut = saisie.trim()
+  if (!brut) return 1
+  if (!/^\d+$/.test(brut)) return null
+  const quantite = Number(brut)
+  return quantite >= 1 && quantite <= QUANTITE_MAX ? quantite : null
+}
 
 export function validerPromesse(champs: {
   nom_medicament: string
+  quantite: string
   nom_patient: string
   telephone_patient: string
 }): ErreursPromesse {
@@ -164,6 +182,7 @@ export function validerPromesse(champs: {
   const patient = champs.nom_patient.trim()
   if (!medicament) erreurs.nom_medicament = 'Indique le médicament attendu.'
   else if (medicament.length > LONGUEUR_MAX_MEDICAMENT) erreurs.nom_medicament = 'Nom de médicament trop long.'
+  if (lireQuantite(champs.quantite) === null) erreurs.quantite = `Quantité : un nombre entier de 1 à ${QUANTITE_MAX}.`
   if (!patient) erreurs.nom_patient = 'Indique le nom du patient.'
   else if (patient.length > LONGUEUR_MAX_PATIENT) erreurs.nom_patient = 'Nom de patient trop long.'
   const erreurTelephone = validerTelephone(champs.telephone_patient)

@@ -12,12 +12,14 @@ import {
   correspondRecherche,
   depuisQuand,
   formaterTelephone,
+  lireQuantite,
   lienTelephone,
   normaliserRecherche,
   validerPromesse,
   validerTelephone,
   LONGUEUR_MAX_MEDICAMENT,
   LONGUEUR_MAX_PATIENT,
+  QUANTITE_MAX,
   type ChampPromesse,
   type ErreursPromesse,
 } from '@/lib/promesses-patients'
@@ -158,12 +160,14 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
 
   async function enregistrer(champs: {
     nom_medicament: string
+    quantite: string
     nom_patient: string
     telephone_patient: string
     facture: boolean
   }): Promise<boolean> {
     const formData = new FormData()
     formData.set('nom_medicament', champs.nom_medicament)
+    formData.set('quantite', champs.quantite)
     formData.set('nom_patient', champs.nom_patient)
     formData.set('telephone_patient', champs.telephone_patient)
     formData.set('facture', champs.facture ? 'oui' : 'non')
@@ -175,6 +179,7 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
           promesse: {
             id: `${PREFIXE_TEMPORAIRE}${Date.now()}`,
             nom_medicament: champs.nom_medicament.trim(),
+            quantite: lireQuantite(champs.quantite) ?? 1,
             nom_patient: champs.nom_patient.trim(),
             telephone_patient: formaterTelephone(champs.telephone_patient),
             facture: champs.facture,
@@ -402,6 +407,10 @@ function GroupeMedicament({
   onDemanderSuppression: (p: PromessePatient) => void
 }) {
   const idTitre = useId()
+  // Total promis tous patients confondus : ce qu'il faut mettre de côté à
+  // la livraison. Affiché seulement s'il diffère du nombre de patients
+  // (sinon redondant : une unité chacun).
+  const total = groupe.promesses.reduce((somme, p) => somme + p.quantite, 0)
 
   return (
     <section aria-labelledby={idTitre} className="item-entree rounded-[20px] bg-surface p-4 shadow-card">
@@ -410,7 +419,10 @@ function GroupeMedicament({
           <h2 id={idTitre} className="wrap-anywhere text-[16px] font-semibold leading-snug text-ink">
             {groupe.medicament}
           </h2>
-          <p className="text-[12px] text-muted">{libellePatients(groupe.promesses.length)} en attente</p>
+          <p className="text-[12px] text-muted">
+            {libellePatients(groupe.promesses.length)} en attente
+            {total !== groupe.promesses.length && ` · ${total} au total`}
+          </p>
         </div>
         <button
           type="button"
@@ -468,15 +480,28 @@ function LignePromesse({
     >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="wrap-anywhere text-[14.5px] font-semibold leading-snug text-ink">{p.nom_patient}</p>
-          <a
-            href={lienTelephone(p.telephone_patient)}
-            aria-label={`Appeler ${p.nom_patient} au ${p.telephone_patient}`}
-            className={`-mx-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[14px] font-medium tabular-nums text-primary hover:bg-primary-soft motion-safe:transition-colors ${CLASSE_FOCUS}`}
-          >
-            <IconTelephone className="h-[15px] w-[15px] shrink-0" />
-            {p.telephone_patient}
-          </a>
+          {/* Quantité dans le flux du texte, séparée par une espace (et non
+              une marge) : si elle passe à la ligne sous un nom long, elle se
+              cale à gauche sans décalage, et le nom garde toute la largeur. */}
+          <p className="wrap-anywhere text-[14.5px] font-semibold leading-snug text-ink">
+            {p.nom_patient}{' '}
+            <span className="inline-block whitespace-nowrap rounded-full bg-neutral-soft px-2 py-0.5 text-[12px] font-bold leading-none tabular-nums text-ink">
+              <span aria-hidden="true">× {p.quantite}</span>
+              <span className="sr-only">, quantité {p.quantite}</span>
+            </span>
+          </p>
+          {p.telephone_patient ? (
+            <a
+              href={lienTelephone(p.telephone_patient)}
+              aria-label={`Appeler ${p.nom_patient} au ${p.telephone_patient}`}
+              className={`-mx-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[14px] font-medium tabular-nums text-primary hover:bg-primary-soft motion-safe:transition-colors ${CLASSE_FOCUS}`}
+            >
+              <IconTelephone className="h-[15px] w-[15px] shrink-0" />
+              {p.telephone_patient}
+            </a>
+          ) : (
+            <p className="flex min-h-11 items-center text-[13px] text-muted">Pas de téléphone</p>
+          )}
         </div>
         <button
           type="button"
@@ -549,6 +574,7 @@ function FormulairePromesse({
   enCours: boolean
   onEnregistrer: (champs: {
     nom_medicament: string
+    quantite: string
     nom_patient: string
     telephone_patient: string
     facture: boolean
@@ -557,6 +583,7 @@ function FormulairePromesse({
 }) {
   const [champs, setChamps] = useState({
     nom_medicament: medicamentInitial,
+    quantite: '',
     nom_patient: '',
     telephone_patient: '',
   })
@@ -617,7 +644,7 @@ function FormulairePromesse({
         e.preventDefault()
         setTentative(true)
         const erreursEnvoi = validerPromesse(champs)
-        const premierChampEnErreur = (['nom_medicament', 'nom_patient', 'telephone_patient'] as const).find(
+        const premierChampEnErreur = (['nom_medicament', 'quantite', 'nom_patient', 'telephone_patient'] as const).find(
           (c) => erreursEnvoi[c]
         )
         if (premierChampEnErreur) {
@@ -643,17 +670,36 @@ function FormulairePromesse({
       </div>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor={idChamp('nom_medicament')} className="text-[12px] font-semibold text-muted">
-          Médicament attendu
-        </label>
-        <input
-          {...proprietesChamp('nom_medicament')}
-          maxLength={LONGUEUR_MAX_MEDICAMENT}
-          placeholder="Ex. Doliprane 1000 mg"
-          autoCapitalize="sentences"
-          enterKeyHint="next"
-        />
+        <div className="flex items-end gap-2">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <label htmlFor={idChamp('nom_medicament')} className="text-[12px] font-semibold text-muted">
+              Médicament attendu
+            </label>
+            <input
+              {...proprietesChamp('nom_medicament')}
+              maxLength={LONGUEUR_MAX_MEDICAMENT}
+              placeholder="Ex. Doliprane 1000 mg"
+              autoCapitalize="sentences"
+              enterKeyHint="next"
+            />
+          </div>
+          {/* Quantité : vide = 1, le cas courant ne coûte aucune saisie. */}
+          <div className="flex w-[84px] shrink-0 flex-col gap-1">
+            <label htmlFor={idChamp('quantite')} className="text-[12px] font-semibold text-muted">
+              Quantité
+            </label>
+            <input
+              {...proprietesChamp('quantite')}
+              inputMode="numeric"
+              maxLength={String(QUANTITE_MAX).length}
+              placeholder="1"
+              enterKeyHint="next"
+              className={`${CHAMP_CLASS} text-center tabular-nums`}
+            />
+          </div>
+        </div>
         <MessageErreur id={`${idChamp('nom_medicament')}-erreur`} erreur={erreurs.nom_medicament} />
+        <MessageErreur id={`${idChamp('quantite')}-erreur`} erreur={erreurs.quantite} />
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -672,7 +718,7 @@ function FormulairePromesse({
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <label htmlFor={idChamp('telephone_patient')} className="text-[12px] font-semibold text-muted">
-            Téléphone
+            Téléphone <span className="font-normal">(facultatif)</span>
           </label>
           <input
             {...proprietesChamp('telephone_patient')}
@@ -685,8 +731,8 @@ function FormulairePromesse({
               setTelephoneQuitte(true)
               // Mise en forme "06 12 34 56 78" dès que la saisie est valide :
               // relecture plus facile avant d'enregistrer.
-              if (!validerTelephone(champs.telephone_patient)) {
-                modifier('telephone_patient', formaterTelephone(champs.telephone_patient))
+              if (champs.telephone_patient.trim() && !validerTelephone(champs.telephone_patient)) {
+                modifier('telephone_patient', formaterTelephone(champs.telephone_patient) ?? '')
               }
             }}
             className={`${CHAMP_CLASS} tabular-nums`}

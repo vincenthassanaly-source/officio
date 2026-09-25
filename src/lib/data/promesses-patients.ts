@@ -8,14 +8,16 @@ export type PromessePatient = {
   id: string
   nom_medicament: string
   nom_patient: string
-  telephone_patient: string
+  quantite: number
+  // null : numéro non communiqué (champ facultatif).
+  telephone_patient: string | null
   facture: boolean
   statut: StatutPromesse
   created_at: string
   traite_at: string | null
 }
 
-const COLONNES = 'id, nom_medicament, nom_patient, telephone_patient, facture, statut, created_at, traite_at'
+const COLONNES = 'id, nom_medicament, quantite, nom_patient, telephone_patient, facture, statut, created_at, traite_at'
 
 // Plus ancienne d'abord : la promesse la plus ancienne est celle dont le
 // patient attend depuis le plus longtemps (même logique que

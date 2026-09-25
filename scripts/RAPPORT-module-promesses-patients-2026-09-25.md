@@ -165,3 +165,19 @@ Scores (après corrections) :
 6. `714952f` fix(promesses-patients) : corrections de l'audit impeccable (mode Operate)
 7. `bd7e5ff` polish(promesses-patients) : focus conservé après « Traitée » et « Remettre en attente »
 8. (ce rapport + captures)
+
+## 9. Évolution (même jour) : quantité promise et téléphone facultatif
+
+À la demande de Vincent :
+
+- **Quantité** : colonne `quantite integer not null default 1 check (1–999)`. Les promesses existantes passent à 1.
+  - Dans le formulaire, un champ court « Quantité » à côté du médicament. Laissé vide, il vaut 1.
+  - Une valeur hors 1–999 ou non entière est signalée sous le champ.
+  - Affichage : pastille « × N » à côté du nom du patient, « × N » dans l'historique, et « N au total » dans l'en-tête du groupe quand le total diffère du nombre de patients (ce qu'il faut mettre de côté à la livraison).
+- **Téléphone facultatif** : `telephone_patient` accepte désormais NULL (la contrainte de longueur ne s'applique qu'à un numéro renseigné).
+  - Un champ vide n'empêche plus d'enregistrer ; seul un numéro saisi mais invalide est encore refusé, pour ne pas stocker un numéro inutilisable.
+  - Libellé « Téléphone (facultatif) » ; sans numéro, la ligne affiche « Pas de téléphone ».
+- Migration : `scripts/migration-promesses-patients-quantite-telephone-facultatif-2026-09-25.sql`, appliquée via Supabase MCP.
+- Vérifié :
+  - validation : sans téléphone ni quantité → aucune erreur ; téléphone incomplet → erreur ; quantités 0 / abc / 1000 / 2.5 → erreur ;
+  - rendu à 320 et 375 px sans débordement (banc temporaire supprimé, non versionné).

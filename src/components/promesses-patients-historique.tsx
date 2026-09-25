@@ -218,7 +218,10 @@ export function PromessesPatientsHistorique({
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="wrap-anywhere text-[14px] font-semibold leading-snug text-ink">{p.nom_patient}</p>
-                  <p className="wrap-anywhere text-[13px] text-ink">{p.nom_medicament}</p>
+                  <p className="wrap-anywhere text-[13px] text-ink">
+                    {p.nom_medicament}
+                    <span className="tabular-nums text-muted"> × {p.quantite}</span>
+                  </p>
                 </div>
                 <span
                   className={`shrink-0 rounded-full px-2.5 py-1 text-[12px] font-bold ${
@@ -228,14 +231,18 @@ export function PromessesPatientsHistorique({
                   {p.facture ? 'Facturé' : 'Non facturé'}
                 </span>
               </div>
-              <a
-                href={lienTelephone(p.telephone_patient)}
-                aria-label={`Appeler ${p.nom_patient} au ${p.telephone_patient}`}
-                className={`-mx-2 inline-flex min-h-11 items-center gap-1.5 self-start rounded-lg px-2 text-[13.5px] font-medium tabular-nums text-primary hover:bg-primary-soft motion-safe:transition-colors ${CLASSE_FOCUS}`}
-              >
-                <IconTelephone className="h-[15px] w-[15px] shrink-0" />
-                {p.telephone_patient}
-              </a>
+              {p.telephone_patient ? (
+                <a
+                  href={lienTelephone(p.telephone_patient)}
+                  aria-label={`Appeler ${p.nom_patient} au ${p.telephone_patient}`}
+                  className={`-mx-2 inline-flex min-h-11 items-center gap-1.5 self-start rounded-lg px-2 text-[13.5px] font-medium tabular-nums text-primary hover:bg-primary-soft motion-safe:transition-colors ${CLASSE_FOCUS}`}
+                >
+                  <IconTelephone className="h-[15px] w-[15px] shrink-0" />
+                  {p.telephone_patient}
+                </a>
+              ) : (
+                <p className="py-1.5 text-[13px] text-muted">Pas de téléphone</p>
+              )}
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <span className="text-[12px] text-muted">{quandTraitee(p.traite_at)}</span>
                 <button

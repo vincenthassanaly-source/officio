@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getCurrentProfil } from '@/lib/data/profils'
 import { getOfficineActive } from '@/lib/data/officine-active'
 import { getPromessesTraitees, type PromessePatient } from '@/lib/data/promesses-patients'
-import { formaterTelephone, validerPromesse } from '@/lib/promesses-patients'
+import { formaterTelephone, lireQuantite, validerPromesse } from '@/lib/promesses-patients'
 
 // Toutes les écritures sont ouvertes à n'importe quel membre de l'officine
 // (policies RLS est_membre, voir migration-promesses-patients-2026-09-25.sql) ;
@@ -21,6 +21,7 @@ async function contexte() {
 function champsPromesse(formData: FormData) {
   return {
     nom_medicament: String(formData.get('nom_medicament') ?? '').trim(),
+    quantite: String(formData.get('quantite') ?? '').trim(),
     nom_patient: String(formData.get('nom_patient') ?? '').trim(),
     telephone_patient: String(formData.get('telephone_patient') ?? '').trim(),
     facture: formData.get('facture') === 'oui',
@@ -41,6 +42,7 @@ export async function creerPromesse(formData: FormData) {
     officine_id: officineId,
     cree_par: profil.id,
     ...champs,
+    quantite: lireQuantite(champs.quantite) ?? 1,
     telephone_patient: formaterTelephone(champs.telephone_patient),
   })
 
