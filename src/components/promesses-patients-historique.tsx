@@ -7,6 +7,7 @@ import { lienTelephone, quandTraitee, LIMITE_HISTORIQUE } from '@/lib/promesses-
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { vibrer } from '@/lib/haptics'
+import { preparerFocusApresRetrait } from '@/lib/focus-apres-retrait'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -104,11 +105,13 @@ export function PromessesPatientsHistorique({
     }, DELAI_RECHERCHE_MS)
   }
 
-  function remettreEnAttente(p: PromessePatient) {
+  function remettreEnAttente(p: PromessePatient, bouton: HTMLElement | null) {
+    const rendreFocus = preparerFocusApresRetrait(bouton, 'data-action-remettre')
     retirerApresAnimation(p.id, () =>
       startAction(async () => {
         vibrer()
         retirerOptimiste(p.id)
+        requestAnimationFrame(rendreFocus)
         try {
           await remettrePromesseEnAttente(p.id)
           setResultats((r) => r?.filter((x) => x.id !== p.id) ?? null)
@@ -237,7 +240,8 @@ export function PromessesPatientsHistorique({
                 <span className="text-[12px] text-muted">{quandTraitee(p.traite_at)}</span>
                 <button
                   type="button"
-                  onClick={() => remettreEnAttente(p)}
+                  onClick={(e) => remettreEnAttente(p, e.currentTarget)}
+                  data-action-remettre=""
                   aria-label={`Remettre la promesse de ${p.nom_patient} en attente`}
                   className={`-mr-1 ml-auto flex min-h-11 items-center gap-1.5 rounded-xl px-2.5 text-[12.5px] font-semibold text-muted hover:bg-neutral-soft hover:text-ink motion-safe:transition-colors ${CLASSE_FOCUS}`}
                 >

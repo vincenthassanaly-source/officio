@@ -25,6 +25,7 @@ import { ModaleConfirmation } from '@/components/ui/modale-confirmation'
 import { useToast } from '@/components/ui/toast-provider'
 import { useRetraitAnime } from '@/lib/use-retrait-anime'
 import { vibrer } from '@/lib/haptics'
+import { preparerFocusApresRetrait } from '@/lib/focus-apres-retrait'
 
 const CLASSE_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
 
@@ -199,11 +200,13 @@ export function PromessesPatientsEnAttente({ promesses }: { promesses: PromesseP
     })
   }
 
-  function traiter(p: PromessePatient) {
+  function traiter(p: PromessePatient, bouton: HTMLElement | null) {
+    const rendreFocus = preparerFocusApresRetrait(bouton, 'data-action-traiter')
     retirerApresAnimation(p.id, () =>
       startTransition(async () => {
         vibrer()
         appliquerOptimiste({ type: 'retrait', id: p.id })
+        requestAnimationFrame(rendreFocus)
         try {
           await marquerPromesseTraitee(p.id)
           toast({ type: 'succes', message: `${p.nom_patient} : promesse traitée, visible dans l'historique.` })
@@ -394,7 +397,7 @@ function GroupeMedicament({
   groupe: Groupe
   estEnSortie: (id: string) => boolean
   onAjouter: () => void
-  onTraiter: (p: PromessePatient) => void
+  onTraiter: (p: PromessePatient, bouton: HTMLElement | null) => void
   onBasculerFacture: (p: PromessePatient) => void
   onDemanderSuppression: (p: PromessePatient) => void
 }) {
@@ -445,7 +448,7 @@ function LignePromesse({
 }: {
   promesse: PromessePatient
   enSortie: boolean
-  onTraiter: (p: PromessePatient) => void
+  onTraiter: (p: PromessePatient, bouton: HTMLElement | null) => void
   onBasculerFacture: (p: PromessePatient) => void
   onDemanderSuppression: (p: PromessePatient) => void
 }) {
@@ -477,8 +480,9 @@ function LignePromesse({
         </div>
         <button
           type="button"
-          onClick={() => onTraiter(p)}
+          onClick={(e) => onTraiter(p, e.currentTarget)}
           disabled={desactive}
+          data-action-traiter=""
           aria-label={`Marquer la promesse de ${p.nom_patient} comme traitée`}
           className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3.5 text-[13px] font-semibold text-white hover:bg-primary-dark motion-safe:transition-colors disabled:opacity-50 ${CLASSE_FOCUS}`}
         >
