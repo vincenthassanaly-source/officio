@@ -138,8 +138,8 @@ export function NotificationsParametres({
                   }`}
                 >
                   <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm motion-safe:transition-all ${
-                      active ? 'left-[22px]' : 'left-0.5'
+                    className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-surface shadow-sm motion-safe:transition-transform ${
+                      active ? 'translate-x-5' : ''
                     }`}
                   />
                 </span>

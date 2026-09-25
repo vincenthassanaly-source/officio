@@ -470,7 +470,7 @@ function CarteHuile({
   return (
     <div
       ref={carteRef}
-      className={`relative flex select-none flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3 transition-all duration-200 ${
+      className={`relative flex select-none flex-col gap-1.5 rounded-[20px] bg-surface shadow-card p-3 transition-[transform,opacity] duration-200 ${
         enMaintien ? 'scale-[0.98] opacity-80' : ''
       }`}
       onTouchStart={demarrerAppuiLong}

@@ -8,6 +8,11 @@ import { getCouleursMembres } from '@/lib/data/couleurs-membres'
 import { CahierDeLiaison } from '@/components/cahier-de-liaison'
 import { PullToRefresh } from '@/components/PullToRefresh'
 
+// Même régime que l'accueil et l'agenda : rendu à chaque requête, jamais
+// d'instantané statique (la route est aussi en Cache-Control no-store, voir
+// next.config.ts) — les non-lus changent en continu entre membres.
+export const dynamic = 'force-dynamic'
+
 export default async function LiaisonPage({
   searchParams,
 }: {

@@ -27,7 +27,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4F46E5",
+  // = --color-primary (oklch(52% 0.19 275)) converti en sRGB.
+  themeColor: "#4E56D3",
   // Sur Chrome Android, le clavier virtuel redimensionne la page (au lieu de
   // se superposer par-dessus sans redimensionner le viewport visuel) : les
   // `dvh`/`max-h`/`overflow-y-auto` des sheets (voir commits précédents)

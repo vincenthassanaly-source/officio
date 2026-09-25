@@ -91,7 +91,21 @@ export function AccueilDashboard({
   if (toutEstAJour) {
     return (
       <div className="mt-4 rounded-[20px] bg-surface shadow-card p-4 text-center">
-        <p className="text-[13.5px] font-semibold text-ink">Tout est à jour ✓</p>
+        <p className="flex items-center justify-center gap-1.5 text-[13.5px] font-semibold text-ink">
+          Tout est à jour
+          <svg
+            className="h-4 w-4 text-green"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+        </p>
         <p className="mt-0.5 text-[12px] text-muted">
           Rien de prévu aujourd&rsquo;hui, aucune tâche ni message en attente.
         </p>
