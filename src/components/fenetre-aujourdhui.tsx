@@ -17,6 +17,7 @@ const LABELS_CATEGORIE_RDV: Record<CategorieRdv, string> = {
   livraison: 'Logistique',
   formation: 'Formation',
   autre: 'Autre',
+  entretien: 'Entretien thérapeutique',
 }
 
 // Abonnement vide : sert seulement (via useSyncExternalStore) à détecter le
