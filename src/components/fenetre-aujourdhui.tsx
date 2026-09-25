@@ -203,7 +203,14 @@ export function FenetreAujourdhui() {
                       onClick={() => naviguer('/agenda')}
                       className="flex items-center justify-between gap-2 min-h-11 rounded-xl bg-bg px-3 py-3 text-left text-[13px] text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                     >
-                      <span className="min-w-0 flex-1 truncate">{r.titre}</span>
+                      {/* Entretien thérapeutique : le nom du patient, s'il est
+                          renseigné, identifie mieux le créneau que le titre
+                          générique. */}
+                      <span className="min-w-0 flex-1 truncate">
+                        {(r.categorie === 'entretien' &&
+                          [r.patient_prenom, r.patient_nom].filter(Boolean).join(' ')) ||
+                          r.titre}
+                      </span>
                       <span className="shrink-0 text-[12px] text-muted">
                         {r.heure_debut.slice(0, 5)} · {LABELS_CATEGORIE_RDV[r.categorie]}
                       </span>

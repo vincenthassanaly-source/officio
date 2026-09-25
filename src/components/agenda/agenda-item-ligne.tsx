@@ -25,12 +25,35 @@ function IconCoche({ className }: { className?: string }) {
   )
 }
 
-const CATEGORIES: { value: CategorieRdv; label: string; className: string }[] = [
+// Silhouette discrète devant le nom du patient d'un entretien thérapeutique.
+function IconPatient({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+  )
+}
+
+// Exporté pour le formulaire de rendez-vous (modale-rendez-vous.tsx), qui
+// réutilise libellés et couleurs pour son sélecteur de catégorie. Teal pour
+// l'entretien thérapeutique : purple est déjà pris par Formation dans ce
+// même tableau, et teal porte déjà la sémantique « relation patient »
+// (module Promesses patients).
+export const CATEGORIES: { value: CategorieRdv; label: string; className: string }[] = [
   { value: 'rdv', label: 'Rendez-vous', className: 'bg-accent-soft text-accent' },
+  { value: 'entretien', label: 'Entretien thérapeutique', className: 'bg-teal-soft text-teal' },
   { value: 'livraison', label: 'Logistique', className: 'bg-primary-soft text-primary' },
   { value: 'formation', label: 'Formation', className: 'bg-purple-soft text-purple' },
   { value: 'autre', label: 'Autre', className: 'bg-neutral-soft text-muted' },
 ]
+
+// Nom affiché d'un patient d'entretien (« Prénom Nom »), ou null si aucun
+// des deux champs n'est renseigné — l'appelant replie alors sur le titre.
+export function nomPatientRdv(r: Pick<RendezVous, 'patient_prenom' | 'patient_nom'>): string | null {
+  const nom = [r.patient_prenom, r.patient_nom].filter(Boolean).join(' ').trim()
+  return nom || null
+}
 
 // Rendez-vous, tâches à échéance et régularisations d'ordonnances combinés
 // sur la même période. Rangés RDV d'abord (par heure), puis tâches, puis
@@ -109,6 +132,13 @@ export function ItemLigne({
   if (item.type === 'rdv') {
     const r = item.rdv
     const cat = CATEGORIES.find((c) => c.value === r.categorie) ?? CATEGORIES[0]
+    const patient = r.categorie === 'entretien' ? nomPatientRdv(r) : null
+    // Avec un patient renseigné, son nom devient l'intitulé principal de la
+    // carte ; le titre ne reste affiché en sous-ligne que s'il apporte
+    // autre chose que le libellé déjà porté par le badge (« Entretien
+    // thérapeutique » par défaut).
+    const titreSecondaire =
+      patient && r.titre.trim().toLocaleLowerCase('fr') !== cat.label.toLocaleLowerCase('fr') ? r.titre : null
     return (
       <div className="flex gap-3">
         <div className="w-12 shrink-0 pt-1 text-right">
@@ -117,7 +147,21 @@ export function ItemLigne({
         </div>
         <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
           <div className="flex items-start justify-between gap-2">
-            <div className="wrap-anywhere text-sm font-semibold text-ink">{r.titre}</div>
+            <div className="min-w-0 flex-1">
+              {patient ? (
+                <>
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
+                    <IconPatient className="h-3.5 w-3.5 shrink-0 text-teal" />
+                    <span className="min-w-0 wrap-anywhere">{patient}</span>
+                  </span>
+                  {titreSecondaire && (
+                    <span className="mt-0.5 block wrap-anywhere text-[12.5px] text-muted">{titreSecondaire}</span>
+                  )}
+                </>
+              ) : (
+                <span className="block wrap-anywhere text-sm font-semibold text-ink">{r.titre}</span>
+              )}
+            </div>
             <div className="flex shrink-0 items-center gap-1">
               <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold ${cat.className}`}>{cat.label}</span>
               <button
