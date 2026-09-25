@@ -9,13 +9,21 @@ import type { Tache } from '@/lib/data/taches'
 import type { Regularisation } from '@/lib/data/regularisations'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
-import { formatJourCourt, toISODate } from '@/lib/dates'
+import { formatDateLongue, formatJourCourt, toISODate } from '@/lib/dates'
 import { useToast } from '@/components/ui/toast-provider'
 import { ItemLigne, regrouperItemsParJour } from './agenda-item-ligne'
 
 // Jamais visible au premier rendu (montée seulement au clic sur une tâche) :
 // voir modale-edition-tache.tsx.
 const ModaleEditionTache = dynamic(() => import('@/components/modale-edition-tache'), { ssr: false })
+
+function IconPlus({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  )
+}
 
 export function AgendaVueGlobale({
   rendezVous,
@@ -25,6 +33,8 @@ export function AgendaVueGlobale({
   equipe,
   profilActuelId,
   couleurs,
+  onNouveauRdv,
+  onEditerRdv,
 }: {
   rendezVous: RendezVous[]
   taches: Tache[]
@@ -33,6 +43,9 @@ export function AgendaVueGlobale({
   equipe: MembreEquipe[]
   profilActuelId: string
   couleurs: Map<string, CouleurAvatar>
+  // Ouvre ModaleRendezVous (état détenu par Agenda, agenda.tsx).
+  onNouveauRdv: (dateIso: string) => void
+  onEditerRdv: (rdv: RendezVous) => void
 }) {
   const [dateSelectionnee, setDateSelectionnee] = useState(() => {
     const aujourdhui = toISODate(new Date())
@@ -168,6 +181,14 @@ export function AgendaVueGlobale({
                     Aujourd&rsquo;hui
                   </span>
                 )}
+                <button
+                  type="button"
+                  onClick={() => onNouveauRdv(iso)}
+                  aria-label={`Ajouter un rendez-vous le ${formatDateLongue(iso)}`}
+                  className="-my-3 ml-auto flex h-11 w-11 items-center justify-center rounded-full text-muted hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <IconPlus className="h-[18px] w-[18px]" />
+                </button>
               </div>
 
               {itemsJour.length === 0 ? (
@@ -187,6 +208,7 @@ export function AgendaVueGlobale({
                         item={item}
                         aujourdhuiIso={aujourdhuiIso}
                         onSupprimerRdv={onSupprimerRdv}
+                        onEditerRdv={onEditerRdv}
                         onToggleTache={onToggleTache}
                         onEditerTache={setTacheEnEdition}
                         couleurs={couleurs}

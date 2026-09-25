@@ -28,6 +28,8 @@ export function AgendaVueGlobaleMois({
   equipe,
   profilActuelId,
   couleurs,
+  onNouveauRdv,
+  onEditerRdv,
 }: {
   rendezVous: RendezVous[]
   taches: Tache[]
@@ -36,6 +38,10 @@ export function AgendaVueGlobaleMois({
   equipe: MembreEquipe[]
   profilActuelId: string
   couleurs: Map<string, CouleurAvatar>
+  // Ouvre ModaleRendezVous (état détenu par Agenda, agenda.tsx), par-dessus
+  // ModaleDetailJour quand l'appel vient de ce panneau.
+  onNouveauRdv: (dateIso: string) => void
+  onEditerRdv: (rdv: RendezVous) => void
 }) {
   const [jourSelectionne, setJourSelectionne] = useState<string | null>(null)
   const [, startTransition] = useTransition()
@@ -152,6 +158,8 @@ export function AgendaVueGlobaleMois({
           items={itemsJourSelectionne}
           aujourdhuiIso={aujourdhuiIso}
           onSupprimerRdv={onSupprimerRdv}
+          onEditerRdv={onEditerRdv}
+          onNouveauRdv={onNouveauRdv}
           onToggleTache={onToggleTache}
           onEditerTache={setTacheEnEdition}
           couleurs={couleurs}
@@ -191,6 +199,8 @@ function ModaleDetailJour({
   items,
   aujourdhuiIso,
   onSupprimerRdv,
+  onEditerRdv,
+  onNouveauRdv,
   onToggleTache,
   onEditerTache,
   couleurs,
@@ -200,6 +210,8 @@ function ModaleDetailJour({
   items: ItemAgenda[]
   aujourdhuiIso: string
   onSupprimerRdv: (id: string) => void
+  onEditerRdv: (rdv: RendezVous) => void
+  onNouveauRdv: (dateIso: string) => void
   onToggleTache: (tache: Tache) => void
   onEditerTache: (tache: Tache) => void
   couleurs: Map<string, CouleurAvatar>
@@ -268,6 +280,7 @@ function ModaleDetailJour({
                   item={item}
                   aujourdhuiIso={aujourdhuiIso}
                   onSupprimerRdv={onSupprimerRdv}
+                  onEditerRdv={onEditerRdv}
                   onToggleTache={onToggleTache}
                   onEditerTache={onEditerTache}
                   couleurs={couleurs}
@@ -277,6 +290,14 @@ function ModaleDetailJour({
             })}
           </div>
         )}
+
+        <button
+          type="button"
+          onClick={() => onNouveauRdv(iso)}
+          className="min-h-11 rounded-xl border border-dashed border-border text-[13px] font-semibold text-primary hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          Ajouter un rendez-vous
+        </button>
       </div>
     </div>,
     document.body

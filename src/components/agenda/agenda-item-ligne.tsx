@@ -108,6 +108,7 @@ export function ItemLigne({
   item,
   aujourdhuiIso,
   onSupprimerRdv,
+  onEditerRdv,
   onToggleTache,
   onEditerTache,
   couleurs,
@@ -120,6 +121,7 @@ export function ItemLigne({
   // nouvel état dès le clic et n'a aucune raison d'être désactivé le temps
   // de l'aller-retour serveur.
   onSupprimerRdv: (id: string) => void
+  onEditerRdv: (rdv: RendezVous) => void
   onToggleTache: (tache: Tache) => void
   onEditerTache: (tache: Tache) => void
   couleurs: Map<string, CouleurAvatar>
@@ -147,7 +149,12 @@ export function ItemLigne({
         </div>
         <div className="flex-1 rounded-[20px] bg-surface shadow-card p-3.5">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => onEditerRdv(r)}
+              aria-label={`Modifier le rendez-vous ${patient ?? r.titre}`}
+              className="-m-1 min-h-11 min-w-0 flex-1 rounded-lg p-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
               {patient ? (
                 <>
                   <span className="flex items-center gap-1.5 text-sm font-semibold text-ink">
@@ -161,7 +168,7 @@ export function ItemLigne({
               ) : (
                 <span className="block wrap-anywhere text-sm font-semibold text-ink">{r.titre}</span>
               )}
-            </div>
+            </button>
             <div className="flex shrink-0 items-center gap-1">
               <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold ${cat.className}`}>{cat.label}</span>
               <button

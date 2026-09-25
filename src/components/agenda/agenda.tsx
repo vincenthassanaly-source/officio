@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { AgendaVueGlobale } from './agenda-vue-globale'
 import { AgendaVueGlobaleMois } from './agenda-vue-globale-mois'
@@ -13,6 +14,13 @@ import type { Creneau } from '@/lib/data/plannings'
 import type { MembreEquipe } from '@/lib/data/equipe'
 import type { CouleurAvatar } from '@/lib/data/couleurs-membres'
 import { formatMoisAnnee, formatPeriodeSemaine, getWeekDates, toISODate } from '@/lib/dates'
+
+// Jamais visible au premier rendu (montée seulement à la création ou à la
+// modification d'un rendez-vous) — même principe que ModaleEditionTache.
+const ModaleRendezVous = dynamic(() => import('./modale-rendez-vous'), { ssr: false })
+
+// Création (date pré-remplie) ou modification d'un rendez-vous existant.
+type EtatModaleRdv = { mode: 'creation'; dateIso: string } | { mode: 'edition'; rdv: RendezVous } | null
 
 // Distance horizontale minimum pour qu'un geste soit considéré comme un
 // swipe intentionnel (plutôt qu'un tap ou un léger tremblement du doigt).
@@ -35,6 +43,14 @@ function IconChevronDroite({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="m9 18 6-6-6-6" />
+    </svg>
+  )
+}
+
+function IconPlus({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" />
     </svg>
   )
 }
@@ -94,6 +110,7 @@ export function Agenda({
 }) {
   const router = useRouter()
   const [onglet, setOnglet] = useState<'globale' | 'planning'>('globale')
+  const [modaleRdv, setModaleRdv] = useState<EtatModaleRdv>(null)
   // Sens du dernier changement de période (1 = vers la suivante, -1 = vers
   // la précédente), pilote le sens de la transition CSS ci-dessous. Mis à
   // jour par allerVersSemaine/allerVersMois (flèches ET swipe) et par le
@@ -117,6 +134,22 @@ export function Agenda({
   const estMoisActuel = moisAfficheIso === moisActuelIso
 
   const estPeriodeActuelle = vue === 'mois' ? estMoisActuel : estSemaineActuelle
+
+  // Date pré-remplie par le bouton « Nouveau rendez-vous » général :
+  // aujourd'hui si la période affichée le contient, sinon son premier jour.
+  const dateNouveauRdvParDefaut = estPeriodeActuelle
+    ? toISODate(new Date())
+    : vue === 'mois'
+      ? `${moisAfficheIso}-01`
+      : lundiAffiche
+
+  function ouvrirCreationRdv(dateIso: string) {
+    setModaleRdv({ mode: 'creation', dateIso })
+  }
+
+  function ouvrirEditionRdv(rdv: RendezVous) {
+    setModaleRdv({ mode: 'edition', rdv })
+  }
 
   // replace plutôt que push : changer de semaine ne doit pas empiler une
   // étape d'historique par clic — sinon revenir en arrière depuis l'Agenda
@@ -309,6 +342,18 @@ export function Agenda({
         </button>
       </div>
 
+      {onglet === 'globale' && (
+        // Même emplacement et même style que « Ajouter un créneau » dans
+        // l'onglet Planning équipe (planning-equipe.tsx).
+        <button
+          type="button"
+          onClick={() => ouvrirCreationRdv(dateNouveauRdvParDefaut)}
+          className="-mt-1 mb-3 flex min-h-11 items-center gap-1 self-start px-1 text-[13px] font-semibold text-primary hover:text-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <IconPlus className="h-3.5 w-3.5" /> Nouveau rendez-vous
+        </button>
+      )}
+
       <div
         className="flex flex-1 flex-col"
         onTouchStart={gererToucheDebut}
@@ -337,6 +382,8 @@ export function Agenda({
                 equipe={equipe}
                 profilActuelId={profilActuelId}
                 couleurs={couleurs}
+                onNouveauRdv={ouvrirCreationRdv}
+                onEditerRdv={ouvrirEditionRdv}
               />
             ) : (
               <PlanningEquipe
@@ -357,6 +404,8 @@ export function Agenda({
               equipe={equipe}
               profilActuelId={profilActuelId}
               couleurs={couleurs}
+              onNouveauRdv={ouvrirCreationRdv}
+              onEditerRdv={ouvrirEditionRdv}
             />
           ) : (
             <PlanningEquipeMois
@@ -369,6 +418,15 @@ export function Agenda({
           )}
         </div>
       </div>
+
+      {modaleRdv && (
+        <ModaleRendezVous
+          key={modaleRdv.mode === 'edition' ? modaleRdv.rdv.id : `nouveau-${modaleRdv.dateIso}`}
+          rdv={modaleRdv.mode === 'edition' ? modaleRdv.rdv : undefined}
+          dateParDefaut={modaleRdv.mode === 'creation' ? modaleRdv.dateIso : modaleRdv.rdv.date}
+          onFerme={() => setModaleRdv(null)}
+        />
+      )}
     </div>
   )
 }
