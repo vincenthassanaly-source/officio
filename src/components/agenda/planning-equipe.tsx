@@ -475,7 +475,7 @@ export function PlanningEquipe({
                     title={`${membre?.nom_complet ?? ''} — Repos (cliquer pour le détail)`}
                     className="-m-1.5 flex h-11 w-11 items-center justify-center p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                   >
-                    <span className="rounded bg-neutral-soft px-1 py-0.5 text-[12px] font-bold text-neutral-text">
+                    <span className="rounded bg-neutral-soft px-1 py-0.5 text-[12px] font-bold text-muted">
                       {membre?.initiales ?? '?'}
                     </span>
                   </button>

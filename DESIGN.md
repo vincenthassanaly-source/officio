@@ -12,13 +12,13 @@ colors:
   muted: "oklch(52% 0.02 265)"
   border: "oklch(91% 0.006 260)"
   track: "oklch(93% 0.01 265)"
-  accent: "oklch(58% 0.14 70)"
+  accent: "oklch(53% 0.14 70)"
   accent-soft: "oklch(94% 0.06 80)"
-  rec: "oklch(58% 0.2 25)"
+  rec: "oklch(53% 0.2 25)"
   rec-soft: "oklch(94% 0.06 25)"
   purple: "oklch(52% 0.15 300)"
   purple-soft: "oklch(92% 0.06 300)"
-  green: "oklch(58% 0.14 150)"
+  green: "oklch(51% 0.14 150)"
   green-soft: "oklch(94% 0.05 150)"
   brun: "oklch(48% 0.09 45)"
   brun-soft: "oklch(93% 0.03 55)"
@@ -105,8 +105,8 @@ Palette `oklch`, restreinte : un seul accent d'action (`primary`), un vocabulair
 - **Indigo primaire** (`oklch(52% 0.19 275)`, `--color-primary`) : actions principales (boutons pleins, liens actifs, onglet actif de la navigation, focus). `primary-light`/`primary-dark` sont des variantes de contraste, `primary-soft` (`oklch(94% 0.03 275)`) sert de fond pour badges/état actif discret (pill de la bottom nav, ligne de notification non lue).
 
 ### Secondary
-- **Accent orangé** (`oklch(58% 0.14 70)`, `--color-accent`) : échéances proches (« Demain », « Aujourd'hui »), signalétique secondaire non critique. `accent-soft` (`oklch(94% 0.06 80)`) pour les fonds associés.
-- **Vert** (`oklch(58% 0.14 150)`, `--color-green`) : succès, état « terminé », toast de succès.
+- **Accent orangé** (`oklch(53% 0.14 70)`, `--color-accent`) : échéances proches (« Demain », « Aujourd'hui »), signalétique secondaire non critique. `accent-soft` (`oklch(94% 0.06 80)`) pour les fonds associés.
+- **Vert** (`oklch(51% 0.14 150)`, `--color-green`) : succès, état « terminé », toast de succès.
 - **Violet** (`oklch(52% 0.15 300)`, `--color-purple`) et **brun** (`oklch(48% 0.09 45)`, `--color-brun`) : couleurs de tuiles de modules secondaires (`MODULES_SECONDAIRES`) et d'avatars d'équipe, sans rôle sémantique fixe au-delà de la distinction visuelle entre modules/personnes.
 
 ### Neutral
@@ -118,6 +118,8 @@ Palette `oklch`, restreinte : un seul accent d'action (`primary`), un vocabulair
 - **Neutre doux** (`oklch(93% 0.01 265)`, `--color-neutral-soft`) : fond au survol/actif des liens de navigation, fond d'avatar par défaut.
 
 ### Named Rules
+**La règle du contraste des couleurs sémantiques.** `accent`, `green` et `rec` servent aussi de couleur de texte (badges, messages d'erreur, statuts) sur leur propre fond `-soft` et sur blanc : leur luminance est calée pour tenir ≥ 4,5:1 dans les deux cas (audit impeccable du 2026-09-25 : 58 % → 53 % pour `accent`/`rec`, 58 % → 51 % pour `green`, teinte et chroma inchangées). Toute nouvelle couleur sémantique utilisée en texte suit la même contrainte ; `primary-light` et `neutral-text` (~3:1) restent réservés aux icônes et éléments non textuels.
+
 **La règle du rouge unique.** `rec`/`rec-soft` ne sert qu'à l'alerte et à la suppression (bouton destructif, badge d'alerte pharmaceutique, pastille de notification urgente). Aucune autre utilisation, même décorative.
 
 ## Typography
