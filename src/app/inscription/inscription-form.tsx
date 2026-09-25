@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { inscription } from '@/app/actions/inscription'
+import { CLASSE_BOUTON_AUTH, CLASSE_CHAMP_AUTH, CLASSE_LIBELLE_AUTH } from '@/components/carte-authentification'
 
 export function InscriptionForm({ invite }: { invite?: string }) {
   const [state, action, pending] = useActionState(inscription, undefined)
@@ -11,7 +12,7 @@ export function InscriptionForm({ invite }: { invite?: string }) {
       {invite && <input type="hidden" name="invite" value={invite} />}
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted">
+        <label htmlFor="email" className={CLASSE_LIBELLE_AUTH}>
           Email
         </label>
         <input
@@ -20,12 +21,12 @@ export function InscriptionForm({ invite }: { invite?: string }) {
           type="email"
           required
           autoComplete="email"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className={CLASSE_CHAMP_AUTH}
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wide text-muted">
+        <label htmlFor="password" className={CLASSE_LIBELLE_AUTH}>
           Mot de passe
         </label>
         <input
@@ -35,19 +36,22 @@ export function InscriptionForm({ invite }: { invite?: string }) {
           required
           minLength={8}
           autoComplete="new-password"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
-          placeholder="8 caractères minimum"
+          aria-describedby="password-aide"
+          className={CLASSE_CHAMP_AUTH}
         />
+        <p id="password-aide" className="text-[12px] text-muted">
+          8 caractères minimum.
+        </p>
       </div>
 
       {state?.error && (
-        <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{state.error}</p>
+        <p role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{state.error}</p>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+        className={CLASSE_BOUTON_AUTH}
       >
         {pending ? 'Création…' : 'Créer mon compte'}
       </button>

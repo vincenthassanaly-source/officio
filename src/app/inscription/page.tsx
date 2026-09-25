@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { InscriptionForm } from './inscription-form'
+import { CarteAuthentification, CLASSE_LIEN_AUTH } from '@/components/carte-authentification'
 
 export default async function InscriptionPage({
   searchParams,
@@ -9,26 +10,21 @@ export default async function InscriptionPage({
   const { invite } = await searchParams
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-bg px-6">
-      <div className="w-full max-w-sm rounded-3xl border border-border bg-surface p-8 shadow-sm">
-        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light">
-          Officio
+    <CarteAuthentification>
+      <h1 className={`font-heading text-2xl text-ink ${invite ? 'mb-1' : 'mb-5'}`}>Créer un compte</h1>
+      {invite && (
+        <p className="mb-5 text-[13px] text-muted">
+          Tu rejoindras une officine avec le code <strong className="font-mono text-ink">{invite}</strong> une
+          fois ton compte créé.
         </p>
-        <h1 className="mt-1 mb-1 font-heading text-2xl text-ink">Créer un compte</h1>
-        {invite && (
-          <p className="mb-5 text-[13px] text-muted">
-            Tu rejoindras une officine avec le code <strong>{invite}</strong> une fois ton compte créé.
-          </p>
-        )}
-        {!invite && <div className="mb-5" />}
-        <InscriptionForm invite={invite} />
-        <p className="mt-5 text-center text-[13px] text-muted">
-          Déjà un compte ?{' '}
-          <Link href="/login" className="font-semibold text-primary">
-            Se connecter
-          </Link>
-        </p>
-      </div>
-    </main>
+      )}
+      <InscriptionForm invite={invite} />
+      <p className="mt-5 text-center text-[13px] text-muted">
+        Déjà un compte ?{' '}
+        <Link href="/login" className={CLASSE_LIEN_AUTH}>
+          Se connecter
+        </Link>
+      </p>
+    </CarteAuthentification>
   )
 }

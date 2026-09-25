@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { LoginForm } from './login-form'
+import { CarteAuthentification, CLASSE_LIEN_AUTH } from '@/components/carte-authentification'
 
 export default async function LoginPage({
   searchParams,
@@ -10,31 +11,25 @@ export default async function LoginPage({
   const modeAjout = mode === 'ajouter'
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-bg px-6">
-      <div className="w-full max-w-sm rounded-3xl border border-border bg-surface p-8 shadow-sm">
-        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-primary-light">
-          Officio
+    <CarteAuthentification>
+      <h1 className={`font-heading text-2xl text-ink ${modeAjout ? 'mb-1' : 'mb-5'}`}>
+        {modeAjout ? 'Ajouter un compte' : 'Connexion'}
+      </h1>
+      {modeAjout && (
+        <p className="mb-5 text-[13px] text-muted">
+          Ta session actuelle reste ouverte. Ce compte sera simplement mémorisé sur cet
+          ordinateur pour que tu puisses basculer dessus depuis le menu du bas.
         </p>
-        <h1 className="mt-1 mb-1 font-heading text-2xl text-ink">
-          {modeAjout ? 'Ajouter un compte' : 'Connexion'}
-        </h1>
-        {modeAjout && (
-          <p className="mb-5 text-[13px] text-muted">
-            Ta session actuelle reste ouverte. Ce compte sera simplement mémorisé sur cet
-            ordinateur pour que tu puisses basculer dessus depuis le menu du bas.
-          </p>
-        )}
-        {!modeAjout && <div className="mb-5" />}
-        <LoginForm modeAjout={modeAjout} />
-        {!modeAjout && (
-          <p className="mt-5 text-center text-[13px] text-muted">
-            Pas encore de compte ?{' '}
-            <Link href="/inscription" className="font-semibold text-primary">
-              En créer un
-            </Link>
-          </p>
-        )}
-      </div>
-    </main>
+      )}
+      <LoginForm modeAjout={modeAjout} />
+      {!modeAjout && (
+        <p className="mt-5 text-center text-[13px] text-muted">
+          Pas encore de compte ?{' '}
+          <Link href="/inscription" className={CLASSE_LIEN_AUTH}>
+            En créer un
+          </Link>
+        </p>
+      )}
+    </CarteAuthentification>
   )
 }

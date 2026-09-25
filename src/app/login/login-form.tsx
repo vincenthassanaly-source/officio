@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { signIn } from './actions'
 import { ajouterOuMettreAJourCompte } from '@/lib/comptes-appareil'
 import { authentifierCompteAppareil } from '@/lib/supabase/authentification-appareil'
+import { CLASSE_BOUTON_AUTH, CLASSE_CHAMP_AUTH, CLASSE_LIBELLE_AUTH } from '@/components/carte-authentification'
 
 export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
   const router = useRouter()
@@ -70,7 +71,7 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
   return (
     <form action={modeAjout ? soumettreAjout : action} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-xs font-semibold uppercase tracking-wide text-muted">
+        <label htmlFor="email" className={CLASSE_LIBELLE_AUTH}>
           Email
         </label>
         <input
@@ -81,13 +82,13 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
+          className={CLASSE_CHAMP_AUTH}
           placeholder="prenom@pharmacie-romevillage.fr"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-xs font-semibold uppercase tracking-wide text-muted">
+        <label htmlFor="password" className={CLASSE_LIBELLE_AUTH}>
           Mot de passe
         </label>
         <input
@@ -96,20 +97,19 @@ export function LoginForm({ modeAjout = false }: { modeAjout?: boolean }) {
           type="password"
           required
           autoComplete="current-password"
-          className="rounded-xl border border-border bg-surface px-4 py-3 text-[15px] text-ink focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-primary"
-          placeholder="••••••••"
+          className={CLASSE_CHAMP_AUTH}
         />
       </div>
 
-      {erreur && <p className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{erreur}</p>}
+      {erreur && <p role="alert" className="rounded-xl bg-rec-soft px-4 py-3 text-sm text-rec">{erreur}</p>}
       {modeAjout && resultatAjout?.succes && (
-        <p className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary">{resultatAjout.succes}</p>
+        <p role="status" className="rounded-xl bg-primary-soft px-4 py-3 text-sm text-primary">{resultatAjout.succes}</p>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 rounded-2xl bg-primary py-3.5 text-[15px] font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+        className={CLASSE_BOUTON_AUTH}
       >
         {pending ? (modeAjout ? 'Ajout…' : 'Connexion…') : modeAjout ? 'Ajouter ce compte' : 'Se connecter'}
       </button>
