@@ -31,11 +31,13 @@ export function GestionOfficines({
           return (
             <div
               key={a.officine_id}
-              className={`flex items-center justify-between gap-2 rounded-xl border p-3 ${
+              // flex-wrap : sous ~320 px, « Quitter cette officine » passe sous
+              // le nom plutôt que de le réduire à une colonne de ~100 px.
+              className={`flex flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-xl border p-3 ${
                 active ? 'border-primary bg-primary-soft' : 'border-border bg-bg'
               }`}
             >
-              <div className="min-w-0">
+              <div className="min-w-40 flex-1">
                 <div className="line-clamp-2 wrap-anywhere text-[13.5px] font-semibold text-ink">{a.officine_nom}</div>
                 {active && (
                   <div className="mt-0.5 text-[12px] font-semibold text-primary">Officine active</div>

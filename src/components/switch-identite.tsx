@@ -199,7 +199,7 @@ export function SwitchIdentite({
         </span>
         <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">{nomComplet}</span>
         <svg
-          className={`h-4 w-4 shrink-0 text-muted motion-safe:transition-transform ${panelOuvert ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-muted motion-safe:transition-transform ${panelOuvert ? '' : 'rotate-180'}`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
