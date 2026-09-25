@@ -49,6 +49,9 @@ export async function creerPromesse(formData: FormData) {
   if (error) throw new Error(error.message)
 
   revalidatePath('/promesses-patients')
+  // Création possible depuis le bouton + de l'accueil : la tuile « N en
+  // attente » doit refléter la nouvelle promesse sans rechargement.
+  revalidatePath('/')
 }
 
 // "Traitée" = patient rappelé, médicament mis de côté : la promesse quitte

@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
 import type { MembreEquipe } from '@/lib/data/equipe'
 
-export type VueFabCreationRapide = 'ferme' | 'menu' | 'message' | 'tache' | 'regularisation' | 'note'
+export type VueFabCreationRapide = 'ferme' | 'menu' | 'message' | 'tache' | 'regularisation' | 'note' | 'promesse'
 
 function IconPlus({ className }: { className?: string }) {
   return (
@@ -23,7 +23,7 @@ function IconPlus({ className }: { className?: string }) {
   )
 }
 
-// Menu + 4 formulaires (dont ChampPhoto/ChampAudio, qui embarquent
+// Menu + 5 formulaires (dont ChampPhoto/ChampAudio, qui embarquent
 // compression d'image et enregistrement micro) chargés seulement à
 // l'ouverture du FAB, pas au premier rendu de l'accueil : ssr:false car ce
 // contenu n'apparaît jamais avant une interaction utilisateur (pas de SEO/

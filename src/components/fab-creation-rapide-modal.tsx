@@ -1,13 +1,16 @@
 'use client'
 
 import { useRef, useState, useTransition } from 'react'
-import { IconLiaison, IconRegularisation, IconNote } from '@/components/nav-icons'
+import { IconLiaison, IconRegularisation, IconNote, IconPromesses } from '@/components/nav-icons'
 import { ChampPhoto } from '@/components/champ-photo'
 import { ChampAudio } from '@/components/champ-audio'
 import { envoyerMessage } from '@/app/actions/liaison'
 import { creerTache } from '@/app/actions/taches'
 import { ajouterRegularisation } from '@/app/actions/regularisations'
 import { creerNote } from '@/app/actions/notes'
+import { creerPromesse } from '@/app/actions/promesses-patients'
+import { FormulairePromesse, formDataPromesse } from '@/components/promesses-patients-formulaire'
+import { useToast } from '@/components/ui/toast-provider'
 import { ChampsFormulaire } from '@/components/regularisations-liste'
 import { toISODate } from '@/lib/dates'
 import { useFermerAvecRetour } from '@/lib/use-fermer-avec-retour'
@@ -41,10 +44,12 @@ function IconTache({ className }: { className?: string }) {
   )
 }
 
+type VueFormulaire = 'message' | 'tache' | 'regularisation' | 'note' | 'promesse'
+
 function MenuChoix({
   onChoisir,
 }: {
-  onChoisir: (vue: 'message' | 'tache' | 'regularisation' | 'note') => void
+  onChoisir: (vue: VueFormulaire) => void
 }) {
   return (
     <div className="flex flex-col gap-2 p-4">
@@ -101,6 +106,19 @@ function MenuChoix({
         <div>
           <div className="text-[14px] font-semibold text-ink">Nouvelle note</div>
           <div className="text-[12px] text-muted">Partager une note avec l&rsquo;équipe</div>
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={() => onChoisir('promesse')}
+        className="flex items-center gap-3 rounded-[20px] bg-surface shadow-card p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-teal-soft text-teal">
+          <IconPromesses className="h-5 w-5" />
+        </div>
+        <div>
+          <div className="text-[14px] font-semibold text-ink">Nouvelle promesse</div>
+          <div className="text-[12px] text-muted">Patient à rappeler à l&rsquo;arrivée d&rsquo;un médicament</div>
         </div>
       </button>
     </div>
@@ -329,6 +347,44 @@ function FormulaireNote({ onCree }: { onCree: () => void }) {
   )
 }
 
+// Même formulaire que la page Promesses patients (variante « panneau » :
+// la sheet porte déjà le fond, la fermeture et le piège à focus). Le focus
+// va d'office au champ médicament, l'ouverture étant un geste explicite.
+function FormulairePromesseRapide({ onCree }: { onCree: () => void }) {
+  const [isPending, startTransition] = useTransition()
+  const toast = useToast()
+
+  return (
+    <FormulairePromesse
+      variante="panneau"
+      idTitre="fab-creation-titre-promesse"
+      medicamentInitial=""
+      focusAuMontage
+      fermable={false}
+      enCours={isPending}
+      onFermer={onCree}
+      onEnregistrer={(champs) =>
+        new Promise((resoudre) => {
+          startTransition(async () => {
+            try {
+              await creerPromesse(formDataPromesse(champs))
+              toast({ type: 'succes', message: `Promesse notée pour ${champs.nom_patient.trim()}.` })
+              resoudre(true)
+              onCree()
+            } catch (err) {
+              toast({
+                type: 'erreur',
+                message: err instanceof Error ? err.message : "Échec de l'enregistrement de la promesse.",
+              })
+              resoudre(false)
+            }
+          })
+        })
+      }
+    />
+  )
+}
+
 // Contenu lourd du FAB de création rapide (menu + 4 formulaires, dont deux
 // embarquent ChampPhoto/ChampAudio — compression d'image et MediaRecorder/
 // micro) : extrait de fab-creation-rapide.tsx pour être chargé via
@@ -344,7 +400,7 @@ export default function FabCreationRapideModal({
   vue: Exclude<VueFabCreationRapide, 'ferme'>
   equipe: MembreEquipe[]
   profilActuelId: string
-  onChoisir: (vue: 'message' | 'tache' | 'regularisation' | 'note') => void
+  onChoisir: (vue: VueFormulaire) => void
   onFermer: () => void
 }) {
   // Un id de titre par vue (chacune porte son propre <h2>, voir plus haut) :
@@ -356,6 +412,7 @@ export default function FabCreationRapideModal({
     tache: 'fab-creation-titre-tache',
     regularisation: 'fab-creation-titre-regularisation',
     note: 'fab-creation-titre-note',
+    promesse: 'fab-creation-titre-promesse',
   }[vue]
 
   const boiteRef = useRef<HTMLDivElement>(null)
@@ -400,6 +457,7 @@ export default function FabCreationRapideModal({
         )}
         {vue === 'regularisation' && <FormulaireRegularisation onCree={onFermer} />}
         {vue === 'note' && <FormulaireNote onCree={onFermer} />}
+        {vue === 'promesse' && <FormulairePromesseRapide onCree={onFermer} />}
       </div>
     </div>
   )
