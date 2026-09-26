@@ -211,7 +211,7 @@ function CompteurGelules({
           aria-label={`Quantité — ${libelle}`}
           inputMode="numeric"
           enterKeyHint="done"
-          className={`w-12 shrink-0 px-1 py-2.5 text-center ${CHAMP_CLASS}`}
+          className={`w-12 shrink-0 px-1 py-2.5 text-center tabular-nums ${CHAMP_CLASS}`}
         />
         <button
           type="button"
@@ -300,7 +300,7 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
               enterKeyHint="done"
               className={`w-20 shrink-0 ${CHAMP_CLASS}`}
             />
-            <span className="w-16 shrink-0 text-right text-[12.5px] font-semibold text-ink">
+            <span className="w-16 shrink-0 text-right text-[12.5px] font-semibold tabular-nums text-ink">
               {formatEuro(prix)}
             </span>
             <button
@@ -373,33 +373,33 @@ export function HuilesEssentiellesCalculateur({ huiles }: { huiles: HuileEssenti
               <span className="truncate pr-2">
                 {huile.nom} ({ligne.volumeMl || 0} mL)
               </span>
-              <span className="shrink-0 font-semibold text-ink">{formatEuro(prix)}</span>
+              <span className="shrink-0 font-semibold tabular-nums text-ink">{formatEuro(prix)}</span>
             </div>
           ) : null
         )}
 
         <div className="flex items-center justify-between border-t border-border pt-1.5 text-[12.5px] text-muted">
           <span>{mode === 'melange' ? 'Flacon' : `Flacons (× ${lignesRenseignees})`}</span>
-          <span className="font-semibold text-ink">{formatEuro(coutFlacons)}</span>
+          <span className="font-semibold tabular-nums text-ink">{formatEuro(coutFlacons)}</span>
         </div>
 
         {nbGelules > 0 && (
           <div className="flex items-center justify-between text-[12.5px] text-muted">
             <span>Gélules vides (100) × {nbGelules}</span>
-            <span className="font-semibold text-ink">{formatEuro(coutGelules)}</span>
+            <span className="font-semibold tabular-nums text-ink">{formatEuro(coutGelules)}</span>
           </div>
         )}
 
         {nbGelulesVegetales > 0 && (
           <div className="flex items-center justify-between text-[12.5px] text-muted">
             <span>Gélules vides végétales (100) × {nbGelulesVegetales}</span>
-            <span className="font-semibold text-ink">{formatEuro(coutGelulesVegetales)}</span>
+            <span className="font-semibold tabular-nums text-ink">{formatEuro(coutGelulesVegetales)}</span>
           </div>
         )}
 
         <div className="mt-1 flex items-center justify-between border-t border-border pt-2">
           <span className="text-[14px] font-semibold text-ink">Total</span>
-          <span className="font-heading text-xl font-bold text-primary">{formatEuro(total)}</span>
+          <span className="font-heading text-xl font-bold tabular-nums text-primary">{formatEuro(total)}</span>
         </div>
       </div>
 
