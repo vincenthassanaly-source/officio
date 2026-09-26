@@ -190,7 +190,9 @@ export function Suggestions({
             aria-expanded={archiveOuverte}
             className="flex min-h-11 items-center justify-between gap-2 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            <span className="text-[13.5px] font-semibold text-ink">Archivé ({suggestionsArchivees.length})</span>
+            <span className="text-[13.5px] font-semibold tabular-nums text-ink">
+              Archivé ({suggestionsArchivees.length})
+            </span>
             <IconChevron
               className={`h-4 w-4 shrink-0 text-muted motion-safe:transition-transform motion-safe:duration-200 ${
                 archiveOuverte ? 'rotate-180' : ''
@@ -303,7 +305,7 @@ function CarteSuggestion({
         )}
       </div>
       <p
-        className={`wrap-anywhere whitespace-pre-wrap text-[13.5px] leading-relaxed ${
+        className={`wrap-anywhere whitespace-pre-wrap text-pretty text-[13.5px] leading-relaxed ${
           suggestion.fait ? 'text-muted line-through' : 'text-ink'
         }`}
       >
