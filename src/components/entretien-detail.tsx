@@ -86,7 +86,7 @@ export function EntretienDetail({
           type="button"
           aria-pressed={!modeEdition}
           onClick={() => setModeEdition(false)}
-          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold ${CLASSE_FOCUS} ${
+          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold transition-colors ${CLASSE_FOCUS} ${
             !modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -96,7 +96,7 @@ export function EntretienDetail({
           type="button"
           aria-pressed={modeEdition}
           onClick={() => setModeEdition(true)}
-          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold ${CLASSE_FOCUS} ${
+          className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-3 text-[13px] font-semibold transition-colors ${CLASSE_FOCUS} ${
             modeEdition ? 'bg-surface text-primary shadow-sm' : 'text-muted'
           }`}
         >
@@ -175,7 +175,7 @@ function EntretienNavigation({
           tabIndex={ongletActif === o.id ? 0 : -1}
           onClick={() => onChanger(o.id)}
           onKeyDown={(e) => onKeyDown(e, index)}
-          className={`flex min-w-0 flex-auto flex-wrap items-center justify-center gap-x-1.5 overflow-hidden rounded-xl px-2 text-[13px] font-semibold ${CLASSE_FOCUS} ${
+          className={`flex min-w-0 flex-auto flex-wrap items-center justify-center gap-x-1.5 overflow-hidden rounded-xl px-2 text-[13px] font-semibold transition-colors ${CLASSE_FOCUS} ${
             ongletActif === o.id ? 'bg-primary text-white shadow-card' : 'bg-surface text-muted'
           }`}
         >
