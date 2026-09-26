@@ -97,7 +97,7 @@ export function NotificationsParametres({
             type="button"
             onClick={toggleActivation}
             disabled={isPending || actif === null}
-            className={`min-h-11 self-start rounded-xl px-4 py-2.5 text-[13.5px] font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
+            className={`min-h-11 self-start rounded-xl px-4 py-2.5 text-[13.5px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 ${
               actif ? 'border border-border text-muted' : 'bg-primary text-white'
             }`}
           >
