@@ -357,7 +357,7 @@ export function FournisseursListe({ fournisseurs }: { fournisseurs: Fournisseur[
               {(f.montant_minimum_commande || f.remises) && (
                 <div className="flex flex-wrap gap-1.5">
                   {f.montant_minimum_commande != null && (
-                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-semibold text-accent">
+                    <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[12px] font-semibold tabular-nums text-accent">
                       Min. {formatEuro(f.montant_minimum_commande)}
                     </span>
                   )}
