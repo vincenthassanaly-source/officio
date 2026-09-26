@@ -110,7 +110,7 @@ function PrixEditable({ chaussure }: { chaussure: ChaussureModele }) {
       type="button"
       onClick={() => setEnEdition(true)}
       aria-label={`Modifier le prix de ${chaussure.nom_modele}${prixFormate ? `, actuellement ${prixFormate} euros` : ''}`}
-      className={`flex min-h-11 items-center rounded-lg px-2 text-left text-[13px] font-semibold ${
+      className={`flex min-h-11 items-center rounded-lg px-2 text-left text-[13px] font-semibold tabular-nums ${
         prixFormate ? 'text-ink' : 'text-accent'
       } ${CLASSE_FOCUS}`}
     >
@@ -136,7 +136,7 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
             alt={chaussure.nom_modele}
             fill
             sizes="(min-width: 1024px) 25vw, 50vw"
-            className="object-cover"
+            className="object-cover ring-1 ring-inset ring-black/10"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-muted">Pas de photo</div>
@@ -164,7 +164,7 @@ function ChaussureCarte({ chaussure, onOuvrir }: { chaussure: ChaussureModele; o
         <div className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
           <PrixEditable chaussure={chaussure} />
           {depassement !== null && (
-            <span className="text-[12px] font-semibold text-rec">+{formatPrix(depassement)} € à charge</span>
+            <span className="text-[12px] font-semibold tabular-nums text-rec">+{formatPrix(depassement)} € à charge</span>
           )}
         </div>
       </div>
@@ -246,7 +246,13 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 
         <div className="relative aspect-square w-full shrink-0 bg-neutral-soft">
           {photoAffichee ? (
-            <Image src={photoAffichee} alt={chaussure.nom_modele} fill sizes="512px" className="object-cover" />
+            <Image
+              src={photoAffichee}
+              alt={chaussure.nom_modele}
+              fill
+              sizes="512px"
+              className="object-cover ring-1 ring-inset ring-black/10"
+            />
           ) : (
             <div className="flex h-full items-center justify-center text-xs text-muted">Pas de photo</div>
           )}
@@ -254,7 +260,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
 
         <div className="flex flex-col gap-3 p-4">
           <div>
-            <h2 id="chaussure-detail-titre" className="font-heading text-lg text-ink">
+            <h2 id="chaussure-detail-titre" className="font-heading text-lg text-ink text-balance">
               {chaussure.nom_modele}
             </h2>
             <div className="mt-0.5 text-[12px] font-medium uppercase tracking-wide text-muted">
@@ -327,7 +333,7 @@ function ChaussureDetail({ chaussure, onFermer }: { chaussure: ChaussureModele; 
             <div className="mb-1 text-[12px] font-bold uppercase tracking-wide text-muted">Prix</div>
             <PrixEditable chaussure={chaussure} />
             {depassement !== null && (
-              <p className="mt-1.5 rounded-lg bg-rec-soft px-2.5 py-1.5 text-[12px] font-medium text-rec">
+              <p className="mt-1.5 rounded-lg bg-rec-soft px-2.5 py-1.5 text-[12px] font-medium tabular-nums text-rec">
                 Dépassement de {formatPrix(depassement)} € à charge du patient (au-delà des {MONTANT_REMBOURSEMENT_SECU} € remboursés par la sécurité sociale)
               </p>
             )}
@@ -404,7 +410,7 @@ export function ChaussuresCatalogue({ chaussures }: { chaussures: ChaussureModel
               key={g.value}
               onClick={() => setGenre(g.value)}
               aria-pressed={genreActif === g.value}
-              className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold ${
+              className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors ${
                 genreActif === g.value ? 'border-primary bg-primary text-white' : 'border-border bg-surface text-muted'
               } ${CLASSE_FOCUS}`}
             >
