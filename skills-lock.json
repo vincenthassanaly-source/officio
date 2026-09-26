@@ -1,23 +1,23 @@
 {
   "version": 1,
   "skills": {
+    "frontend-a11y": {
+      "source": "affaan-m/everything-claude-code",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-a11y/SKILL.md",
+      "computedHash": "822c925563e37abb79298c3146577c3dc4565612196f84f6e5f8dc3531e31837"
+    },
     "impeccable": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "skillPath": ".agents/skills/impeccable/SKILL.md",
       "computedHash": "ec48c58ca973b42c826d5d3be9069b7023d2361ebf7f89ee56b0bae7eb92390a"
     },
-    "vercel-react-best-practices": {
-      "source": "vercel-labs/agent-skills",
+    "react-performance": {
+      "source": "affaan-m/everything-claude-code",
       "sourceType": "github",
-      "skillPath": "skills/react-best-practices/SKILL.md",
-      "computedHash": "6b526d013e28073246a36f99b529bc43745d30832ecfa8217b359c34f260ca6b"
+      "skillPath": "skills/react-performance/SKILL.md",
+      "computedHash": "7b5b19e9c15a6b442fa0e7a0a1cb7ced951ab5872a96ff876b099b6bdfc9ae86"
     },
-    "web-design-guidelines": {
-      "source": "vercel-labs/agent-skills",
-      "sourceType": "github",
-      "skillPath": "skills/web-design-guidelines/SKILL.md",
-      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
-    }
   }
 }
