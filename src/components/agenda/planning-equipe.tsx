@@ -272,7 +272,7 @@ export function PlanningEquipe({
           <span key={m.id} className="flex items-center gap-1.5 text-[12px] font-medium text-ink">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
-            <span className="text-[12px] font-normal text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
+            <span className="text-[12px] font-normal tabular-nums text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
           </span>
         ))}
       </div>

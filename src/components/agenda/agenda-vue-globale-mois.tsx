@@ -140,7 +140,7 @@ export function AgendaVueGlobaleMois({
                   dans le panneau de détail ouvert au tap (taille normale). */}
               {items.length > 0 && (
                 <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold ${
+                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold tabular-nums ${
                     estAujourdhui ? 'bg-primary text-white' : 'bg-accent-soft text-accent'
                   }`}
                 >

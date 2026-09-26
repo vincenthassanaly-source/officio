@@ -89,7 +89,7 @@ export function PlanningEquipeMois({
           <span key={m.id} className="flex items-center gap-1.5 text-[12px] font-medium text-ink">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${couleurMembre(m.id).fond}`} />
             {m.nom_complet}
-            <span className="text-[12px] font-normal text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
+            <span className="text-[12px] font-normal tabular-nums text-muted">{formatDureeHeures(heuresParMembre.get(m.id) ?? 0)}</span>
           </span>
         ))}
       </div>
@@ -140,7 +140,7 @@ export function PlanningEquipeMois({
                       indicateur "+n" à 8 px dans une cellule de ~45 px — la
                       liste complète reste à taille normale dans le panneau de
                       détail ouvert au tap. */}
-                  {reste > 0 && <span className="text-[8px] font-semibold text-muted">+{reste}</span>}
+                  {reste > 0 && <span className="text-[8px] font-semibold tabular-nums text-muted">+{reste}</span>}
                 </span>
               )}
             </button>

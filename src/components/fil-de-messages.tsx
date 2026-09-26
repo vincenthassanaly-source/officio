@@ -703,7 +703,7 @@ function MessageItem({
               type="button"
               onClick={() => setPhotoAgrandie(index)}
               aria-label="Agrandir la photo"
-              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl ring-1 ring-inset ring-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Image src={url} alt="" fill sizes="64px" className="object-cover" />
             </button>

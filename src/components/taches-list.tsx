@@ -562,7 +562,7 @@ function CarteTache({
           type="button"
           onClick={() => setPhotoAgrandie(true)}
           aria-label="Agrandir la photo"
-          className="relative block h-11 w-11 shrink-0 overflow-hidden rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="relative block h-11 w-11 shrink-0 overflow-hidden rounded-lg ring-1 ring-inset ring-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <Image src={tache.photoUrl} alt="" fill sizes="44px" className="object-cover" />
         </button>
