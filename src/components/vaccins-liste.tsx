@@ -170,7 +170,7 @@ function LigneInfo({
       </div>
       <div className="min-w-0 flex-1">
         <div className="text-[12px] font-bold uppercase tracking-wide text-muted">{label}</div>
-        <p className="mt-0.5 text-[13px] leading-relaxed text-ink">{texte}</p>
+        <p className="mt-0.5 text-pretty text-[13px] leading-relaxed text-ink">{texte}</p>
       </div>
     </div>
   )
@@ -188,7 +188,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
         aria-expanded={ouvert}
         className={`-m-1 flex min-h-11 items-center justify-between gap-2 rounded-xl p-1 text-left ${CLASSE_FOCUS}`}
       >
-        <div className="min-w-0 flex-1 text-[14.5px] font-semibold text-ink">
+        <div className="min-w-0 flex-1 text-balance text-[14.5px] font-semibold text-ink">
           {surligner(v.nom_commercial, rechercheNormalisee)}
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
@@ -243,7 +243,7 @@ function CarteVaccin({ v, rechercheNormalisee }: { v: Vaccin; rechercheNormalise
                 <IconAlerte className="h-3 w-3" />
                 Cas particuliers
               </div>
-              <p className="mt-0.5 text-[12.5px] leading-relaxed text-ink">{v.cas_particuliers}</p>
+              <p className="mt-0.5 text-pretty text-[12.5px] leading-relaxed text-ink">{v.cas_particuliers}</p>
             </div>
           )}
 
@@ -347,7 +347,7 @@ export function VaccinsListe({ vaccins }: { vaccins: Vaccin[] }) {
           >
             {f.label}
             <span
-              className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold ${
+              className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[12px] font-bold tabular-nums ${
                 filtreStatut === f.value ? 'bg-white/20 text-white' : 'bg-neutral-soft text-muted'
               }`}
             >
