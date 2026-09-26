@@ -11,6 +11,7 @@ export async function creerEntreeJournal(formData: FormData) {
   const typeEntretienId = String(formData.get('type_entretien_id') ?? '').trim()
   const patientNom = String(formData.get('patient_nom') ?? '').trim()
   const dateEntretien = String(formData.get('date_entretien') ?? '').trim()
+  const note = String(formData.get('note') ?? '').trim()
   if (!typeEntretienId || !patientNom || !dateEntretien) throw new Error('Champs manquants.')
 
   const profil = await getCurrentProfil()
@@ -23,6 +24,7 @@ export async function creerEntreeJournal(formData: FormData) {
     type_entretien_id: typeEntretienId,
     patient_nom: patientNom,
     date_entretien: dateEntretien,
+    note: note || null,
     realise_par_id: profil.id,
   })
 
@@ -35,6 +37,7 @@ export async function modifierEntreeJournal(id: string, formData: FormData) {
   const typeEntretienId = String(formData.get('type_entretien_id') ?? '').trim()
   const patientNom = String(formData.get('patient_nom') ?? '').trim()
   const dateEntretien = String(formData.get('date_entretien') ?? '').trim()
+  const note = String(formData.get('note') ?? '').trim()
   if (!typeEntretienId || !patientNom || !dateEntretien) throw new Error('Champs manquants.')
 
   const profil = await getCurrentProfil()
@@ -47,6 +50,7 @@ export async function modifierEntreeJournal(id: string, formData: FormData) {
       type_entretien_id: typeEntretienId,
       patient_nom: patientNom,
       date_entretien: dateEntretien,
+      note: note || null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)

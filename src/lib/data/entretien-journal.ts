@@ -7,6 +7,7 @@ export type EntreeJournalEntretien = {
   type_entretien_nom: string
   patient_nom: string
   date_entretien: string
+  note: string | null
   realise_par: { id: string; nom_complet: string; initiales: string } | null
 }
 
@@ -20,7 +21,7 @@ export const getEntretienJournal = cache(async (officineId: string): Promise<Ent
   const { data, error } = await supabase
     .from('entretien_journal')
     .select(
-      `id, type_entretien_id, patient_nom, date_entretien,
+      `id, type_entretien_id, patient_nom, date_entretien, note,
        type_entretien:types_entretien!entretien_journal_type_entretien_id_fkey ( nom ),
        realise_par:profils!entretien_journal_realise_par_id_fkey ( id, nom_complet, initiales )`
     )
@@ -40,6 +41,7 @@ export const getEntretienJournal = cache(async (officineId: string): Promise<Ent
       type_entretien_nom: type?.nom ?? '',
       patient_nom: e.patient_nom,
       date_entretien: e.date_entretien,
+      note: e.note,
       realise_par: Array.isArray(e.realise_par) ? e.realise_par[0] ?? null : e.realise_par,
     }
   })

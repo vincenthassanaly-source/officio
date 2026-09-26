@@ -130,6 +130,17 @@ export function EntretienJournal({
             className={CLASSE_CHAMP}
           />
 
+          <label htmlFor="note-nouvelle-entree" className="text-[13px] font-semibold text-muted">
+            Note <span className="font-normal text-muted">(facultatif)</span>
+          </label>
+          <textarea
+            id="note-nouvelle-entree"
+            name="note"
+            rows={3}
+            placeholder="Détails de l’entretien…"
+            className={`${CLASSE_CHAMP} resize-none`}
+          />
+
           <div className="flex gap-2">
             <button
               type="button"
@@ -224,6 +235,9 @@ function CarteEntreeJournal({
             {entree.type_entretien_nom} · {formatDateEntretien(entree.date_entretien)}
             {entree.realise_par && ` · ${entree.realise_par.initiales}`}
           </p>
+          {entree.note && (
+            <p className="mt-1 line-clamp-2 wrap-anywhere whitespace-pre-wrap text-[13px] text-ink">{entree.note}</p>
+          )}
         </div>
         <button
           type="button"
@@ -358,6 +372,18 @@ function ModaleEditionEntreeJournal({
           required
           defaultValue={entree.patient_nom}
           className={CLASSE_CHAMP}
+        />
+
+        <label htmlFor="note-edition-entree" className="text-[13px] font-semibold text-muted">
+          Note <span className="font-normal text-muted">(facultatif)</span>
+        </label>
+        <textarea
+          id="note-edition-entree"
+          name="note"
+          rows={4}
+          defaultValue={entree.note ?? ''}
+          placeholder="Détails de l’entretien…"
+          className={`${CLASSE_CHAMP} resize-none`}
         />
 
         <div className="mt-1 flex gap-2">
