@@ -147,7 +147,7 @@ export function RegularisationsCalendrier({
                   quantième, même motif que l'Agenda (Lot 2, A4/A7) plutôt
                   qu'une simple couleur de texte. */}
               <span
-                className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                className={`flex h-5 w-5 items-center justify-center rounded-full tabular-nums ${
                   estAujourdhui ? 'bg-primary font-bold text-white' : ''
                 }`}
               >
@@ -155,7 +155,7 @@ export function RegularisationsCalendrier({
               </span>
               {compteAFaire > 0 && (
                 <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${classeBadge}`}
+                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold tabular-nums ${classeBadge}`}
                 >
                   {compteAFaire}
                 </span>

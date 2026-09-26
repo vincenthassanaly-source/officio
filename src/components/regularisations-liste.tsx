@@ -406,7 +406,9 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
 
       {enRetard.length > 0 && (
         <div className="flex flex-col gap-2">
-          <div className="text-[12px] font-bold uppercase tracking-wide text-rec">En retard · {enRetard.length}</div>
+          <div className="text-[12px] font-bold uppercase tracking-wide tabular-nums text-rec">
+            En retard · {enRetard.length}
+          </div>
           <div className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:items-start lg:gap-2.5">
             {enRetard.map((r) => renderCarte(r, true))}
           </div>
@@ -432,7 +434,9 @@ export function RegularisationsListe({ regularisations }: { regularisations: Reg
             aria-expanded={archiveOuverte}
             className={`flex min-h-11 items-center justify-between gap-2 text-left ${CLASSE_FOCUS}`}
           >
-            <span className="text-[13.5px] font-semibold text-ink">Régularisations archivées ({archivees.length})</span>
+            <span className="text-[13.5px] font-semibold tabular-nums text-ink">
+              Régularisations archivées ({archivees.length})
+            </span>
             <IconChevron
               className={`h-4 w-4 shrink-0 text-muted transition-transform duration-200 ${
                 archiveOuverte ? 'rotate-180' : ''
