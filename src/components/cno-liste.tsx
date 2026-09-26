@@ -86,7 +86,7 @@ function QuantiteEditable({
             }
           }}
           aria-label={`Compléments restants pour ${patient.nom_patient}`}
-          className={`w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold text-ink ${CLASSE_FOCUS}`}
+          className={`w-20 rounded-lg border border-primary bg-bg px-2 py-1 text-center text-[16px] font-bold tabular-nums text-ink ${CLASSE_FOCUS}`}
         />
       </div>
     )
@@ -100,7 +100,7 @@ function QuantiteEditable({
       className={`-m-1.5 flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-lg p-1.5 ${CLASSE_FOCUS}`}
     >
       <span className="text-[12px] font-semibold uppercase tracking-wide text-muted">Compl.</span>
-      <span className="flex h-7 min-w-10 items-center justify-center rounded-lg bg-primary-soft px-2 text-[14.5px] font-bold text-primary">
+      <span className="flex h-7 min-w-10 items-center justify-center rounded-lg bg-primary-soft px-2 text-[14.5px] font-bold tabular-nums text-primary">
         {patient.quantite_restante}
       </span>
     </button>
