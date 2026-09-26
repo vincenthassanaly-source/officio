@@ -364,8 +364,8 @@ function CarteNote({
           </>
         )}
       </div>
-      <div className="mb-1 wrap-anywhere text-[14.5px] font-semibold text-ink">{note.titre}</div>
-      <p className="wrap-anywhere whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">{note.contenu}</p>
+      <div className="mb-1 text-balance wrap-anywhere text-[14.5px] font-semibold text-ink">{note.titre}</div>
+      <p className="wrap-anywhere whitespace-pre-wrap text-pretty text-[13.5px] leading-relaxed text-ink">{note.contenu}</p>
       {note.photosUrls.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {note.photosUrls.map((url, index) => (
@@ -374,7 +374,7 @@ function CarteNote({
               type="button"
               onClick={() => setPhotoAgrandie(index)}
               aria-label="Agrandir la photo"
-              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="relative block h-16 w-16 shrink-0 overflow-hidden rounded-xl ring-1 ring-inset ring-black/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <Image src={url} alt="" fill sizes="64px" className="object-cover" />
             </button>
