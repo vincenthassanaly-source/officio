@@ -98,8 +98,11 @@ export function ChampPhoto({
                 origines dans le même state : une URL signée Supabase Storage au montage
                 (édition, voir `photoInitiale`) OU une blob URL locale dès qu'un nouveau
                 fichier est choisi (voir `choisir()`) — next/image ne peut pas décoder une
-                blob: URL, et rien ici ne permet de distinguer statiquement les deux cas. */}
-            <img src={apercu} alt="" className="h-16 w-16 rounded-xl object-cover" />
+                blob: URL, et rien ici ne permet de distinguer statiquement les deux cas.
+                ring-1 ring-inset : sans lui la vignette flotte sans bord sur le fond clair
+                de la page quand la photo elle-même est claire (même correction sur
+                champ-photos.tsx). */}
+            <img src={apercu} alt="" className="h-16 w-16 rounded-xl object-cover ring-1 ring-inset ring-black/10" />
           </button>
           <button
             type="button"

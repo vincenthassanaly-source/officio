@@ -82,8 +82,11 @@ export function ChampPhotos({ onChange }: { onChange: (fichiers: File[]) => void
             aria-label="Agrandir la photo"
             className="rounded-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob URL), pas une image distante */}
-            <img src={a.url} alt="" className="h-16 w-16 rounded-xl object-cover" />
+            {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local (blob URL),
+                pas une image distante. ring-1 ring-inset : sans lui la vignette flotte sans
+                bord sur le fond clair de la page quand la photo elle-même est claire (même
+                correction que champ-photo.tsx). */}
+            <img src={a.url} alt="" className="h-16 w-16 rounded-xl object-cover ring-1 ring-inset ring-black/10" />
           </button>
           <button
             type="button"
